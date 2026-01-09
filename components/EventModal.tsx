@@ -65,7 +65,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect }) => {
                   <span className="pixel-text text-xs font-bold uppercase">{opt.label}</span>
                   {opt.risk && (
                     <span className="block text-[9px] opacity-70 mt-1 font-mono group-hover:text-white/90">
-                      >> {opt.risk}
+                      &gt;&gt; {opt.risk}
                     </span>
                   )}
                 </button>
