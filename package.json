@@ -1,0 +1,42 @@
+{
+  "name": "cosmic-excavator:-void-piercer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@capacitor/cli": "^8.0.0",
+    "framer-motion": "12.26.0",
+    "immer": "10.1.1",
+    "pixi-filters": "6.1.5",
+    "pixi.js": "8.15.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "zustand": "^5.0.10"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.1",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.0.0",
+    "jsdom": "^27.4.0",
+    "prettier": "^3.8.0",
+    "typescript": "~5.8.2",
+    "typescript-eslint": "^8.53.0",
+    "vite": "^6.2.0",
+    "vitest": "^4.0.17"
+  }
+}

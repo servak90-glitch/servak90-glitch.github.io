@@ -1,0 +1,79 @@
+import React from 'react';
+import { UpgradeCardProps } from './types';
+import { Resources } from '../../types';
+
+/**
+ * Upgrade Card component for drill parts
+ */
+const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, resources, onBuy }) => {
+    if (!next) return (
+        <div className="bg-zinc-900 p-3 md:p-4 border border-zinc-800 opacity-50 flex flex-col justify-between min-h-[160px] md:min-h-[200px]">
+            <div>
+                <h3 className="text-zinc-500 font-bold mb-2 pixel-text text-xs md:text-sm">{title}</h3>
+                <div className="text-[10px] md:text-xs text-zinc-600 font-mono mb-2">TIER {current.tier}</div>
+                <p className="text-[10px] md:text-xs text-zinc-600">МАКСИМУМ</p>
+            </div>
+        </div>
+    );
+
+    const isFusionLocked = next.tier >= 13;
+    const cost = (next.cost || {}) as Partial<Resources>;
+    const costKeys = Object.keys(cost) as Array<keyof Resources>;
+    const canAfford = !isFusionLocked && costKeys.every(r => resources[r] >= (cost[r] || 0));
+
+    return (
+        <div className="bg-zinc-900 p-3 md:p-4 border border-zinc-700 flex flex-col justify-between min-h-[180px] md:min-h-[220px] hover:border-zinc-500 transition-colors group relative">
+            <div>
+                <h3 className="text-cyan-400 font-bold mb-1 pixel-text text-xs md:text-sm group-hover:text-white transition-colors truncate">{title}</h3>
+                <div className="text-[9px] md:text-[10px] text-zinc-500 mb-2 font-mono">
+                    TIER {current.tier} <span className="text-zinc-300">➔ {next.tier}</span>
+                </div>
+
+                <div className="bg-black/50 p-2 mb-2 border border-zinc-800 min-h-[40px] md:min-h-[50px]">
+                    <p className="text-[9px] md:text-[10px] text-zinc-300 italic leading-tight">"{next.description}"</p>
+                    <div className="mt-1 text-[8px] md:text-[9px] text-green-400 font-mono grid grid-cols-2 gap-x-2">
+                        {next.baseStats.damage && <span>DMG: {next.baseStats.damage}</span>}
+                        {next.baseStats.speed && <span>SPD: {next.baseStats.speed}</span>}
+                        {next.baseStats.cooling && <span>COOL: {next.baseStats.cooling}</span>}
+                        {next.baseStats.energyOutput && <span>PWR: {next.baseStats.energyOutput}</span>}
+                        {next.baseStats.torque && <span className="text-amber-400">TRQ: {next.baseStats.torque}%</span>}
+                        {next.baseStats.regen && <span className="text-emerald-400">REG: {next.baseStats.regen}/s</span>}
+                        {next.baseStats.luck && <span className="text-purple-400">LCK: {next.baseStats.luck}%</span>}
+                        {next.baseStats.energyCost > 0 && <span className="text-red-500 col-span-2">LOAD: -{next.baseStats.energyCost} W</span>}
+                    </div>
+                </div>
+
+                <div className="space-y-1 mb-3">
+                    {isFusionLocked ? (
+                        <div className="text-[10px] text-purple-400 font-bold font-mono py-2 text-center animate-pulse">ТРЕБУЕТСЯ СЛИЯНИЕ</div>
+                    ) : (
+                        costKeys.map(res => (
+                            <div key={res} className="flex justify-between text-[9px] md:text-[10px] font-mono border-b border-zinc-800/50 pb-0.5">
+                                <span className="text-zinc-500 uppercase">{res}</span>
+                                <span className={resources[res] >= (cost[res] || 0) ? 'text-green-400' : 'text-red-500'}>
+                                    {cost[res]?.toLocaleString()}
+                                </span>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            <button
+                disabled={!canAfford}
+                onClick={() => onBuy(type)}
+                className={`w-full py-2 md:py-3 text-[10px] md:text-xs font-bold pixel-text transition-all border active:scale-95
+            ${isFusionLocked
+                        ? 'bg-zinc-950 border-purple-900/50 text-zinc-600 cursor-not-allowed opacity-50'
+                        : canAfford
+                            ? 'bg-cyan-900/50 border-cyan-500 hover:bg-cyan-500 hover:text-black text-cyan-400'
+                            : 'bg-zinc-950 border-zinc-800 text-zinc-600 cursor-not-allowed'}
+         `}
+            >
+                {isFusionLocked ? 'ТОЛЬКО СЛИЯНИЕ' : canAfford ? 'УЛУЧШИТЬ' : 'НЕДОСТУПНО'}
+            </button>
+        </div>
+    );
+};
+
+export default UpgradeCard;

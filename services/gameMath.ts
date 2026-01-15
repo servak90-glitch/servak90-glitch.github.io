@@ -1,0 +1,269 @@
+
+import { DrillState, Resources, GameState, ResourceType } from '../types';
+import { calculateSkillModifiers } from './skillRegistry';
+import { ARTIFACTS } from './artifactRegistry';
+
+// [DEV_CONTEXT: HARDCORE MATH]
+// 1. Rock Density: Every 800m requires +1 Tier of Drill Bit.
+export const getRockDensity = (depth: number) => {
+    return 1 + Math.floor(depth / 800);
+};
+
+// 2. Ambient Heat: Temperature rises with depth.
+// 50,000m = 50% base heat.
+export const getAmbientTemp = (depth: number) => {
+    return Math.min(50, depth / 1000);
+};
+
+// 3. Repair Cost: Exponential scaling with depth + Critical Tax
+export const calculateRepairCost = (depth: number, currentHp: number, maxHp: number): { resource: ResourceType, cost: number } => {
+    const missingHp = maxHp - currentHp;
+    if (missingHp <= 0) return { resource: 'stone', cost: 0 };
+
+    // Resource Tiering based on Depth
+    let resource: ResourceType = 'stone';
+    if (depth > 40000) resource = 'titanium';
+    else if (depth > 15000) resource = 'gold';
+    else if (depth > 4000) resource = 'iron';
+
+    // Depth Multiplier
+    const depthMult = 1 + (depth / 2000);
+    const isCritical = (currentHp / maxHp) < 0.20;
+    const criticalMult = isCritical ? 1.5 : 1.0;
+
+    const cost = Math.ceil(missingHp * depthMult * criticalMult);
+
+    return { resource, cost };
+};
+
+// 4. Shield Recharge Cost
+export const calculateShieldRechargeCost = (depth: number): { resource: ResourceType, cost: number } => {
+    if (depth < 2000) return { resource: 'stone', cost: 0 }; // Free early game
+
+    let resource: ResourceType = 'stone';
+    let baseCost = 100;
+
+    if (depth > 30000) { resource = 'uranium'; baseCost = 50; }
+    else if (depth > 15000) { resource = 'gold'; baseCost = 100; }
+    else if (depth > 5000) { resource = 'iron'; baseCost = 200; }
+    else { resource = 'copper'; baseCost = 300; }
+
+    const cost = Math.ceil(baseCost * (1 + depth / 10000));
+    return { resource, cost };
+};
+
+// UI UTILITY: Compact Number Formatting
+export const formatCompactNumber = (num: number): string => {
+    if (num === 0 || isNaN(num)) return '0';
+    if (num < 0) return '-' + formatCompactNumber(Math.abs(num));
+    if (num < 1000) return Math.floor(num).toString();
+
+    const suffixes = ['', 'k', 'M', 'B', 'T'];
+    const suffixNum = Math.floor(("" + Math.floor(num)).length / 3);
+
+    if (suffixNum >= suffixes.length) return '∞';
+
+    let shortValue = parseFloat((suffixNum !== 0 ? (num / Math.pow(1000, suffixNum)) : num).toPrecision(3));
+    if (shortValue % 1 !== 0) {
+        shortValue = parseFloat(shortValue.toFixed(1));
+    }
+    return shortValue + suffixes[suffixNum];
+};
+
+// === КЭШИРОВАНИЕ calculateStats ===
+// Кэш предотвращает повторные вычисления при неизменных входных данных
+
+interface StatsCache {
+    key: string;
+    result: ReturnType<typeof calculateStatsInternal>;
+    timestamp: number;
+}
+
+let statsCache: StatsCache | null = null;
+const CACHE_TTL = 100; // Время жизни кэша в мс (10 тиков)
+
+/**
+ * Генерация ключа кэша на основе входных данных
+ */
+function generateCacheKey(
+    drill: DrillState,
+    skillLevels: GameState['skillLevels'],
+    equippedArtifacts: string[],
+    currentDepth: number
+): string {
+    // Ключевые данные, влияющие на результат
+    return JSON.stringify({
+        bit: drill.bit?.id,
+        engine: drill.engine?.id,
+        cooling: drill.cooling?.id,
+        hull: drill.hull?.id,
+        logic: drill.logic?.id,
+        control: drill.control?.id,
+        gearbox: drill.gearbox?.id,
+        power: drill.power?.id,
+        armor: drill.armor?.id,
+        skills: Object.keys(skillLevels).sort().map(k => `${k}:${skillLevels[k]}`).join(','),
+        artifacts: equippedArtifacts.filter(Boolean).sort().join(','),
+        depthTier: Math.floor(currentDepth / 100) // Округляем глубину до 100м
+    });
+}
+
+/**
+ * Обёртка с кэшированием
+ */
+export const calculateStats = (
+    drill: DrillState,
+    skillLevels: GameState['skillLevels'],
+    equippedArtifacts: string[],
+    inventory: GameState['inventory'],
+    currentDepth: number = 0
+) => {
+    const now = Date.now();
+    const cacheKey = generateCacheKey(drill, skillLevels, equippedArtifacts, currentDepth);
+
+    // Проверяем кэш
+    if (statsCache && statsCache.key === cacheKey && (now - statsCache.timestamp) < CACHE_TTL) {
+        return statsCache.result;
+    }
+
+    // Вычисляем новый результат
+    const result = calculateStatsInternal(drill, skillLevels, equippedArtifacts, inventory, currentDepth);
+
+    // Обновляем кэш
+    statsCache = { key: cacheKey, result, timestamp: now };
+
+    return result;
+};
+
+/**
+ * Внутренняя функция вычисления статов (без кэширования)
+ */
+const calculateStatsInternal = (
+    drill: DrillState,
+    skillLevels: GameState['skillLevels'],
+    equippedArtifacts: string[],
+    inventory: GameState['inventory'],
+    currentDepth: number = 0
+) => {
+
+    // Defensive check for corrupted state
+    if (!drill || !drill.bit || !drill.power || !drill.engine || !drill.cooling || !drill.hull || !drill.logic || !drill.control || !drill.gearbox || !drill.armor) {
+        console.warn("Invalid drill state in calculateStats, using safe defaults", drill);
+        return {
+            energyProd: 0,
+            energyCons: 0,
+            energyEfficiency: 1,
+            totalDamage: 0,
+            totalSpeed: 0,
+            totalCooling: 0,
+            torque: 0,
+            critChance: 0,
+            luck: 0,
+            predictionTime: 0,
+            clickMult: 1,
+            ventSpeed: 1,
+            defense: 0,
+            evasion: 0,
+            hazardResist: 0,
+            integrity: 100,
+            regen: 0,
+            droneEfficiency: 1,
+            drillingEfficiency: 1,
+            ambientHeat: 0,
+            requiredTier: 1,
+            skillMods: { clickPowerPct: 0, autoSpeedPct: 0, heatGenReductionPct: 0, resourceMultPct: 0, residueEffPct: 0, xpGainPct: 0, buffDurationPct: 0, critChance: 0, coolingPowerPct: 0, globalSpeedPct: 0, analysisSpeedPct: 0 },
+            artifactMods: { clickPowerPct: 0, drillSpeedPct: 0, heatGenPct: 0, resourceMultPct: 0, luckPct: 0 }
+        };
+    }
+
+    const energyProd = drill.power.baseStats.energyOutput;
+    const energyCons = drill.bit.baseStats.energyCost + drill.engine.baseStats.energyCost + drill.cooling.baseStats.energyCost + drill.logic.baseStats.energyCost + drill.control.baseStats.energyCost + drill.gearbox.baseStats.energyCost + drill.armor.baseStats.energyCost;
+    const energyEfficiency = energyProd >= energyCons ? 1.0 : (energyProd / Math.max(1, energyCons));
+
+    // Calculate Artifact Modifiers
+    const artifactMods = {
+        clickPowerPct: 0,
+        drillSpeedPct: 0,
+        heatGenPct: 0,
+        resourceMultPct: 0,
+        luckPct: 0
+    };
+
+    equippedArtifacts.forEach(id => {
+        const item = inventory[id];
+        if (item) {
+            const def = ARTIFACTS.find(a => a.id === item.defId);
+            if (def && def.modifiers) {
+                if (def.modifiers.clickPowerPct) artifactMods.clickPowerPct += def.modifiers.clickPowerPct;
+                if (def.modifiers.drillSpeedPct) artifactMods.drillSpeedPct += def.modifiers.drillSpeedPct;
+                if (def.modifiers.heatGenPct) artifactMods.heatGenPct += def.modifiers.heatGenPct;
+                if (def.modifiers.resourceMultPct) artifactMods.resourceMultPct += def.modifiers.resourceMultPct;
+                if (def.modifiers.luckPct) artifactMods.luckPct += def.modifiers.luckPct;
+            }
+        }
+    });
+
+    const skillMods = calculateSkillModifiers(skillLevels);
+
+    // --- HARDCORE MECHANICS ---
+
+    // 1. Density Penalty
+    const requiredTier = getRockDensity(currentDepth);
+    const tierDiff = drill.bit.tier - requiredTier;
+    let drillingEfficiency = 1.0;
+
+    if (tierDiff < 0) {
+        // Exponential penalty: 0.5x per missing tier
+        drillingEfficiency = Math.pow(0.5, Math.abs(tierDiff));
+        // Hard cap minimum speed to avoid total softlock (1%)
+        drillingEfficiency = Math.max(0.01, drillingEfficiency);
+    }
+
+    // 2. Ambient Heat
+    const ambientHeat = getAmbientTemp(currentDepth);
+    // Cooling becomes harder deep underground (air is hot)
+    const coolingEfficiencyEnv = Math.max(0.1, 1.0 - (currentDepth / 100000));
+
+    // [DEV_CONTEXT: EVASION PROTOCOL]
+    // Base formula: 0.5% per tier of Engine + Logic
+    const baseEvasion = (drill.engine.tier * 0.5) + (drill.logic.tier * 0.5);
+    // Hard Cap 60%
+    const totalEvasion = Math.min(60, baseEvasion);
+
+    return {
+        energyProd,
+        energyCons,
+        energyEfficiency,
+        totalDamage: drill.bit.baseStats.damage * energyEfficiency * drillingEfficiency,
+        totalSpeed: drill.engine.baseStats.speed * energyEfficiency * drillingEfficiency,
+        totalCooling: drill.cooling.baseStats.cooling * energyEfficiency * coolingEfficiencyEnv,
+        torque: drill.gearbox.baseStats.torque || 0,
+        critChance: drill.logic.baseStats.critChance,
+        luck: (drill.logic.baseStats.luck || 0) + artifactMods.luckPct,
+        predictionTime: drill.logic.baseStats.predictionTime || 0,
+        clickMult: drill.control.baseStats.clickMultiplier,
+        ventSpeed: drill.control.baseStats.ventSpeed || 1.0,
+        defense: drill.armor.baseStats.defense,
+        evasion: totalEvasion,
+        hazardResist: drill.armor.baseStats.hazardResist || 0,
+        integrity: drill.hull.baseStats.maxIntegrity,
+        regen: drill.hull.baseStats.regen || 0,
+        droneEfficiency: drill.power.baseStats.droneEfficiency || 1.0,
+        skillMods,
+        artifactMods,
+        // Exposed for UI/Logic
+        drillingEfficiency,
+        ambientHeat,
+        requiredTier
+    };
+};
+
+export const getResourceLabel = (res: string): string => {
+    const labels: Record<string, string> = {
+        clay: 'ГЛИНА', stone: 'КАМЕНЬ', copper: 'МЕДЬ', iron: 'ЖЕЛЕЗО', silver: 'СЕРЕБРО',
+        gold: 'ЗОЛОТО', titanium: 'ТИТАН', uranium: 'УРАН', nanoSwarm: 'НАНО',
+        ancientTech: 'TECH', rubies: 'РУБИН', emeralds: 'ИЗУМР', diamonds: 'АЛМАЗ',
+        XP: 'XP', DEPTH: 'ГЛУБИНА'
+    };
+    return labels[res] || res.toUpperCase();
+};
