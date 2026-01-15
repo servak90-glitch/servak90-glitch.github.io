@@ -9,7 +9,6 @@
 import { GameState, VisualEvent, Resources } from '../types';
 import { calculateStats } from './gameMath';
 import { narrativeManager } from './narrativeManager';
-import { coolingManager } from './CoolingManager'; // NEW
 
 import { audioEngine } from './audioEngine';
 import {
@@ -82,8 +81,7 @@ export class GameEngine {
         const eventsResult = processEvents(state, stats);
         visualEvents.push(...eventsResult.events);
 
-        // UPDATE COOLING MANAGER (RHYTHM)
-        const coolingState = coolingManager.update(dt, state.heat);
+        // COOLING MANAGER moved to separate high-frequency loop
 
         // 4. Щит
         const shieldResult = processShield(state);
@@ -203,11 +201,28 @@ export class GameEngine {
                 // Ресурсы и HP
                 resources: newResources,
                 integrity,
-                xp: (eventsResult.update.xp ?? 0) + (combatResult.update.xp ?? 0) + (state.xp - state.xp), // Logic error in source? combatResult returns total or delta? 
-                // combatResult usually returns new XP value? No, let's assume it returns updated value.
-                // Let's safe check:
-                // If combat updated XP, use it. If event updated XP, add the difference?
-                // Simplification:
+                xp: (combatResult.update.xp ?? state.xp), // Combat XP updates
+
+                // === БОЙ И СУЩНОСТИ (КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ) ===
+                currentBoss: combatResult.update.currentBoss,
+                combatMinigame: combatResult.update.combatMinigame,
+                bossAttackTick: combatResult.update.bossAttackTick,
+                lastBossDepth: combatResult.update.lastBossDepth,
+                flyingObjects: entityResult.update.flyingObjects,
+
+                // События
+                eventQueue: eventsResult.update.eventQueue,
+                eventCheckTick: eventsResult.update.eventCheckTick,
+                recentEventIds: eventsResult.update.recentEventIds,
+
+                // Эффекты и анализатор
+                activeEffects,
+                analyzer: analyzerResult.update.analyzer,
+                inventory: newInventory,
+
+                // Нарратив
+                narrativeTick,
+                aiState,
             },
             events: visualEvents
         };

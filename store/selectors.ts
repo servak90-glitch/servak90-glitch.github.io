@@ -19,6 +19,7 @@ export const useGameCore = () => useGameStore(
         enterGame: s.enterGame,
         manualLoad: s.manualLoad,
         tick: s.tick,
+        updateCooling: s.updateCooling,
     }))
 );
 

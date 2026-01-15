@@ -17,7 +17,7 @@ import {
     GEARBOXES, POWER_CORES, ARMORS, DRONES, FUSION_RECIPES
 } from '../constants';
 import { gameEngine } from '../services/GameEngine';
-import { coolingManager } from '../services/CoolingManager'; // NEW
+// Cooling imported removed
 import { calculateStats, getResourceLabel, calculateRepairCost, calculateShieldRechargeCost } from '../services/gameMath';
 import { audioEngine } from '../services/audioEngine';
 import { generateQuestBatch } from '../services/questRegistry';
@@ -56,7 +56,6 @@ interface EventActions {
     setCoolingGame: (active: boolean) => void;
     forceVentHeat: (amount: number) => void;
     triggerOverheat: () => void;
-    attemptVent: () => void; // NEW
 }
 
 interface AdminActions {
@@ -134,16 +133,7 @@ const INITIAL_STATE: GameState = {
     aiState: 'LUCID',
     narrativeTick: 0,
 
-    // COOLING STATE
-    cooling: {
-        isActive: false,
-        pulseSize: 1.0,
-        targetSize: 1.0,
-        perfectWindow: 0.15,
-        goodWindow: 0.4,
-        combo: 0,
-        cooldownTimer: 0
-    },
+    // SETTINGS
     // SETTINGS
     settings: { musicVolume: 0.5, sfxVolume: 0.5, musicMuted: false, sfxMuted: false, language: 'RU' },
     selectedBiome: null,
@@ -301,7 +291,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const queue = s.actionLogQueue;
         const allEvents = [...events, ...queue];
 
-        set({ ...partialState, activeView: nextView, actionLogQueue: [] });
+        set({
+            ...partialState,
+            activeView: nextView,
+            actionLogQueue: [],
+        });
+
+        // Handle audio events from tick
+        events.forEach(e => {
+            if (e.type === 'SOUND' && e.sfx) {
+                if (e.sfx === 'LOG') audioEngine.playLog();
+                if (e.sfx === 'GLITCH') audioEngine.playGlitch();
+            }
+        });
+
         return allEvents;
     },
 

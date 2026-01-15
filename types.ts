@@ -419,19 +419,9 @@ export interface TunnelPropDef {
 }
 
 // --- ACTIVE COOLING (RHYTHM) ---
-export interface CoolingState {
-  isActive: boolean;
-  pulseSize: number; // 0.5 to 1.5
-  targetSize: number; // 1.0 is perfect
-  perfectWindow: number; // +/- 0.1
-  goodWindow: number; // +/- 0.3
-  combo: number;
-  lastVentResult?: 'PERFECT' | 'GOOD' | 'MISS' | 'COOLDOWN';
-  cooldownTimer: number;
-}
+
 
 export interface GameState {
-  cooling: CoolingState;
   depth: number;
   resources: Resources;
   heat: number;

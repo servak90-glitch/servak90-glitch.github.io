@@ -30,7 +30,11 @@
     "PROTOCOL: DISCUSSION_FIRST. Любые изменения кода должны предваряться обсуждением концепции.",
     "PROTOCOL: SIMULATION. Перед кодингом провести мысленную симуляцию работы новой механики и выявить краевые случаи (Edge Cases).",
     "PROTOCOL: USER_APPROVAL. Переход к следующему этапу или внедрение кода ТОЛЬКО после явного согласия пользователя.",
-    "PERSISTENCE: Данный контекст является законом для модели."
+    "PERSISTENCE: Данный контекст является законом для модели.",
+    "PROTOCOL: TOOL_USAGE_MAXIMIZATION. Всегда использовать доступные MCP инструменты (Context7, Memory, Brave) вместо общих знаний.",
+    "PROTOCOL: DOCS_FIRST. Для PixiJS, React, Zustand, Framer Motion - ВСЕГДА проверять Context7 перед сложной имплементацией.",
+    "PROTOCOL: MEMORY_READ. При начале сессии считывать 'Improvement Plans' из Memory Graph.",
+    "PROTOCOL: WEB_SEARCH. Использовать Brave Search для поиска современных (2025+) практик и решений."
   ],
   "narrative_roadmap": {
     "status": "TBD",
@@ -44,14 +48,11 @@
     "steps": []
   },
   "last_changes": {
-    "date": "2026-01-17",
-    "description": "UI OVERHAUL: Implemented Micro-HUD system. Replaced bulky floating stats with a compact Header and Status Strip. Added dedicated Menu Overlay and number formatting (1k, 1M).",
+    "date": "2026-01-16",
+    "description": "TUNNEL ATMOSPHERE: Added floating debris (40 rocks with parallax), depth-based fog gradient, and hazard event system (CAVE_IN shake, GAS_POCKET mist, MAGMA_FLOW glow). New isolated module TunnelAtmosphere.ts integrated into PixiOverlay.",
     "affected_files": [
-      "components/layout/GameHeader.tsx",
-      "components/layout/StatusStrip.tsx",
-      "components/MenuOverlay.tsx",
-      "App.tsx",
-      "services/gameMath.ts",
+      "services/systems/TunnelAtmosphere.ts",
+      "components/PixiOverlay.tsx",
       "DEV_CONTEXT.json"
     ]
   }

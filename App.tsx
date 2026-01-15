@@ -31,7 +31,6 @@ import AICompanion from './components/AICompanion';
 import SettingsModal from './components/SettingsModal';
 import CodexView from './components/CodexView';
 import CoolingMinigame from './components/CoolingMinigame';
-import CoolingOverlay from './components/CoolingOverlay'; // NEW
 import CombatMinigameOverlay from './components/CombatMinigameOverlay';
 import HelpModal from './components/HelpModal';
 import DevTools from './components/DevTools';
@@ -90,7 +89,7 @@ const App: React.FC = () => {
     }, [manualLoad]);
 
 
-    // --- GAME LOOP ---
+    // --- GAME LOOP (LOGIC: 10FPS) ---
     useEffect(() => {
         if (!isGameActive) return;
 
@@ -104,6 +103,7 @@ const App: React.FC = () => {
             const safeDt = Math.min(dt, 0.5);
 
             const events = tick(safeDt);
+            // ... process events ...
             events.forEach(e => {
                 if (e.type === 'LOG') addLog(e.msg, e.color);
                 else if (e.type === 'TEXT') textRef.current?.addText(e.x, e.y, e.text, e.style);
@@ -187,7 +187,6 @@ const App: React.FC = () => {
         if (e.cancelable) e.preventDefault();
         setDrilling(false);
     };
-
     const availableBiomes = useMemo(() => BIOMES.filter(b => depth >= b.depth), [depth]);
     const currentBiome = selectedBiome
         ? BIOMES.find(b => b.name === selectedBiome) || BIOMES[0]
@@ -390,9 +389,6 @@ const App: React.FC = () => {
             {/* --- LAYER 3: OVERLAYS (Z-50+) --- */}
             {combatMinigame && combatMinigame.active && <CombatMinigameOverlay type={combatMinigame.type} difficulty={combatMinigame.difficulty} onComplete={completeCombatMinigame} />}
             {eventQueue.length > 0 && <EventModal event={eventQueue[0]} onOptionSelect={handleEventOption} />}
-
-            {/* NEW: COOLING RHYTHM UI */}
-            <CoolingOverlay />
 
             {/* MENUS */}
             <MenuOverlay
