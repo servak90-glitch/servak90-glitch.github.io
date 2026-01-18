@@ -1,6 +1,6 @@
 
 import { SliceCreator } from './types';
-import { ResourceType, View } from '../../types';
+import { ResourceType, View, Resources } from '../../types';
 import { EVENTS } from '../../services/eventRegistry';
 import { generateBoss } from '../../services/bossRegistry';
 import { audioEngine } from '../../services/audioEngine';
@@ -22,6 +22,15 @@ export interface AdminActions {
     adminSpawnBoss: () => void;
     adminTriggerEvent: (eventId: string) => void;
     adminClearEvents: () => void;
+    adminMaxSkills: () => void;
+    adminCompleteActiveQuests: () => void;
+    adminIdentifyAll: () => void;
+    adminMaxDrones: () => void;
+    adminInstantHeal: () => void;
+    adminAddXP: (amount: number) => void;
+    adminForceRaid: () => void;
+    adminAddLevel: (amount: number) => void;
+    adminClearEffects: () => void;
 }
 
 export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
@@ -120,4 +129,98 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
         }
     },
     adminClearEvents: () => set({ eventQueue: [] }),
+
+    adminMaxSkills: () => {
+        const { SKILLS } = require('../../services/skillRegistry');
+        const maxSkills: Record<string, number> = {};
+        SKILLS.forEach((s: any) => {
+            maxSkills[s.id] = s.maxLevel === 999 ? 100 : s.maxLevel;
+        });
+        set({ skillLevels: maxSkills });
+    },
+
+    adminCompleteActiveQuests: () => {
+        const s = get() as any;
+        if (!s.activeQuests || s.activeQuests.length === 0) return;
+
+        // Клонируем массив, так как completeQuest модифицирует его
+        const questIds = s.activeQuests.map((q: any) => q.id);
+
+        questIds.forEach((id: string) => {
+            // Форсируем выполнение objectives
+            set(state => {
+                const qIdx = state.activeQuests.findIndex(q => q.id === id);
+                if (qIdx === -1) return {};
+                const quest = state.activeQuests[qIdx];
+                const newObjectives = quest.objectives.map(obj => ({ ...obj, current: obj.required }));
+                const newActive = [...state.activeQuests];
+                newActive[qIdx] = { ...quest, objectives: newObjectives };
+                return { activeQuests: newActive };
+            });
+            // Вызываем стандартный метод завершения
+            s.completeQuest(id);
+        });
+    },
+
+    adminIdentifyAll: () => set(s => {
+        const newInv = { ...s.inventory };
+        Object.keys(newInv).forEach(id => {
+            newInv[id] = { ...newInv[id], isIdentified: true };
+        });
+        return { inventory: newInv };
+    }),
+
+    adminMaxDrones: () => {
+        const { DroneType } = require('../../types');
+        const maxDrones: any = {};
+        Object.values(DroneType).forEach(type => {
+            maxDrones[type as any] = 10; // Предположим макс 10
+        });
+        set({ droneLevels: maxDrones });
+    },
+
+    adminInstantHeal: () => set({ heat: 0, integrity: 100 }),
+
+    adminAddXP: (amount) => set(s => ({ xp: (s.xp || 0) + amount })),
+
+    adminForceRaid: () => {
+        const s = get();
+        const activeBases = s.playerBases.filter(b => b.status === 'active');
+        if (activeBases.length === 0) return;
+        const target = activeBases[Math.floor(Math.random() * activeBases.length)];
+
+        const { raidSystem } = require('../../services/systems/RaidSystem');
+        const threat = raidSystem.calculateThreatLevel(target, s.globalReputation);
+        const result = raidSystem.resolveRaid(target);
+
+        const events: any[] = [];
+        if (result.success) {
+            events.push({ type: 'LOG', msg: `🛡️ [DEV] ОТБИТ РЕЙД НА ${target.regionId}: ${result.logMessage}`, color: 'text-green-400' });
+            events.push({ type: 'SOUND', sfx: 'RAID_SUCCESS' });
+        } else {
+            events.push({ type: 'LOG', msg: `⚠️ [DEV] БАЗА ${target.regionId} РАЗГРАБЛЕНА: ${result.logMessage}`, color: 'text-red-500 font-bold' });
+            events.push({ type: 'SCREEN_SHAKE', intensity: 10, duration: 500 });
+            events.push({ type: 'SOUND', sfx: 'RAID_ALARM' });
+            events.push({ type: 'SOUND', sfx: 'RAID_FAILURE' });
+
+            // Apply resources loss
+            set(state => ({
+                playerBases: state.playerBases.map(b => b.id === target.id ? {
+                    ...b,
+                    storedResources: Object.keys(b.storedResources).reduce((acc: any, key: any) => {
+                        const cur = b.storedResources[key as keyof Resources] || 0;
+                        const stolen = result.stolenResources[key as keyof Resources] || 0;
+                        acc[key] = Math.max(0, cur - stolen);
+                        return acc;
+                    }, {})
+                } : b)
+            }));
+        }
+
+        set(state => ({ actionLogQueue: [...state.actionLogQueue, ...events] }));
+    },
+
+    adminAddLevel: (amount) => set(s => ({ level: Math.max(1, (s.level || 1) + amount) })),
+
+    adminClearEffects: () => set({ activeEffects: [] }),
 });

@@ -120,9 +120,12 @@ const DevTools: React.FC = () => {
         {activeTab === 'RES' && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => store.adminAddResources(1000000, 0)} className="border border-green-700 hover:bg-green-900 p-2">+1M COMMON</button>
-              <button onClick={() => store.adminAddResources(0, 1000)} className="border border-green-700 hover:bg-green-900 p-2">+1K RARE</button>
-              <button onClick={store.adminResetResources} className="border border-red-700 text-red-500 hover:bg-red-900/20 p-2 col-span-2">RESET WALLET</button>
+              <button onClick={() => store.adminAddResources(1000000, 0)} className="border border-green-700 hover:bg-green-900 p-2 text-[9px]">+1M COM</button>
+              <button onClick={() => store.adminAddResources(0, 1000)} className="border border-green-700 hover:bg-green-900 p-2 text-[9px]">+1K RARE</button>
+              <button onClick={() => store.adminAddXP(1000000)} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-2 text-[9px]">+1M XP</button>
+              <button onClick={() => store.adminAddLevel(1)} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-2 text-[9px]">+1 LVL</button>
+              <button onClick={store.adminIdentifyAll} className="border border-purple-700 text-purple-400 hover:bg-purple-900/30 p-2 text-[9px]">ID ALL ARTIF.</button>
+              <button onClick={store.adminResetResources} className="border border-red-700 text-red-500 hover:bg-red-900/20 p-2 text-[9px]">RESET WALLET</button>
             </div>
 
             {/* ARTIFACT SPAWNER */}
@@ -182,9 +185,13 @@ const DevTools: React.FC = () => {
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              <button onClick={store.adminUnlockAll} className="border border-green-700 hover:bg-green-900 p-2">UNLOCK ALL</button>
-              <button onClick={store.adminMaxTech} className="border border-green-700 hover:bg-green-900 p-2">MAX TECH</button>
-              <button onClick={() => store.adminInstantComplete()} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-2 col-span-2">FINISH EXPEDITIONS</button>
+              <button onClick={store.adminUnlockAll} className="border border-green-700 hover:bg-green-900 p-1 text-[9px]">UNLOCK ALL</button>
+              <button onClick={store.adminMaxSkills} className="border border-green-700 hover:bg-green-900 p-1 text-[9px]">MAX SKILLS</button>
+              <button onClick={store.adminMaxDrones} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-1 text-[9px]">MAX DRONES</button>
+              <button onClick={store.adminMaxTech} className="border border-green-700 hover:bg-green-900 p-1 text-[9px]">MAX TECH</button>
+              <button onClick={store.adminInstantHeal} className="border border-red-700 text-red-400 hover:bg-red-900/20 p-1 text-[9px]">INSTANT HEAL</button>
+              <button onClick={store.adminCompleteActiveQuests} className="border border-amber-700 text-amber-400 hover:bg-amber-900/20 p-1 text-[9px]">FINISH QUESTS</button>
+              <button onClick={() => store.adminInstantComplete()} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-1 text-[9px] col-span-2 text-center">FINISH EXPEDITIONS</button>
 
               {/* HORIZONTAL PROGRESSION DEBUG */}
               <div className="col-span-2 border-t border-zinc-800 pt-2 mt-2">
@@ -193,6 +200,10 @@ const DevTools: React.FC = () => {
                   <button onClick={() => (store as any).addReputation?.('CORPORATE', 100)} className="border border-zinc-600 text-[10px] hover:bg-zinc-800">+CORP</button>
                   <button onClick={() => (store as any).addReputation?.('SCIENCE', 100)} className="border border-cyan-600 text-[10px] hover:bg-cyan-900">+SCI</button>
                   <button onClick={() => (store as any).addReputation?.('REBELS', 100)} className="border border-amber-600 text-[10px] hover:bg-amber-900">+REB</button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <button onClick={() => store.adminClearEvents()} className="border border-blue-900 text-blue-400 hover:bg-blue-950 p-1 text-[8px]">CLEAR EVT</button>
+                  <button onClick={() => store.adminClearEffects()} className="border border-blue-900 text-blue-400 hover:bg-blue-950 p-1 text-[8px]">CLEAR EFF</button>
                 </div>
                 <button onClick={() => store.adminTriggerEvent('SIDE_TUNNEL_DISCOVERY')} className="w-full mt-2 border border-purple-600 text-purple-400 hover:bg-purple-900/30 p-2 text-xs">TRIGGER SIDE TUNNEL</button>
               </div>
@@ -300,12 +311,13 @@ const DevTools: React.FC = () => {
 
             {/* БАЗЫ */}
             <div className="border-t border-green-800 pt-2">
-              <div className="text-green-500 text-[10px] mb-1">🏗️ CREATE BASE</div>
+              <div className="text-green-500 text-[10px] mb-1">🏗️ CREATE BASE / RAID</div>
               <div className="grid grid-cols-3 gap-1">
                 <button onClick={() => (store as any).adminCreateBase?.('outpost')} className="border border-zinc-600 hover:bg-zinc-800 p-1 text-[8px]">OUTPOST</button>
                 <button onClick={() => (store as any).adminCreateBase?.('camp')} className="border border-blue-600 hover:bg-blue-900/30 p-1 text-[8px]">CAMP</button>
                 <button onClick={() => (store as any).adminCreateBase?.('station')} className="border border-purple-600 hover:bg-purple-900/30 p-1 text-[8px]">STATION</button>
               </div>
+              <button onClick={store.adminForceRaid} className="w-full mt-1 border border-red-700 text-red-400 hover:bg-red-900/30 p-1 text-[9px]">FORCE BASE RAID</button>
             </div>
 
             {/* КАРАВАНЫ */}
