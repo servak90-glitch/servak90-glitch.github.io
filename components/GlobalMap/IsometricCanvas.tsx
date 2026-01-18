@@ -98,24 +98,72 @@ export const IsometricCanvas: React.FC<IsometricCanvasProps> = ({ regions, activ
 
             let isDragging = false;
             let lastPos = { x: 0, y: 0 };
+            let dragDistance = 0;
+
+            // Pinch-to-zoom state
+            const activePointers = new Map<number, { x: number, y: number }>();
+            let lastPinchDist = 0;
 
             app.stage.on('pointerdown', (e) => {
-                isDragging = true;
-                lastPos = { x: e.global.x, y: e.global.y };
+                activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
+
+                if (activePointers.size === 1) {
+                    isDragging = true;
+                    lastPos = { x: e.global.x, y: e.global.y };
+                    dragDistance = 0;
+                } else if (activePointers.size === 2) {
+                    isDragging = false; // Disable dragging when pinching
+                    const points = Array.from(activePointers.values());
+                    lastPinchDist = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+                }
             });
 
             app.stage.on('pointermove', (e) => {
-                if (isDragging) {
+                activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
+
+                if (activePointers.size === 1 && isDragging) {
                     const dx = e.global.x - lastPos.x;
                     const dy = e.global.y - lastPos.y;
                     mapContainer.x += dx;
                     mapContainer.y += dy;
+                    dragDistance += Math.sqrt(dx * dx + dy * dy);
                     lastPos = { x: e.global.x, y: e.global.y };
+                } else if (activePointers.size === 2) {
+                    const points = Array.from(activePointers.values());
+                    const dist = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+
+                    if (lastPinchDist > 0) {
+                        const zoomFactor = dist / lastPinchDist;
+                        const newScale = mapContainer.scale.x * zoomFactor;
+
+                        // Clamp Zoom
+                        if (newScale > 0.5 && newScale < 3.0) {
+                            mapContainer.scale.set(newScale);
+                        }
+                    }
+                    lastPinchDist = dist;
                 }
             });
 
-            app.stage.on('pointerup', () => { isDragging = false; });
-            app.stage.on('pointerupoutside', () => { isDragging = false; });
+            const onPointerUp = (e: PIXI.FederatedPointerEvent) => {
+                activePointers.delete(e.pointerId);
+                if (activePointers.size < 2) {
+                    lastPinchDist = 0;
+                }
+                if (activePointers.size === 0) {
+                    isDragging = false;
+                } else if (activePointers.size === 1) {
+                    // Resume dragging with the remaining finger
+                    const remaining = activePointers.values().next().value;
+                    if (remaining) {
+                        lastPos = { x: remaining.x, y: remaining.y };
+                        isDragging = true;
+                    }
+                }
+            };
+
+            app.stage.on('pointerup', onPointerUp);
+            app.stage.on('pointerupoutside', onPointerUp);
 
             // Zoom (Wheel)
             const wheelHandler = (e: WheelEvent) => {
@@ -142,7 +190,11 @@ export const IsometricCanvas: React.FC<IsometricCanvasProps> = ({ regions, activ
                 sprite.cursor = 'pointer';
                 sprite.label = regionId;
 
-                sprite.on('pointerdown', () => onRegionSelect(regionId));
+                sprite.on('pointerup', (e) => {
+                    if (dragDistance < 10) {
+                        onRegionSelect(regionId);
+                    }
+                });
                 sprite.on('pointerover', () => {
                     sprite.alpha = 1.0;
                     sprite.scale.set(1.05);

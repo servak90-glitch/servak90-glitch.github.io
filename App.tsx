@@ -202,7 +202,31 @@ const App: React.FC = () => {
         setLogs([{ msg: t(TEXT_IDS.AI_INIT, lang), color: 'text-zinc-400' }]);
         addLog(t(TEXT_IDS.AI_READY, lang));
         enterGame();
+
+        // Попытка войти в полноэкранный режим на мобильных
+        if (window.innerWidth < 1024) {
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => { });
+                }
+            } catch (e) { }
+        }
     };
+
+    // Хук для определения мобильного устройства
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Авто-скрытие адресной панели (старый метод)
+    useEffect(() => {
+        if (isMobile) {
+            window.scrollTo(0, 1);
+        }
+    }, [isMobile]);
 
     // [DEV_CONTEXT: HARDCORE MATH] Added depth to stats calc
     const stats = useMemo(() => calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth), [drill, skillLevels, equippedArtifacts, inventory, depth]);
@@ -302,8 +326,21 @@ const App: React.FC = () => {
             <div className="absolute inset-0 z-10 flex flex-col pointer-events-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
 
                 {/* NEW HEADER & STATUS STRIP */}
-                <GameHeader onOpenMenu={() => setIsMenuOpen(true)} />
-                {(activeView === View.DRILL || activeView === View.COMBAT) && <StatusStrip />}
+                {(!isMobile || (activeView !== View.DRILL && activeView !== View.COMBAT)) && (
+                    <GameHeader onOpenMenu={() => setIsMenuOpen(true)} />
+                )}
+
+                {/* Mobile Menu Trigger (when header is hidden) */}
+                {isMobile && (activeView === View.DRILL || activeView === View.COMBAT) && (
+                    <button
+                        onClick={() => setIsMenuOpen(true)}
+                        className="absolute top-2 right-2 z-50 p-2 bg-black/40 border border-zinc-800 rounded text-zinc-400 pointer-events-auto"
+                    >
+                        ☰
+                    </button>
+                )}
+
+                {(activeView === View.DRILL || activeView === View.COMBAT) && !isMobile && <StatusStrip />}
                 <ActiveEffects />
 
                 {/* MAIN VIEWPORT */}
