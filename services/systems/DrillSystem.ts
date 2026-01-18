@@ -66,7 +66,8 @@ export function processDrilling(
     activeEffects: GameState['activeEffects'],
     isDrilling: boolean,
     isOverheated: boolean,
-    dt: number
+    dt: number,
+    activePerks: string[] = []
 ): { update: DrillUpdate; resourceChanges: ResourceChanges; events: VisualEvent[] } {
     const events: VisualEvent[] = [];
     const resourceChanges: ResourceChanges = {};
@@ -131,6 +132,11 @@ export function processDrilling(
             if (e.modifiers.resourceMultiplier) resMult *= e.modifiers.resourceMultiplier;
         });
 
+        // Perk: Executive (Corporate Level 10) - Passive generation/extraction x2
+        if (activePerks.includes('EXECUTIVE')) {
+            resMult *= 2;
+        }
+
         // Итоговая мощность бурения
         let drillPower = stats.totalSpeed * speedPenalty * speedMult;
         if (state.isOverdrive) drillPower *= 100;
@@ -147,10 +153,10 @@ export function processDrilling(
 
         // Добыча ресурсов
         const currentBiome = state.selectedBiome
-            ? BIOMES.find(b => b.name === state.selectedBiome) || BIOMES[0]
+            ? BIOMES.find(b => (typeof b.name === 'string' ? b.name : b.name.EN) === state.selectedBiome) || BIOMES[0]
             : BIOMES.slice().reverse().find(b => depth >= b.depth) || BIOMES[0];
 
-        const resToAdd = drillPower * 0.3 * resMult * dt;
+        const resToAdd = drillPower * 1.0 * resMult * dt; // Увеличено с 0.3 до 1.0
         resourceChanges[currentBiome.resource] = (resourceChanges[currentBiome.resource] || 0) + resToAdd;
 
         // [VISUALS] Mining Effects
@@ -164,12 +170,12 @@ export function processDrilling(
             });
         }
 
-        // Floating Text - ограничиваем частоту появления через dt
-        if (resToAdd >= 1 || (resToAdd > 0 && Math.random() < 0.1 * dt * 60)) {
+        // Floating Text - показываем даже малые значения для фидбека
+        if (resToAdd > 0 && Math.random() < 0.2 * dt * 60) {
             events.push({
                 type: 'TEXT',
                 position: 'CENTER',
-                text: `+${resToAdd >= 10 ? Math.floor(resToAdd) : resToAdd.toFixed(1)} ${currentBiome.resource.toUpperCase()}`,
+                text: `+${resToAdd < 1 ? resToAdd.toFixed(2) : resToAdd < 10 ? resToAdd.toFixed(1) : Math.floor(resToAdd)} ${currentBiome.resource.toUpperCase()}`,
                 style: 'RESOURCE'
             });
         }

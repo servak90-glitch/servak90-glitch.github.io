@@ -66,7 +66,8 @@ export const FUEL_BASE_COST_MULTIPLIER = 0.1;  // 0.1 coal per unit distance
 export function calculateFuelCost(
     distance: number,
     fuelType: ResourceType,
-    cargoRatio: number = 0
+    cargoRatio: number = 0,
+    activePerks: string[] = []
 ): number {
     const efficiency = FUEL_EFFICIENCY[fuelType] || 0;
 
@@ -84,7 +85,14 @@ export function calculateFuelCost(
     // Штраф за груз: +50% при полном грузе
     const cargoPenalty = 1 + (cargoRatio * 0.5);
 
-    return Math.ceil(costAfterEfficiency * cargoPenalty);
+    let finalCost = costAfterEfficiency * cargoPenalty;
+
+    // Perk: Smuggler Routes (-20% fuel cost)
+    if (activePerks.includes('SMUGGLER')) {
+        finalCost *= 0.8;
+    }
+
+    return Math.ceil(finalCost);
 }
 
 /**

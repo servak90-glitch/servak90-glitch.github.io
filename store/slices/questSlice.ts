@@ -38,6 +38,9 @@ export interface QuestSlice {
     // Провалить квест
     failQuest: (questId: string) => void;
 
+    // Обновить доступные контракты
+    refreshQuests: (cost?: number) => void;
+
     // Проверить автоматический прогресс всех активных квестов (вызывается в GameEngine)
     checkAllQuestsProgress: () => void;
 }
@@ -89,6 +92,7 @@ export const createQuestSlice: SliceCreator<QuestSlice> = (set, get) => ({
 
     updateQuestObjective: (questId, objectiveId, progress) => {
         set((state) => {
+            if (!Array.isArray(state.activeQuests)) return {};
             const questIndex = state.activeQuests.findIndex(q => q.id === questId);
             if (questIndex === -1) return {};
 
@@ -113,6 +117,8 @@ export const createQuestSlice: SliceCreator<QuestSlice> = (set, get) => ({
 
     completeQuest: (questId) => {
         const state = get();
+        if (!Array.isArray(state.activeQuests)) return;
+
         const questIndex = state.activeQuests.findIndex(q => q.id === questId);
 
         if (questIndex === -1) {
@@ -155,7 +161,6 @@ export const createQuestSlice: SliceCreator<QuestSlice> = (set, get) => ({
             console.log(`🎉 Квест "${quest.title}" завершён!`);
             console.log(`Награды:`, rewards);
 
-            // TODO Phase 3: Интеграция unlocks и blueprints
             const newUnlockedBlueprints = [...(state.unlockedBlueprints || [])];
             let blueprintsChanged = false;
 
@@ -168,9 +173,6 @@ export const createQuestSlice: SliceCreator<QuestSlice> = (set, get) => ({
                     }
                 });
             }
-
-            // Также обрабатываем rewards.unlocks (караваны, механики)
-            // (Пока заглушка, т.к. requires implementation in specific systems)
 
             return {
                 activeQuests: newActiveQuests,
@@ -185,6 +187,7 @@ export const createQuestSlice: SliceCreator<QuestSlice> = (set, get) => ({
 
     failQuest: (questId) => {
         set((state) => {
+            if (!Array.isArray(state.activeQuests)) return {};
             const questIndex = state.activeQuests.findIndex(q => q.id === questId);
             if (questIndex === -1) return {};
 
@@ -201,16 +204,56 @@ export const createQuestSlice: SliceCreator<QuestSlice> = (set, get) => ({
         });
     },
 
+    refreshQuests: (cost = 100) => {
+        const state = get();
+        if (state.resources.clay >= cost) {
+            // Мы просто тратим глину и меняем lastQuestRefresh
+            // Компонент QuestPanel сам подхватит изменение и перерендерится
+            const newRes = { ...state.resources, clay: state.resources.clay - cost };
+
+            set({
+                resources: newRes,
+                lastQuestRefresh: Date.now()
+            });
+
+            console.log("📜 Контракты обновлены");
+        }
+    },
+
     checkAllQuestsProgress: () => {
         const state = get();
+
+        // [CRITICAL FIX] Защита от поврежденного состояния
+        // Если это не массив, сбрасываем в [], чтобы не ложило весь движок
+        if (!Array.isArray(state.activeQuests)) {
+            console.error("❌ КРИТИЧЕСКАЯ ОШИБКА: state.activeQuests не является массивом! Сброс...", state.activeQuests);
+            set({ activeQuests: [] });
+            return;
+        }
+
+        // Дополнительная защита для завершенных и проваленных квестов
+        if (!Array.isArray(state.completedQuestIds) || !Array.isArray(state.failedQuestIds)) {
+            set({
+                completedQuestIds: Array.isArray(state.completedQuestIds) ? state.completedQuestIds : [],
+                failedQuestIds: Array.isArray(state.failedQuestIds) ? state.failedQuestIds : []
+            });
+            return;
+        }
+
         let hasChanges = false;
 
         const updatedQuests = state.activeQuests.map(quest => {
+            if (!quest || !quest.id) return quest;
+
             // Проверка истечения времени
             if (isQuestExpired(quest, Date.now())) {
                 console.warn(`⏰ Квест "${quest.title}" истёк`);
-                // Автоматический fail через action
-                setTimeout(() => (get() as any).failQuest(quest.id), 0);
+                setTimeout(() => {
+                    const currentState = get() as any;
+                    if (typeof currentState.failQuest === 'function') {
+                        currentState.failQuest(quest.id);
+                    }
+                }, 0);
                 return quest;
             }
 

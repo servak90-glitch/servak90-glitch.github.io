@@ -7,6 +7,8 @@ import { abilitySystem } from '../services/systems/AbilitySystem';
 import { checkWeakness } from '../services/systems/CombatSystem';
 import { AbilityType } from '../types';
 import BossOverlay from './BossOverlay';
+import { t } from '../services/localization';
+
 
 interface CombatOverlayProps {
     onDrillStart: (e: any) => void;
@@ -19,6 +21,8 @@ const CombatOverlay: React.FC<CombatOverlayProps> = ({ onDrillStart, onDrillEnd,
     const { currentBoss } = useCombatState();
     const { depth, heat, shieldCharge, resources } = useDrillState();
     const { isDrilling, isOverheated } = useDrillActions();
+    const lang = useGameStore(state => state.settings.language);
+
 
     // We need active abilities from state
     const activeAbilities = useGameStore(state => state.activeAbilities || []);
@@ -45,7 +49,8 @@ const CombatOverlay: React.FC<CombatOverlayProps> = ({ onDrillStart, onDrillEnd,
             {/* BOSS HEALTH BAR */}
             <div className="absolute top-4 left-0 right-0 z-30 flex flex-col items-center px-4 pointer-events-auto">
                 <h2 className={`text-lg md:text-2xl font-black pixel-text mb-2 drop-shadow-[0_0_10px_red] text-center ${currentBoss.isMob ? 'text-orange-500' : 'text-red-600'}`}>
-                    {currentBoss.name}
+                    {t(currentBoss.name, lang)}
+
                     {currentBoss.phases && currentBoss.phases[0] > 1 && <span className="text-sm ml-2 animate-pulse text-yellow-400">PHASE {currentBoss.phases[0]}</span>}
                 </h2>
                 <div className="w-full max-w-lg h-4 md:h-8 bg-black border-2 border-red-800 relative overflow-hidden">

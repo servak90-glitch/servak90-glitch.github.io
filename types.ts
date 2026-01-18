@@ -12,6 +12,8 @@ export enum View {
 }
 
 export type Language = 'RU' | 'EN';
+export type LocalizedString = { RU: string; EN: string } | string;
+
 
 export interface GameSettings {
   musicVolume: number;
@@ -75,7 +77,7 @@ export type ZoneColor = 'green' | 'yellow' | 'red';
  */
 export interface Region {
   id: RegionId;
-  name: string;                              // Название (RU)
+  name: LocalizedString;                              // Название
   coordinates: { x: number; y: number };     // Координаты на глобальной карте
   recommendedLevel: number;                  // Рекомендуемый минимальный уровень игрока
   baseZoneColor: ZoneColor;                  // Базовый цвет зоны
@@ -84,7 +86,7 @@ export interface Region {
   resourceBonuses?: Partial<Record<ResourceType, number>>;
 
   // Lore description
-  description?: string;
+  description?: LocalizedString;
 }
 
 // === LICENSES & PERMITS ===
@@ -114,11 +116,12 @@ export interface ReputationTier {
 export interface FactionPerk {
   id: string;
   levelRequired: number;
-  name: string;
-  description: string;
+  name: LocalizedString;
+  description: LocalizedString;
   effectType: 'MARKET' | 'LOGISTICS' | 'SCANNER' | 'COMBAT' | 'PASSIVE';
   value?: number;
 }
+
 
 export interface FactionDef {
   id: FactionId;
@@ -167,11 +170,12 @@ export type FacilityId = 'basic_refinery' | 'advanced_refinery';
 
 export interface Facility {
   id: FacilityId;
-  name: string;
+  name: LocalizedString;
   cost: number;
-  description: string;
+  description: LocalizedString;
   unlocksRecipes: string[];  // Recipe IDs
 }
+
 
 // === PHASE 2: DYNAMIC MARKET ===
 
@@ -275,6 +279,7 @@ export interface Stats {
   drillingEfficiency: number;
   ambientHeat: number;
   requiredTier: number;
+  totalCargoCapacity: number; // [NEW v4.0] Общая грузоподъемность (база + модули)
   // Using simplified types for mods to avoid huge interface duplication
   skillMods: Record<string, number>;
   artifactMods: Record<string, number>;
@@ -298,9 +303,10 @@ export type DrillFX =
 
 export interface ArtifactDefinition {
   id: string;
-  name: string;
-  description: string;
-  loreDescription: string;
+  name: LocalizedString;
+  description: LocalizedString;
+  loreDescription: LocalizedString;
+
   rarity: ArtifactRarity;
   icon: string;
   basePrice: number;
@@ -308,7 +314,8 @@ export interface ArtifactDefinition {
   visualEffect?: VisualEffectType;
   allowedBiomes?: string[];
 
-  effectDescription: string;
+  effectDescription: LocalizedString;
+
   modifiers: {
     heatGenPct?: number;
     resourceMultPct?: number;
@@ -338,17 +345,19 @@ export enum DrillSlot {
   CONTROL = 'control',
   GEARBOX = 'gearbox',
   POWER = 'power',
-  ARMOR = 'armor'
+  ARMOR = 'armor',
+  CARGO_BAY = 'cargoBay'
 }
 
 export interface BaseDrillPart {
   id: string;
-  name: string;
+  name: LocalizedString;
   tier: number;
   rarity: ItemRarity;
-  description: string;
+  description: LocalizedString;
   cost: Partial<Resources>;
 }
+
 
 export interface DrillPart extends BaseDrillPart {
   baseStats: {
@@ -421,6 +430,13 @@ export interface ArmorPart extends BaseDrillPart {
   };
 }
 
+export interface CargoBayPart extends BaseDrillPart {
+  baseStats: {
+    cargoCapacity: number;
+    energyCost: number;
+  };
+}
+
 export interface DrillState {
   [DrillSlot.BIT]: DrillPart;
   [DrillSlot.ENGINE]: EnginePart;
@@ -431,6 +447,7 @@ export interface DrillState {
   [DrillSlot.GEARBOX]: GearboxPart;
   [DrillSlot.POWER]: PowerCorePart;
   [DrillSlot.ARMOR]: ArmorPart;
+  [DrillSlot.CARGO_BAY]: CargoBayPart;
 }
 
 export type FusionConditionType = 'ZERO_HEAT' | 'MAX_HEAT' | 'DEPTH_REACHED' | 'NO_DAMAGE';
@@ -451,17 +468,19 @@ export interface MergeRecipe {
     amount: number;
   };
   condition?: FusionCondition;
-  description: string;
+  description: LocalizedString;
 }
+
 
 export type HazardType = 'NONE' | 'CORROSION' | 'MAGNETIC' | 'HEAT_REFLECTION' | 'RADIATION' | 'VOID_PRESSURE';
 
 export interface Biome {
-  name: string;
+  name: LocalizedString;
   depth: number;
   resource: ResourceType;
   color: string;
-  description: string;
+  description: LocalizedString;
+
   hub?: string;
   hazard: HazardType;
   hazardLevel: number;
@@ -472,7 +491,8 @@ export enum BossType {
   WORM = 'WORM',
   CORE = 'CORE',
   CONSTRUCT = 'CONSTRUCT',
-  SWARM = 'SWARM'
+  SWARM = 'SWARM',
+  VOID_SENTINEL = 'VOID_SENTINEL'
 }
 
 // --- ABILITY SYSTEM ---
@@ -480,14 +500,15 @@ export type AbilityType = 'EMP_BURST' | 'THERMAL_STRIKE' | 'BARRIER' | 'OVERLOAD
 
 export interface AbilityDef {
   id: AbilityType;
-  name: string;
-  description: string;
+  name: LocalizedString;
+  description: LocalizedString;
   cooldownMs: number;
   energyCost: number; // For now maybe Heat or direct resource? Let's assume a new "Energy" or "Charge" or just Heat Cost
   heatCost: number;   // Adds heat
   icon: string;       // emoji for now
   unlockLevel: number;
 }
+
 
 export interface ActiveAbilityState {
   id: AbilityType;
@@ -501,15 +522,16 @@ export type CombatMinigameType = 'TIMING' | 'MEMORY' | 'MASH' | 'ALIGN' | 'GLYPH
 
 export interface Boss {
   id: string;
-  name: string;
+  name: LocalizedString;
   type: BossType;
   color: string;
   maxHp: number;
   currentHp: number;
   damage: number;
   attackSpeed: number;
-  description: string;
+  description: LocalizedString;
   isMob?: boolean;
+
   reward: {
     xp: number;
     resources: Partial<Resources>;
@@ -569,16 +591,18 @@ export enum EventActionId {
 }
 
 export interface EventOption {
-  label: string;
+  label: LocalizedString;
   actionId: EventActionId | string; // allowing string for flexibility if needed, but preferring Enum
-  risk?: string;
+  risk?: LocalizedString;
 }
+
 
 export interface GameEvent {
   id: string;
-  title: string;
-  description: string;
+  title: LocalizedString;
+  description: LocalizedString;
   type: EventType;
+
   weight: number;  // Legacy: used for weighted random (will be deprecated)
   options?: EventOption[];
   biomes?: string[];
@@ -694,7 +718,8 @@ export type QuestObjectiveType = 'COLLECT' | 'DELIVER' | 'REACH_DEPTH' | 'DEFEAT
 
 export interface QuestObjective {
   id: string;
-  description: string;
+  description: LocalizedString;
+
   type: QuestObjectiveType;
   target: string;  // Resource ID, region ID, boss ID, etc.
   required: number;  // Количество
@@ -711,8 +736,9 @@ export interface QuestReward {
 
 export interface Quest {
   id: string;
-  title: string;
-  description: string;
+  title: LocalizedString;
+  description: LocalizedString;
+
   status: QuestStatus;
   type: QuestType;
 
@@ -745,8 +771,9 @@ export type SkillCategory = 'CORTEX' | 'MOTOR' | 'VISUAL' | 'CHRONOS';
 
 export interface SkillDefinition {
   id: string;
-  name: string;
-  description: string;
+  name: LocalizedString;
+  description: LocalizedString;
+
   category: SkillCategory;
   maxLevel: number;
   baseCost: number;
@@ -787,14 +814,15 @@ export enum DroneType {
 
 export interface DroneDefinition {
   id: DroneType;
-  name: string;
-  description: string;
+  name: LocalizedString;
+  description: LocalizedString;
   baseCost: Partial<Resources>;
   costMultiplier: number;
   maxLevel: number;
-  effectDescription: (level: number) => string;
+  effectDescription: (level: number) => LocalizedString;
   color: string;
 }
+
 
 // --- EXPEDITION SYSTEM ---
 export type ExpeditionDifficulty = 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';

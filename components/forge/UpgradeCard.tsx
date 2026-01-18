@@ -1,12 +1,17 @@
 import React from 'react';
 import { UpgradeCardProps } from './types';
 import { Resources } from '../../types';
+import { useGameStore } from '../../store/gameStore';
+import { t } from '../../services/localization';
+
 
 /**
  * Upgrade Card component for drill parts
  */
 const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, resources, onBuy }) => {
+    const lang = useGameStore(s => s.settings.language);
     if (!next) return (
+
         <div className="bg-zinc-900 p-3 md:p-4 border border-zinc-800 opacity-50 flex flex-col justify-between min-h-[160px] md:min-h-[200px]">
             <div>
                 <h3 className="text-zinc-500 font-bold mb-2 pixel-text text-xs md:text-sm">{title}</h3>
@@ -30,7 +35,8 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                 </div>
 
                 <div className="bg-black/50 p-2 mb-2 border border-zinc-800 min-h-[40px] md:min-h-[50px]">
-                    <p className="text-[9px] md:text-[10px] text-zinc-300 italic leading-tight">"{next.description}"</p>
+                    <p className="text-[9px] md:text-[10px] text-zinc-300 italic leading-tight">"{t(next.description, lang)}"</p>
+
                     <div className="mt-1 text-[8px] md:text-[9px] text-green-400 font-mono grid grid-cols-2 gap-x-2">
                         {(next.baseStats as any).damage && <span>DMG: {(next.baseStats as any).damage}</span>}
                         {(next.baseStats as any).speed && <span>SPD: {(next.baseStats as any).speed}</span>}
@@ -39,6 +45,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                         {(next.baseStats as any).torque && <span className="text-amber-400">TRQ: {(next.baseStats as any).torque}%</span>}
                         {(next.baseStats as any).regen && <span className="text-emerald-400">REG: {(next.baseStats as any).regen}/s</span>}
                         {(next.baseStats as any).luck && <span className="text-purple-400">LCK: {(next.baseStats as any).luck}%</span>}
+                        {(next.baseStats as any).cargoCapacity && <span className="text-blue-400">CRG: {(next.baseStats as any).cargoCapacity}</span>}
                         {(next.baseStats as any).energyCost > 0 && <span className="text-red-500 col-span-2">LOAD: -{(next.baseStats as any).energyCost} W</span>}
                     </div>
                 </div>

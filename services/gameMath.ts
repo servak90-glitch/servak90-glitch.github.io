@@ -4,6 +4,8 @@ import { calculateSkillModifiers } from './skillRegistry';
 import { ARTIFACTS } from './artifactRegistry';
 
 // [DEV_CONTEXT: HARDCORE MATH]
+const BASE_CARGO_CAPACITY = 5000;
+
 // 1. Rock Density: Every 800m requires +1 Tier of Drill Bit.
 export const getRockDensity = (depth: number) => {
     return 1 + Math.floor(depth / 800);
@@ -116,6 +118,8 @@ export function recalculateCargoWeight(resources: Resources): number {
 export const formatCompactNumber = (num: number): string => {
     if (num === 0 || isNaN(num)) return '0';
     if (num < 0) return '-' + formatCompactNumber(Math.abs(num));
+    if (num < 10) return num.toFixed(2);
+    if (num < 100) return num.toFixed(1);
     if (num < 1000) return Math.floor(num).toString();
 
     const suffixes = ['', 'k', 'M', 'B', 'T'];
@@ -237,8 +241,14 @@ const calculateStatsInternal = (
     }
 
     const energyProd = drill.power.baseStats.energyOutput;
-    const energyCons = drill.bit.baseStats.energyCost + drill.engine.baseStats.energyCost + drill.cooling.baseStats.energyCost + drill.logic.baseStats.energyCost + drill.control.baseStats.energyCost + drill.gearbox.baseStats.energyCost + drill.armor.baseStats.energyCost;
+    const energyCons = drill.bit.baseStats.energyCost + drill.engine.baseStats.energyCost + drill.cooling.baseStats.energyCost +
+        drill.logic.baseStats.energyCost + drill.control.baseStats.energyCost + drill.gearbox.baseStats.energyCost +
+        drill.armor.baseStats.energyCost + (drill.cargoBay?.baseStats?.energyCost || 0);
     const energyEfficiency = energyProd >= energyCons ? 1.0 : (energyProd / Math.max(1, energyCons));
+
+    const totalCargoCapacity = BASE_CARGO_CAPACITY +
+        (drill.hull.baseStats.cargoCapacity || 0) +
+        (drill.cargoBay?.baseStats?.cargoCapacity || 0);
 
     // Calculate Artifact Modifiers
     const artifactMods = {
@@ -297,6 +307,7 @@ const calculateStatsInternal = (
         totalDamage: drill.bit.baseStats.damage * energyEfficiency * drillingEfficiency,
         totalSpeed: drill.engine.baseStats.speed * energyEfficiency * drillingEfficiency,
         totalCooling: drill.cooling.baseStats.cooling * energyEfficiency * coolingEfficiencyEnv,
+        totalCargoCapacity: totalCargoCapacity,
         torque: drill.gearbox.baseStats.torque || 0,
         critChance: drill.logic.baseStats.critChance,
         luck: (drill.logic.baseStats.luck || 0) + artifactMods.luckPct,
@@ -318,12 +329,20 @@ const calculateStatsInternal = (
     };
 };
 
-export const getResourceLabel = (res: string): string => {
-    const labels: Record<string, string> = {
-        clay: 'ГЛИНА', stone: 'КАМЕНЬ', copper: 'МЕДЬ', iron: 'ЖЕЛЕЗО', silver: 'СЕРЕБРО',
-        gold: 'ЗОЛОТО', titanium: 'ТИТАН', uranium: 'УРАН', nanoSwarm: 'НАНО',
-        ancientTech: 'TECH', rubies: 'РУБИН', emeralds: 'ИЗУМР', diamonds: 'АЛМАЗ',
-        XP: 'XP', DEPTH: 'ГЛУБИНА'
+import { TL } from './localization';
+
+export const getResourceLabel = (res: string): any => {
+    // Check if it's a standard resource from TL
+    const tlRes = (TL.resources as any)[res];
+    if (tlRes) return tlRes;
+
+    const labels: Record<string, any> = {
+        XP: { RU: 'ОПЫТ', EN: 'XP' },
+        DEPTH: { RU: 'ГЛУБИНА', EN: 'DEPTH' },
+        coal: { RU: 'УГОЛЬ', EN: 'COAL' },
+        oil: { RU: 'НЕФТЬ', EN: 'OIL' },
+        gas: { RU: 'ГАЗ', EN: 'GAS' }
     };
-    return labels[res] || res.toUpperCase();
+    return labels[res] || { RU: res.toUpperCase(), EN: res.toUpperCase() };
 };
+

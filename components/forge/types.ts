@@ -4,13 +4,13 @@
 
 import {
     Resources, DrillPart, EnginePart, CoolerPart, HullPart,
-    LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart,
+    LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, CargoBayPart,
     DrillSlot, InventoryItem, DrillState
 } from '../../types';
 
 // Объединение всех типов частей бура
 export type AnyDrillPart = DrillPart | EnginePart | CoolerPart | HullPart |
-    LogicPart | ControlPart | GearboxPart | PowerCorePart | ArmorPart;
+    LogicPart | ControlPart | GearboxPart | PowerCorePart | ArmorPart | CargoBayPart;
 
 export interface UpgradeCardProps {
     title: string;

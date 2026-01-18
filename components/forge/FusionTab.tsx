@@ -5,6 +5,8 @@ import { useGameStore } from '../../store/gameStore';
 import { FUSION_RECIPES } from '../../constants';
 import { ARTIFACTS } from '../../services/artifactRegistry';
 import { BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS } from '../../constants';
+import { t } from '../../services/localization';
+
 
 const ALL_PARTS = [...BITS, ...ENGINES, ...COOLERS, ...HULLS, ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES, ...POWER_CORES, ...ARMORS];
 
@@ -19,6 +21,8 @@ const FusionTab: React.FC<FusionTabProps> = ({
     const [selectedArtifactsForFusion, setSelectedArtifactsForFusion] = useState<string[]>([]);
     const fusionUpgrade = useGameStore(s => s.fusionUpgrade);
     const transmuteArtifacts = useGameStore(s => s.transmuteArtifacts);
+    const lang = useGameStore(s => s.settings.language);
+
 
     const inventoryList = Object.values(inventory) as InventoryItem[];
 
@@ -163,13 +167,14 @@ const FusionTab: React.FC<FusionTabProps> = ({
                             <div key={recipe.id} className="bg-black border border-purple-600/30 p-4 flex flex-col justify-between group hover:border-purple-500 transition-colors">
                                 <div>
                                     <div className="flex justify-between items-start mb-2">
-                                        <h4 className="text-red-500 font-bold pixel-text text-xs leading-snug">{targetPart ? targetPart.name : recipe.resultId}</h4>
+                                        <h4 className="text-red-500 font-bold pixel-text text-xs leading-snug">{targetPart ? t(targetPart.name, lang) : recipe.resultId}</h4>
                                         <span className="text-[9px] bg-purple-900/50 text-purple-300 px-1 rounded">GODLY</span>
                                     </div>
 
                                     <div className="text-[10px] text-zinc-400 mb-3 border-l-2 border-purple-800 pl-2">
-                                        "{recipe.description}"
+                                        "{t(recipe.description, lang)}"
                                     </div>
+
 
                                     <div className="space-y-1 mb-4 bg-zinc-900/50 p-2">
                                         <div className="flex justify-between text-[9px] font-mono">

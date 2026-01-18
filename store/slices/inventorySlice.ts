@@ -6,6 +6,7 @@ import { SliceCreator, pushLogs } from './types';
 import { VisualEvent, InventoryItem, ArtifactRarity } from '../../types';
 import { ARTIFACTS } from '../../services/artifactRegistry';
 import { audioEngine } from '../../services/audioEngine';
+import { getActivePerkIds } from '../../services/factionLogic';
 
 export interface InventoryActions {
     startAnalysis: (instanceId: string) => void;
@@ -25,7 +26,13 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
         const def = ARTIFACTS.find(a => a.id === item.defId);
         if (!def) return;
 
-        const time = def.rarity === 'COMMON' ? 10 : def.rarity === 'RARE' ? 30 : 60;
+        const activePerks = getActivePerkIds(s.reputation);
+        let time = def.rarity === 'COMMON' ? 10 : def.rarity === 'RARE' ? 30 : 60;
+
+        if (activePerks.includes('AUTO_ANALYSIS')) {
+            time = Math.ceil(time * 0.75); // -25%
+        }
+
         set({ analyzer: { activeItemInstanceId: instanceId, timeLeft: time, maxTime: time } });
     },
 

@@ -2,8 +2,9 @@ import React, { useMemo } from 'react';
 import { ContractsTabProps, getFactionStyle } from './types';
 import { Resources } from '../../types';
 import { getResourceLabel } from '../../services/gameMath';
-
 import { useGameStore } from '../../store/gameStore';
+import { t } from '../../services/localization';
+
 
 const ContractsTab: React.FC<ContractsTabProps> = ({
     resources,
@@ -14,7 +15,9 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
     onRefreshQuests
 }) => {
     const questList = useMemo(() => Object.values(activeQuests), [activeQuests]);
-    const { reputation } = useGameStore();
+    const { reputation, settings } = useGameStore();
+    const lang = settings.language;
+
 
     return (
         <div className="max-w-2xl mx-auto">
@@ -71,8 +74,9 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
                                             {quest.factionId || 'NEUTRAL'}
                                         </span>
                                     </div>
-                                    <h4 className={`text-xs md:text-sm font-bold mb-1 ${style.text}`}>{quest.title}</h4>
-                                    <p className="text-[9px] text-zinc-400 mb-3 leading-tight">{quest.description}</p>
+                                    <h4 className={`text-xs md:text-sm font-bold mb-1 ${style.text}`}>{t(quest.title, lang)}</h4>
+                                    <p className="text-[9px] text-zinc-400 mb-3 leading-tight">{t(quest.description, lang)}</p>
+
 
                                     {/* OBJECTIVES (вместо REQUIREMENTS) */}
                                     <div className="mb-3">
@@ -80,7 +84,8 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
                                         <div className="bg-black/30 p-1.5 md:p-2 border-l-2 border-red-900/30">
                                             {quest.objectives.map((obj, i) => (
                                                 <div key={i} className="flex justify-between text-[10px] md:text-xs font-mono">
-                                                    <span>{obj.description}</span>
+                                                    <span>{t(obj.description, lang)}</span>
+
                                                     <span className={obj.current >= obj.required ? 'text-green-500' : 'text-red-500'}>
                                                         {obj.current}/{obj.required}
                                                     </span>
@@ -95,7 +100,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
                                         <div className="bg-black/30 p-1.5 md:p-2 border-l-2 border-green-900/30">
                                             {quest.rewards.map((rew, i) => (
                                                 <div key={i} className="flex justify-between text-[10px] md:text-xs font-mono">
-                                                    <span>{rew.type === 'REPUTATION' ? 'REP' : getResourceLabel(rew.target)}</span>
+                                                    <span>{rew.type === 'REPUTATION' ? 'REP' : t(getResourceLabel(rew.target), lang)}</span>
                                                     <span className="text-green-400">+{rew.amount?.toLocaleString() || 0}</span>
                                                 </div>
                                             ))}

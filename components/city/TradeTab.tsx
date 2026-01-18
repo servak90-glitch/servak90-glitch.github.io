@@ -2,8 +2,11 @@ import React from 'react';
 import { TradeTabProps } from './types';
 import { getResourceLabel } from '../../services/gameMath';
 import { REVERSE_TRADES, CITY_TRADES } from '../../constants/balance';
+import { useGameStore } from '../../store/gameStore';
+import { t } from '../../services/localization';
 
 const TradeTab: React.FC<TradeTabProps> = ({ resources, onTrade }) => {
+    const lang = useGameStore(s => s.settings.language);
     const tradeCost = CITY_TRADES.BASIC_EXCHANGE.cost;
     const tradeReward = CITY_TRADES.BASIC_EXCHANGE.reward;
     const canAffordTrade = resources.clay >= (tradeCost.clay || 0);
@@ -48,9 +51,9 @@ const TradeTab: React.FC<TradeTabProps> = ({ resources, onTrade }) => {
                                 <div className="flex-1">
                                     <div className="text-[9px] md:text-[10px] text-zinc-500 font-bold mb-1">{trade.label}</div>
                                     <div className="flex items-center gap-1 md:gap-2 font-mono text-[10px] md:text-xs">
-                                        <span className="text-amber-600">{costVal} {getResourceLabel(trade.source)}</span>
+                                        <span className="text-amber-600">{costVal} {t(getResourceLabel(trade.source), lang)}</span>
                                         <span className="text-zinc-600">➔</span>
-                                        <span className="text-green-500">{rewardVal} {getResourceLabel(trade.target)}</span>
+                                        <span className="text-green-500">{rewardVal} {t(getResourceLabel(trade.target), lang)}</span>
                                     </div>
                                 </div>
                                 <button

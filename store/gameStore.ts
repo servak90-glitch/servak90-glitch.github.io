@@ -13,7 +13,7 @@ import {
 } from '../types';
 import {
     BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS,
-    GEARBOXES, POWER_CORES, ARMORS
+    GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS
 } from '../constants';
 import { gameEngine } from '../services/GameEngine';
 // Cooling imported removed
@@ -102,7 +102,8 @@ const INITIAL_STATE: GameState = {
         [DrillSlot.CONTROL]: CONTROL_UNITS[0],
         [DrillSlot.GEARBOX]: GEARBOXES[0],
         [DrillSlot.POWER]: POWER_CORES[0],
-        [DrillSlot.ARMOR]: ARMORS[0]
+        [DrillSlot.ARMOR]: ARMORS[0],
+        [DrillSlot.CARGO_BAY]: CARGO_BAYS[0]
     },
     skillLevels: {},
     artifacts: [],
@@ -215,27 +216,35 @@ const sanitizeAndMerge = (initial: GameState, saved: any): GameState => {
     const merged: any = { ...initial };
 
     const deepKeys: (keyof GameState)[] = ['resources', 'settings', 'droneLevels', 'skillLevels'];
-    const keepKeys: (keyof GameState)[] = [
-        'drill', 'inventory', 'equippedArtifacts', 'discoveredArtifacts',
-        'analyzer', 'activeQuests', 'activeEffects', 'eventQueue',
-        'recentEventIds', 'activeDrones'
+    const arrayKeys: (keyof GameState)[] = [
+        'inventory', 'equippedArtifacts', 'discoveredArtifacts',
+        'activeQuests', 'completedQuestIds', 'failedQuestIds',
+        'activeEffects', 'eventQueue', 'recentEventIds', 'activeDrones',
+        'playerBases', 'caravans', 'caravanUnlocks', 'artifacts'
     ];
     const primitiveKeys: (keyof GameState)[] = [
         'depth', 'heat', 'integrity', 'xp', 'level', 'totalDrilled',
         'lastBossDepth', 'storageLevel', 'forgeUnlocked', 'cityUnlocked', 'skillsUnlocked',
         'selectedBiome', 'debugUnlocked', 'lastQuestRefresh', 'shieldCharge', 'minigameCooldown',
-        'currentCargoWeight', 'currentRegion'
+        'currentCargoWeight', 'currentRegion', 'globalReputation'
     ];
 
     deepKeys.forEach(key => {
-        if (saved[key]) {
+        if (saved[key] && typeof saved[key] === 'object' && !Array.isArray(saved[key])) {
             merged[key] = { ...initial[key as any], ...saved[key] };
         }
     });
 
-    keepKeys.forEach(key => {
+    arrayKeys.forEach(key => {
         if (saved[key] !== undefined) {
-            merged[key] = saved[key];
+            // КРИТИЧЕСКАЯ ПРОВЕРКА: Если сохраненное значение не массив (например {}), 
+            // используем начальный массив, чтобы не сломать .map/.filter
+            if (Array.isArray(saved[key])) {
+                merged[key] = saved[key];
+            } else {
+                console.warn(`[STATE SANITIZER] Ключ ${key} в сохранении не является массивом. Использовано значение по умолчанию.`);
+                merged[key] = initial[key];
+            }
         }
     });
 
@@ -245,8 +254,10 @@ const sanitizeAndMerge = (initial: GameState, saved: any): GameState => {
         }
     });
 
-    if (!merged.drill || !merged.drill[DrillSlot.BIT]) {
-        merged.drill = initial.drill;
+    // Специальная обработка для объектов, которые могут быть null
+    if (saved.analyzer) merged.analyzer = saved.analyzer;
+    if (saved.drill && typeof saved.drill === 'object') {
+        merged.drill = { ...initial.drill, ...saved.drill };
     }
 
     return merged as GameState;
@@ -321,7 +332,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     tick: (dt: number) => {
         const s = get();
-        const { partialState, events } = gameEngine.tick(s, dt);
+        const { partialState, events, questUpdates } = gameEngine.tick(s, dt);
+
+        // Обработка немедленных обновлений квестов (например, смерть босса)
+        questUpdates.forEach(upd => {
+            s.activeQuests.forEach(quest => {
+                quest.objectives.forEach(obj => {
+                    if (obj.type === upd.type && obj.target === upd.target) {
+                        s.updateQuestObjective(quest.id, obj.id, obj.current + 1);
+                    }
+                });
+            });
+        });
 
         let nextView = s.activeView;
 

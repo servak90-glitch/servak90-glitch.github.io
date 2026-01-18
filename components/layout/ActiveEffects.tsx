@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { t } from '../../services/localization';
 import { ActiveEffect } from '../../types';
 
-const EffectBadge: React.FC<{ effect: ActiveEffect }> = ({ effect }) => {
+const EffectBadge: React.FC<{ effect: ActiveEffect; lang: 'RU' | 'EN' }> = ({ effect, lang }) => {
     // Convert ticks to seconds (10 ticks = 1 sec)
     const secondsLeft = Math.ceil(effect.duration / 10);
 
@@ -31,21 +32,22 @@ const EffectBadge: React.FC<{ effect: ActiveEffect }> = ({ effect }) => {
 
     return (
         <div className={`flex items-center gap-2 px-2 py-0.5 rounded-sm border ${bg} ${border} animate-in fade-in zoom-in duration-300`}>
-            <span className={`text-[10px] font-bold ${text}`}>{effect.name}</span>
+            <span className={`text-[10px] font-bold ${text}`}>{t(effect.name, lang)}</span>
             <span className="text-[10px] font-mono text-white/80">{secondsLeft}s</span>
         </div>
     );
 };
 
 const ActiveEffects: React.FC = () => {
-    const activeEffects = useGameStore(s => s.activeEffects);
+    const effects = useGameStore(s => s.activeEffects);
+    const lang = useGameStore(s => s.settings.language);
 
-    if (activeEffects.length === 0) return null;
+    if (effects.length === 0) return null;
 
     return (
         <div className="w-full flex flex-wrap gap-1 px-2 py-1 bg-transparent pointer-events-none z-30 justify-center">
-            {activeEffects.map(effect => (
-                <EffectBadge key={effect.id} effect={effect} />
+            {effects.map(effect => (
+                <EffectBadge key={effect.id} effect={effect} lang={lang} />
             ))}
         </div>
     );

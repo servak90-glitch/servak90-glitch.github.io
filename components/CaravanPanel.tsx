@@ -8,7 +8,7 @@ import { useGameStore } from '../store/gameStore';
 import { CARAVAN_SPECS } from '../constants/caravans';
 import { getCaravanETA } from '../services/caravanManager';
 import { getActivePerkIds } from '../services/factionLogic';
-import { TL } from '../services/localization';
+import { TL, t } from '../services/localization';
 import type { Resources } from '../types';
 
 export const CaravanPanel = () => {
@@ -19,6 +19,7 @@ export const CaravanPanel = () => {
     const unlockBasicLogistics = useGameStore(s => s.unlockBasicLogistics);
     const sendCaravan = useGameStore(s => s.sendCaravan);
     const reputation = useGameStore(s => s.reputation);
+    const lang = useGameStore(s => s.settings.language);
 
     const [fromBaseId, setFromBaseId] = useState<string>('');
     const [toBaseId, setToBaseId] = useState<string>('');
@@ -90,7 +91,7 @@ export const CaravanPanel = () => {
             {/* Send Caravan Section */}
             {isUnlocked && (
                 <div className="bg-gray-800/80 border-2 border-cyan-500 rounded-lg p-6">
-                    <h3 className="text-2xl font-bold text-cyan-400 mb-4">🚛 {TL.caravan.send}</h3>
+                    <h3 className="text-2xl font-bold text-cyan-400 mb-4">🚛 {t(TL.caravan.send, lang)}</h3>
 
                     {playerBases.length < 2 ? (
                         <div className="bg-yellow-900/30 border border-yellow-600 rounded p-4">
@@ -111,7 +112,7 @@ export const CaravanPanel = () => {
                                     <option value="">Выберите базу</option>
                                     {playerBases.map(base => (
                                         <option key={base.id} value={base.id}>
-                                            {TL.regions[base.regionId] || base.regionId} ({TL.baseTypes[base.type] || base.type})
+                                            {t(TL.regions[base.regionId], lang) || base.regionId} ({t(TL.baseTypes[base.type], lang) || base.type})
                                         </option>
                                     ))}
                                 </select>
@@ -128,7 +129,7 @@ export const CaravanPanel = () => {
                                     <option value="">Выберите базу</option>
                                     {playerBases.filter(b => b.id !== fromBaseId).map(base => (
                                         <option key={base.id} value={base.id}>
-                                            {TL.regions[base.regionId] || base.regionId} ({TL.baseTypes[base.type] || base.type})
+                                            {t(TL.regions[base.regionId], lang) || base.regionId} ({t(TL.baseTypes[base.type], lang) || base.type})
                                         </option>
                                     ))}
                                 </select>
@@ -143,12 +144,12 @@ export const CaravanPanel = () => {
                                     className="w-full bg-gray-700 border-2 border-gray-600 rounded px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
                                 >
                                     {(['stone', 'clay', 'iron', 'coal', 'oil', 'gas'] as (keyof Resources)[]).map(res => (
-                                        <option key={res} value={res}>{TL.resources[res] || res}</option>
+                                        <option key={res} value={res}>{t(TL.resources[res], lang) || res}</option>
                                     ))}
                                 </select>
                                 {fromBase && (
                                     <p className="text-xs text-gray-500 mt-1">
-                                        В базе: {availableInBase} {TL.resources[cargoResource] || cargoResource}
+                                        В базе: {availableInBase} {t(TL.resources[cargoResource], lang) || cargoResource}
                                     </p>
                                 )}
                             </div>
@@ -185,12 +186,12 @@ export const CaravanPanel = () => {
                                     }
                                 `}
                             >
-                                {canSend ? `🚀 ${TL.caravan.send.toUpperCase()}` : '❌ ПРОВЕРЬТЕ УСЛОВИЯ'}
+                                {canSend ? `🚀 ${t(TL.caravan.send, lang).toUpperCase()}` : '❌ ПРОВЕРЬТЕ УСЛОВИЯ'}
                             </button>
 
                             {!canSend && fromBase && toBaseId && (
                                 <div className="text-xs text-red-400">
-                                    {availableInBase < cargoAmount && `⚠️ Недостаточно ${TL.resources[cargoResource]} в базе`}
+                                    {availableInBase < cargoAmount && `⚠️ Недостаточно ${t(TL.resources[cargoResource], lang)} в базе`}
                                     {cargoAmount > maxCapacity && `⚠️ Превышена вместимость каравана`}
                                     {fromBaseId === toBaseId && `⚠️ Выберите разные базы`}
                                 </div>
@@ -214,14 +215,14 @@ export const CaravanPanel = () => {
                                 <div key={caravan.id} className="bg-gray-900/50 rounded-lg p-4">
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="font-bold text-white">
-                                            {TL.regions[fromBaseName] || fromBaseName} → {TL.regions[toBaseName] || toBaseName}
+                                            {t(TL.regions[fromBaseName], lang) || fromBaseName} → {t(TL.regions[toBaseName], lang) || toBaseName}
                                         </div>
                                         <div className="text-cyan-400 text-sm">
                                             {eta.arrived ? '✅ Прибыл' : `⏱️ ${eta.remainingMinutes} мин`}
                                         </div>
                                     </div>
                                     <div className="text-sm text-gray-400">
-                                        Груз: {Object.entries(caravan.cargo).map(([res, amt]) => `${amt} ${TL.resources[res] || res}`).join(', ')}
+                                        Груз: {Object.entries(caravan.cargo).map(([res, amt]) => `${amt} ${t(TL.resources[res], lang) || res}`).join(', ')}
                                     </div>
                                     <div className="text-xs text-gray-500 mt-1">
                                         Риск потери: {Math.round(caravan.lossChance * 100)}%
@@ -246,7 +247,7 @@ export const CaravanPanel = () => {
                                 <div key={caravan.id} className="bg-gray-900/30 rounded p-3 text-sm">
                                     <div className="flex items-center justify-between">
                                         <span className="text-gray-400">
-                                            {TL.regions[fromBaseName] || fromBaseName} → {TL.regions[toBaseName] || toBaseName}
+                                            {t(TL.regions[fromBaseName], lang) || fromBaseName} → {t(TL.regions[toBaseName], lang) || toBaseName}
                                         </span>
                                         <span className={caravan.status === 'completed' ? 'text-green-400' : 'text-red-400'}>
                                             {caravan.status === 'completed' ? '✅ Доставлено' : '💀 Потеряно'}

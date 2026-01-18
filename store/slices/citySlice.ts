@@ -3,11 +3,10 @@
  */
 
 import { SliceCreator, pushLog } from './types';
-import { Resources, ResourceType, VisualEvent, Quest } from '../../types';
+import { Resources, ResourceType, VisualEvent } from '../../types';
 import { calculateStats, getResourceLabel, calculateRepairCost, recalculateCargoWeight } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 import { createEffect } from '../../services/eventRegistry';
-import { generateQuestBatch } from '../../services/questRegistry';
 import { canCraftRecipe, getRecipeById } from '../../constants/fuelRecipes';
 
 export interface CityActions {
@@ -16,8 +15,6 @@ export interface CityActions {
     repairHull: () => void;
     buyCityBuff: (cost: number, res: ResourceType, effectId: string) => void;
     gambleResources: (res: ResourceType, amount: number) => void;
-    completeQuest: (questId: string) => void;
-    refreshQuests: () => void;
     craftFuel: (recipeId: string) => void;  // NEW: Crafting топлива
 }
 
@@ -114,59 +111,6 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
                     actionLogQueue: pushLog(s, event)
                 });
             }
-        }
-    },
-
-    completeQuest: (id) => {
-        const s = get();
-        const quest = s.activeQuests.find(q => q.id === id);
-        if (quest) {
-            const newRes = { ...s.resources };
-            let xpGain = 0;
-            quest.rewards.forEach(r => {
-                if (r.type === 'RESOURCE' && r.amount) {
-                    newRes[r.target as ResourceType] += r.amount;
-                }
-                if (r.type === 'XP' && r.amount) xpGain += r.amount;
-                // REPUTATION REWARD
-                if (r.type === 'REPUTATION' && r.amount) {
-                    const factionAction = (get() as any).addReputation;
-                    if (factionAction) factionAction(r.target, r.amount);
-                }
-            });
-
-            // Legacy support if reputationReward field is used
-            const legacyQuest = quest as any;
-            if (legacyQuest.reputationReward) {
-                const factionMap: Record<string, string> = { 'CORP': 'CORPORATE', 'SCIENCE': 'SCIENCE', 'REBELS': 'REBELS' };
-                const factionId = factionMap[legacyQuest.issuer] || legacyQuest.issuer;
-                (get() as any).addReputation?.(factionId, legacyQuest.reputationReward);
-            }
-
-            const newQuests = s.activeQuests.filter(q => q.id !== id);
-
-            const event: VisualEvent = { type: 'LOG', msg: `КОНТРАКТ ВЫПОЛНЕН`, color: 'text-green-500' };
-            set({
-                resources: newRes,
-                currentCargoWeight: recalculateCargoWeight(newRes),
-                xp: s.xp + xpGain,
-                activeQuests: newQuests,
-                actionLogQueue: pushLog(s, event)
-            });
-            audioEngine.playAchievement();
-        }
-    },
-
-    refreshQuests: () => {
-        const s = get();
-        if (s.resources.clay >= 100) {
-            const quests = generateQuestBatch(s.depth, s.level);
-            const newRes = { ...s.resources, clay: s.resources.clay - 100 };
-            set({
-                resources: newRes,
-                currentCargoWeight: recalculateCargoWeight(newRes),
-                activeQuests: quests
-            });
         }
     },
 

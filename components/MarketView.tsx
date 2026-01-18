@@ -7,7 +7,7 @@ import { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { getAllMarketPrices } from '../services/marketEngine';
 import { getActivePerkIds } from '../services/factionLogic';
-import { TL } from '../services/localization';
+import { TL, t } from '../services/localization';
 import type { Resources } from '../types';
 
 export const MarketView = () => {
@@ -17,6 +17,7 @@ export const MarketView = () => {
     const buyFromMarket = useGameStore(s => s.buyFromMarket);
     const sellToMarket = useGameStore(s => s.sellToMarket);
     const reputation = useGameStore(s => s.reputation);
+    const lang = useGameStore(s => s.settings.language);
 
     const [selectedResource, setSelectedResource] = useState<keyof Resources | null>(null);
     const [amount, setAmount] = useState<number>(1);
@@ -67,7 +68,7 @@ export const MarketView = () => {
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-6">
             {/* Header */}
             <div className="max-w-6xl mx-auto mb-6">
-                <h1 className="text-4xl font-bold text-cyan-400 mb-2">💰 {TL.ui.market.toUpperCase()}</h1>
+                <h1 className="text-4xl font-bold text-cyan-400 mb-2">💰 {t(TL.ui.market, lang).toUpperCase()}</h1>
                 <p className="text-gray-400">Региональная торговля • Комиссия продажи: 20%</p>
             </div>
 
@@ -79,8 +80,8 @@ export const MarketView = () => {
                         <p className="text-yellow-400 font-bold text-2xl">💎 {resources.rubies} credits</p>
                     </div>
                     <div className="text-right">
-                        <p className="text-gray-400 text-sm">{TL.ui.currentRegion}</p>
-                        <p className="text-cyan-400 font-bold">{TL.regions[currentBase.regionId] || currentBase.regionId}</p>
+                        <p className="text-gray-400 text-sm">{t(TL.ui.currentRegion, lang)}</p>
+                        <p className="text-cyan-400 font-bold">{t(TL.regions[currentBase.regionId], lang) || currentBase.regionId}</p>
                     </div>
                 </div>
             </div>
@@ -91,6 +92,14 @@ export const MarketView = () => {
                     <h2 className="text-2xl font-bold text-white mb-4">📊 Рыночные цены</h2>
                     <div className="grid md:grid-cols-2 gap-3">
                         {marketPrices.map(price => {
+                            // Perk: Black Market (Science Level 3) - Unlocks illegal goods
+                            const illegalResources = ['nanoSwarm', 'ancientTech'];
+                            const isIllegal = illegalResources.includes(price.resource);
+                            const hasBlackMarket = activePerks.includes('BLACK_MARKET');
+
+                            if (isIllegal && !hasBlackMarket) return null;
+                            if (price.resource === 'rubies') return null; // Credits are not traded
+
                             const isSelected = price.resource === selectedResource;
                             const hasResource = (resources[price.resource] || 0) > 0;
 
@@ -104,7 +113,7 @@ export const MarketView = () => {
                                     `}
                                 >
                                     <div className="flex items-center justify-between mb-2">
-                                        <h3 className="font-bold text-white capitalize">{TL.resources[price.resource] || price.resource}</h3>
+                                        <h3 className="font-bold text-white capitalize">{t(TL.resources[price.resource], lang) || price.resource}</h3>
                                         <span className="text-xl">
                                             {hasResource ? '✅' : ''}
                                         </span>
@@ -112,11 +121,11 @@ export const MarketView = () => {
 
                                     <div className="space-y-1 text-sm">
                                         <div className="flex justify-between">
-                                            <span className="text-gray-400">{TL.ui.buy}:</span>
+                                            <span className="text-gray-400">{t(TL.ui.buy, lang)}:</span>
                                             <span className="text-green-400 font-bold">{price.finalPrice} 💎</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-400">{TL.ui.sell}:</span>
+                                            <span className="text-gray-400">{t(TL.ui.sell, lang)}:</span>
                                             <span className="text-yellow-400 font-bold">
                                                 {Math.floor(price.finalPrice * 0.8)} 💎
                                             </span>
@@ -150,7 +159,7 @@ export const MarketView = () => {
                         <div className="bg-gray-800/80 border-2 border-cyan-500 rounded-lg p-6 space-y-4">
                             <div>
                                 <h3 className="text-xl font-bold text-cyan-400 capitalize mb-2">
-                                    {TL.resources[selectedResource] || selectedResource}
+                                    {t(TL.resources[selectedResource], lang) || selectedResource}
                                 </h3>
                                 <p className="text-gray-400 text-sm">
                                     В наличии: <span className="text-white font-bold">{availableResource}</span>
@@ -190,7 +199,7 @@ export const MarketView = () => {
                                         }
                                     `}
                                 >
-                                    {resources.rubies >= totalBuyCost ? `💵 ${TL.ui.buy.toUpperCase()}` : '❌ НЕДОСТАТОЧНО СРЕДСТВ'}
+                                    {resources.rubies >= totalBuyCost ? `💵 ${t(TL.ui.buy, lang).toUpperCase()}` : '❌ НЕДОСТАТОЧНО СРЕДСТВ'}
                                 </button>
                             </div>
 
@@ -211,7 +220,7 @@ export const MarketView = () => {
                                         }
                                     `}
                                 >
-                                    {availableResource >= amount ? `💰 ${TL.ui.sell.toUpperCase()}` : '❌ НЕДОСТАТОЧНО РЕСУРСОВ'}
+                                    {availableResource >= amount ? `💰 ${t(TL.ui.sell, lang).toUpperCase()}` : '❌ НЕДОСТАТОЧНО РЕСУРСОВ'}
                                 </button>
                             </div>
                         </div>

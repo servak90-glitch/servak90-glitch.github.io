@@ -31,12 +31,13 @@ const GameFooter: React.FC<GameFooterProps> = ({ logs }) => {
     const navButtons = [
         { id: View.DRILL, label: t(TEXT_IDS.MENU_DRILL, lang), icon: '🎯' },
         ...(cityUnlocked ? [{ id: View.CITY, label: t(TEXT_IDS.MENU_CITY, lang), icon: '🏙️' }] : []),
-        ...(cityUnlocked ? [{ id: View.GLOBAL_MAP, label: 'КАРТА', icon: '🗺️' }] : []),
+        ...(cityUnlocked ? [{ id: View.GLOBAL_MAP, label: t(TEXT_IDS.MENU_MAP, lang), icon: '🗺️' }] : []),
         ...(forgeUnlocked ? [{ id: View.FORGE, label: t(TEXT_IDS.MENU_FORGE, lang), icon: '🔧' }] : []),
         ...(skillsUnlocked ? [{ id: View.SKILLS, label: t(TEXT_IDS.MENU_SKILLS, lang), icon: '⚡' }] : []),
         { id: View.ARTIFACTS, label: t(TEXT_IDS.MENU_ARTIFACTS, lang), icon: '📦' },
-        { id: View.CODEX, label: 'АРХИВ', icon: '📚' }
+        { id: View.CODEX, label: t(TEXT_IDS.MENU_ARCHIVE, lang), icon: '📚' }
     ];
+
 
     return (
         <div className="flex flex-col shrink-0 z-30 bg-zinc-950 border-t border-zinc-800 transition-all duration-300 pointer-events-auto">

@@ -100,15 +100,21 @@ export function processHeat(
         // Охлаждение в простое
         const coolingDisabled = activeEffects.some(e => e.modifiers && e.modifiers.coolingDisabled);
 
-        if (!coolingDisabled && !isCoolingGameActive) {
+        if (!coolingDisabled) { // Убрано !isCoolingGameActive, чтобы охлаждение шло всегда
             // stats.totalCooling — это базовое значение охлаждения
             // Базовое охлаждение ~10% в секунду при totalCooling=50
             const coolingAmount = (stats.totalCooling * 0.2 + 0.1) * stats.ventSpeed * dt;
             heat = Math.max(stats.ambientHeat, heat - coolingAmount);
 
-            if (heat <= stats.ambientHeat + 1 && isOverheated) {
-                isOverheated = false;
-                events.push({ type: 'LOG', msg: "СИСТЕМЫ ОХЛАЖДЕНЫ.", color: "text-green-500" });
+            if (heat <= stats.ambientHeat + 1) {
+                if (isOverheated) {
+                    isOverheated = false;
+                    events.push({ type: 'LOG', msg: "СИСТЕМЫ ОХЛАЖДЕНЫ.", color: "text-green-500" });
+                }
+                if (isCoolingGameActive) {
+                    isCoolingGameActive = false;
+                    events.push({ type: 'LOG', msg: "АВАРИЙНАЯ БЛОКИРОВКА СНЯТА.", color: "text-cyan-400" });
+                }
             } else if (heat > stats.ambientHeat + 10 && coolingAmount < 0.01 && Math.random() < 0.02 * dt * 60) {
                 events.push({ type: 'LOG', msg: "ПРЕДУПРЕЖДЕНИЕ: ВНЕШНЯЯ СРЕДА СЛИШКОМ ГОРЯЧАЯ.", color: "text-orange-400" });
             }

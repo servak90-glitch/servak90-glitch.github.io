@@ -23,7 +23,7 @@ export function processEntities(state: GameState): { update: EntityUpdate; event
 
     // Спавн новых объектов
     if (!state.currentBoss && !state.combatMinigame && !state.isCoolingGameActive && flyingObjects.length < 3) {
-        if (Math.random() < 0.015) { // Slightly increased spawn rate
+        if (Math.random() < 0.04) { // Increased spawn rate from 0.015 to 0.04
             const rand = Math.random();
             const rarity = rand > 0.95 ? 'EPIC' : (rand > 0.70 ? 'RARE' : 'COMMON');
 
@@ -47,7 +47,7 @@ export function processEntities(state: GameState): { update: EntityUpdate; event
 
             const newObj: FlyingObject = {
                 id: `fly_${Date.now()}_${Math.random()}`,
-                x: Math.random() < 0.5 ? -20 : 120,
+                x: Math.random() < 0.5 ? -30 : 130, // Wider spawn
                 y: 10 + Math.random() * 60,
                 type,
                 rarity,
@@ -74,7 +74,7 @@ export function processEntities(state: GameState): { update: EntityUpdate; event
                 x: obj.x + obj.vx,
                 y: obj.y + obj.vy
             }))
-            .filter(obj => obj.x > -20 && obj.x < 120 && obj.y > -10 && obj.y < 110);
+            .filter(obj => obj.x > -40 && obj.x < 140 && obj.y > -20 && obj.y < 120); // Widened boundaries
         hasChanged = true;
     }
 

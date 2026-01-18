@@ -5,35 +5,40 @@ const BOSS_NAMES: Record<BossType, string[]> = {
   [BossType.WORM]: ["ГЛУБИННЫЙ ПОЖИРАТЕЛЬ", "ОБСИДИАНОВЫЙ ЗМЕЙ", "ТИТАНОВЫЙ ЧЕРВЬ", "ДРЕВНИЙ БУРИЛЬЩИК"],
   [BossType.CORE]: ["СТРАЖ ЯДРА", "ПЫЛАЮЩАЯ СФЕРА", "СИНГУЛЯРНОСТЬ-1", "СЕРДЦЕ ГОРЫ"],
   [BossType.CONSTRUCT]: ["ГЕОМЕТРИЧЕСКИЙ УЖАС", "ХРАНИТЕЛЬ ПРОТОКОЛА", "КУБ ПУСТОТЫ", "МОНОЛИТ"],
-  [BossType.SWARM]: ["КОРОЛЕВА УЛЬЯ", "НАНО-ЛЕГИОН", "РОЙ СМЕРТИ", "КОЛЛЕКТИВНЫЙ РАЗУМ"]
+  [BossType.SWARM]: ["КОРОЛЕВА УЛЬЯ", "НАНО-ЛЕГИОН", "РОЙ СМЕРТИ", "КОЛЛЕКТИВНЫЙ РАЗУМ"],
+  [BossType.VOID_SENTINEL]: ["СТРАЖ ПУСТОТЫ", "ВЕСТНИК СТЕРЕО", "ЦЕНТУРИОН AEGIS-7"]
 };
 
 const MOB_NAMES: Record<BossType, string[]> = {
   [BossType.WORM]: ["СКАЛЬНЫЙ ЧЕРВЬ", "ЛИЧИНКА", "ПЕЩЕРНЫЙ ЗМЕЙ"],
   [BossType.CORE]: ["ОГНЕННЫЙ ДУХ", "ИСКРА", "МАГМОВЫЙ СЛИЗЕНЬ"],
   [BossType.CONSTRUCT]: ["ДРОН-ОХРАННИК", "АВТО-ТУРЕЛЬ", "БИТЫЙ ПИКСЕЛЬ"],
-  [BossType.SWARM]: ["НАНО-РОЙ", "ЖУК-РУДОЕД", "ПАРАЗИТ"]
+  [BossType.SWARM]: ["НАНО-РОЙ", "ЖУК-РУДОЕД", "ПАРАЗИТ"],
+  [BossType.VOID_SENTINEL]: ["ТЕНЬ ПУСТОТЫ", "ОСКОЛОК КОДА"]
 };
 
 const BOSS_COLORS: Record<BossType, string> = {
   [BossType.WORM]: "#8B4513",
   [BossType.CORE]: "#FF4500",
   [BossType.CONSTRUCT]: "#00FFFF",
-  [BossType.SWARM]: "#32CD32"
+  [BossType.SWARM]: "#32CD32",
+  [BossType.VOID_SENTINEL]: "#A020F0"
 };
 
 const MOB_COLORS: Record<BossType, string> = {
   [BossType.WORM]: "#A0522D",
   [BossType.CORE]: "#FFA500",
   [BossType.CONSTRUCT]: "#E0FFFF",
-  [BossType.SWARM]: "#90EE90"
+  [BossType.SWARM]: "#90EE90",
+  [BossType.VOID_SENTINEL]: "#BA55D3"
 };
 
 const BOSS_WEAKNESSES: Record<BossType, CombatMinigameType> = {
   [BossType.WORM]: 'MASH',
   [BossType.CORE]: 'TIMING',
   [BossType.CONSTRUCT]: 'MEMORY',
-  [BossType.SWARM]: 'ALIGN'
+  [BossType.SWARM]: 'ALIGN',
+  [BossType.VOID_SENTINEL]: 'MEMORY'
 };
 
 export const generateBoss = (depth: number, biomeName: string): Boss => {

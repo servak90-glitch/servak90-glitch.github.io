@@ -246,7 +246,7 @@ const App: React.FC = () => {
     };
     const availableBiomes = useMemo(() => BIOMES.filter(b => depth >= b.depth), [depth]);
     const currentBiome = selectedBiome
-        ? BIOMES.find(b => b.name === selectedBiome) || BIOMES[0]
+        ? BIOMES.find(b => (typeof b.name === 'string' ? b.name : b.name.EN) === selectedBiome) || BIOMES[0]
         : BIOMES.slice().reverse().find(b => depth >= b.depth) || BIOMES[0];
 
     const isNavOpen = activeView !== View.DRILL && activeView !== View.COMBAT;
@@ -315,7 +315,7 @@ const App: React.FC = () => {
                                 <div className="text-2xl md:text-6xl font-black text-white/90 drop-shadow-md font-mono">{Math.floor(depth)}<span className="text-sm md:text-2xl text-zinc-400 ml-1 md:ml-2">m</span></div>
                                 <div className="mt-1 flex items-center gap-2">
                                     <div className="text-[10px] md:text-xs font-bold text-zinc-400 bg-black/50 px-2 py-1 inline-block border-l-2" style={{ borderColor: currentBiome.color }}>
-                                        {currentBiome.name}
+                                        {t(currentBiome.name, lang)}
                                     </div>
                                     {availableBiomes.length > 1 && (
                                         <select
@@ -324,7 +324,7 @@ const App: React.FC = () => {
                                             className="bg-black/50 text-white text-[9px] border border-zinc-700 px-1 py-1 font-mono outline-none"
                                         >
                                             <option value="">АВТО</option>
-                                            {availableBiomes.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
+                                            {availableBiomes.map(b => <option key={typeof b.name === 'string' ? b.name : b.name.EN} value={typeof b.name === 'string' ? b.name : b.name.EN}>{t(b.name, lang)}</option>)}
                                         </select>
                                     )}
                                 </div>

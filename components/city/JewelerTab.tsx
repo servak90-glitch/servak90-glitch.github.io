@@ -2,8 +2,16 @@ import React from 'react';
 import { JewelerTabProps } from './types';
 import { getResourceLabel } from '../../services/gameMath';
 import { GEM_TRADES } from '../../constants/balance';
+import { useGameStore } from '../../store/gameStore';
+import { getActivePerkIds } from '../../services/factionLogic';
+import { t } from '../../services/localization';
 
 const JewelerTab: React.FC<JewelerTabProps> = ({ resources, onTrade }) => {
+    const reputation = useGameStore(s => s.reputation);
+    const lang = useGameStore(s => s.settings.language);
+    const activePerks = React.useMemo(() => getActivePerkIds(reputation), [reputation]);
+    const hasResearchGrant = activePerks.includes('RESEARCH_GRANT');
+
     return (
         <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in">
             <div className="bg-zinc-900/80 border border-purple-900/50 p-6 text-center">
@@ -37,23 +45,23 @@ const JewelerTab: React.FC<JewelerTabProps> = ({ resources, onTrade }) => {
                                 {/* SELL FOR XP */}
                                 <button
                                     disabled={!canAfford}
-                                    onClick={() => onTrade({ [trade.gem]: 1 }, { XP: trade.xp })}
+                                    onClick={() => onTrade({ [trade.gem]: 1 }, { XP: Math.floor(trade.xp * (hasResearchGrant ? 1.1 : 1)) })}
                                     className={`px-4 py-2 border text-xs font-bold font-mono min-w-[100px]
                     ${canAfford ? 'border-purple-500 text-purple-400 hover:bg-purple-900/20' : 'border-zinc-800 text-zinc-600'}
                   `}
                                 >
-                                    +{trade.xp} XP
+                                    +{Math.floor(trade.xp * (hasResearchGrant ? 1.1 : 1))} XP
                                 </button>
 
                                 {/* SELL FOR MONEY */}
                                 <button
                                     disabled={!canAfford}
-                                    onClick={() => onTrade({ [trade.gem]: 1 }, { [trade.moneyRes]: trade.moneyAmount })}
+                                    onClick={() => onTrade({ [trade.gem]: 1 }, { [trade.moneyRes]: Math.floor(trade.moneyAmount * (hasResearchGrant ? 1.1 : 1)) })}
                                     className={`px-4 py-2 border text-xs font-bold font-mono min-w-[120px]
                     ${canAfford ? 'border-amber-500 text-amber-400 hover:bg-amber-900/20' : 'border-zinc-800 text-zinc-600'}
                   `}
                                 >
-                                    +{trade.moneyAmount} {getResourceLabel(trade.moneyRes)}
+                                    +{Math.floor(trade.moneyAmount * (hasResearchGrant ? 1.1 : 1))} {t(getResourceLabel(trade.moneyRes), lang)}
                                 </button>
                             </div>
                         </div>

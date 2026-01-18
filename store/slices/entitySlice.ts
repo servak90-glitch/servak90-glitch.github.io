@@ -7,6 +7,7 @@ import { ResourceType, VisualEvent } from '../../types';
 import { BIOMES } from '../../constants';
 import { getResourceLabel } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
+import { t } from '../../services/localization';
 
 export interface EntityActions {
     clickFlyingObject: (id: string, x: number, y: number) => void;
@@ -30,7 +31,7 @@ export const createEntitySlice: SliceCreator<EntityActions> = (set, get) => ({
 
             const newRes = { ...s.resources };
             const currentBiome = s.selectedBiome
-                ? BIOMES.find(b => b.name === s.selectedBiome) || BIOMES[0]
+                ? BIOMES.find(b => (typeof b.name === 'string' ? b.name : b.name.EN) === s.selectedBiome) || BIOMES[0]
                 : BIOMES.slice().reverse().find(b => s.depth >= b.depth) || BIOMES[0];
 
             // Rarity Multiplier
@@ -39,37 +40,38 @@ export const createEntitySlice: SliceCreator<EntityActions> = (set, get) => ({
             if (obj.rarity === 'EPIC') multiplier = 5;
 
             // REWARDS BY TYPE
+            const lang = s.settings.language;
             if (obj.type === 'SATELLITE_DEBRIS') {
                 // Metals
                 const metalAmount = (Math.floor(Math.random() * 5) + 3) * multiplier;
                 newRes.iron += metalAmount;
-                logs.push({ type: 'TEXT', x, y, text: `+${metalAmount} Iron`, style: 'RESOURCE' });
+                logs.push({ type: 'TEXT', x, y, text: `+${metalAmount} ${t(getResourceLabel('iron'), lang)}`, style: 'RESOURCE' });
 
                 if (Math.random() < 0.5) {
                     const copperAmount = (Math.floor(Math.random() * 4) + 2) * multiplier;
                     newRes.copper += copperAmount;
-                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${copperAmount} Copper`, style: 'RESOURCE' });
+                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${copperAmount} ${t(getResourceLabel('copper'), lang)}`, style: 'RESOURCE' });
                 }
             } else if (obj.type === 'GEODE_SMALL') {
                 // Gems & Stone
                 const stoneAmount = (Math.floor(Math.random() * 10) + 5) * multiplier;
                 newRes.stone += stoneAmount;
-                logs.push({ type: 'TEXT', x, y, text: `+${stoneAmount} Stone`, style: 'RESOURCE' });
+                logs.push({ type: 'TEXT', x, y, text: `+${stoneAmount} ${t(getResourceLabel('stone'), lang)}`, style: 'RESOURCE' });
 
                 if (Math.random() < 0.3 * multiplier) {
                     newRes.rubies += 1 * multiplier;
-                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${1 * multiplier} Ruby`, style: 'CRIT' });
+                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${1 * multiplier} ${t(getResourceLabel('rubies'), lang)}`, style: 'CRIT' });
                 }
             } else if (obj.type === 'GEODE_LARGE') {
                 // Rare Gems & Tech
                 const rareAmount = Math.floor(Math.random() * 2) + 1;
                 newRes.diamonds += rareAmount; // Guaranteed diamond for Large
-                logs.push({ type: 'TEXT', x, y, text: `+${rareAmount} Diamond`, style: 'CRIT' });
+                logs.push({ type: 'TEXT', x, y, text: `+${rareAmount} ${t(getResourceLabel('diamonds'), lang)}`, style: 'CRIT' });
 
                 if (Math.random() < 0.4) {
                     const techAmount = 1 * multiplier;
                     newRes.ancientTech += techAmount;
-                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${techAmount} Tech`, style: 'CRIT' });
+                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${techAmount} ${t(getResourceLabel('ancientTech'), lang)}`, style: 'CRIT' });
                 }
             }
 

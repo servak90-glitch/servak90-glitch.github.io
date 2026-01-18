@@ -10,9 +10,10 @@ import { SliceCreator, pushLog } from './types';
 import { RegionId, ResourceType, VisualEvent } from '../../types';
 import { calculateDistance } from '../../services/regionMath';
 import { calculateFuelCost, hasSufficientFuel, getFuelLabel } from '../../services/travelMath';
-import { recalculateCargoWeight } from '../../services/gameMath';
+import { recalculateCargoWeight, calculateStats } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 import { hasRequiredLicense, hasActivePermit, getRequiredLicense } from '../../services/licenseManager';
+import { getActivePerkIds } from '../../services/factionLogic';
 
 export interface TravelActions {
     /**
@@ -69,8 +70,8 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         }
 
         // Проверка 4: Cargo overload?
-        const stats = get().drill?.hull?.baseStats;
-        const maxCapacity = stats?.cargoCapacity || 0;
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const maxCapacity = stats.totalCargoCapacity;
 
         if (s.currentCargoWeight > maxCapacity) {
             const event: VisualEvent = {
@@ -85,7 +86,8 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         // Расчёт расстояния и топлива
         const distance = calculateDistance(s.currentRegion, targetRegion);
         const cargoRatio = maxCapacity > 0 ? s.currentCargoWeight / maxCapacity : 0;
-        const fuelCost = calculateFuelCost(distance, fuelType, cargoRatio);
+        const activePerks = getActivePerkIds(s.reputation);
+        const fuelCost = calculateFuelCost(distance, fuelType, cargoRatio, activePerks);
 
         // Проверка 3: Достаточно топлива?
         const availableFuel = s.resources[fuelType] || 0;
@@ -131,10 +133,11 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         if (s.currentRegion === targetRegion) return 0;
 
         const distance = calculateDistance(s.currentRegion, targetRegion);
-        const stats = get().drill?.hull?.baseStats;
-        const maxCapacity = stats?.cargoCapacity || 1;
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const maxCapacity = stats.totalCargoCapacity || 1;
         const cargoRatio = s.currentCargoWeight / maxCapacity;
+        const activePerks = getActivePerkIds(s.reputation);
 
-        return calculateFuelCost(distance, fuelType, cargoRatio);
+        return calculateFuelCost(distance, fuelType, cargoRatio, activePerks);
     }
 });

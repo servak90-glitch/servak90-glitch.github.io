@@ -3,9 +3,13 @@ import { DronesTabProps } from './types';
 import { Resources } from '../../types';
 import { useGameStore } from '../../store/gameStore';
 import { DRONES } from '../../constants';
+import { t } from '../../services/localization';
+
 
 const DronesTab: React.FC<DronesTabProps> = ({ resources, droneLevels }) => {
     const buyDrone = useGameStore(s => s.buyDrone);
+    const lang = useGameStore(s => s.settings.language);
+
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
@@ -16,7 +20,8 @@ const DronesTab: React.FC<DronesTabProps> = ({ resources, droneLevels }) => {
                     <div key={drone.id} className="bg-zinc-900 border border-zinc-700 p-4 relative group flex flex-col justify-between">
                         <div>
                             <div className="flex justify-between items-start mb-2">
-                                <h4 className="font-bold pixel-text text-xs" style={{ color: drone.color }}>{drone.name}</h4>
+                                <h4 className="font-bold pixel-text text-xs" style={{ color: drone.color }}>{t(drone.name, lang)}</h4>
+
                                 <span className="text-[9px] bg-black px-1.5 py-0.5 rounded text-white border border-zinc-800">
                                     LVL {lvl} <span className="text-zinc-600">/ {drone.maxLevel}</span>
                                 </span>
@@ -24,20 +29,21 @@ const DronesTab: React.FC<DronesTabProps> = ({ resources, droneLevels }) => {
 
                             <div className="mb-4 bg-black/40 p-2 border-l-2" style={{ borderColor: drone.color }}>
                                 <div className="text-[9px] text-zinc-400 italic mb-2 leading-tight min-h-[2.5em]">
-                                    "{drone.description}"
+                                    "{t(drone.description, lang)}"
                                 </div>
 
                                 <div className="text-[10px] font-mono text-white font-bold">
-                                    {lvl > 0 ? drone.effectDescription(lvl) : "СТАТУС: НЕ АКТИВЕН"}
+                                    {lvl > 0 ? t(drone.effectDescription(lvl), lang) : "СТАТУС: НЕ АКТИВЕН"}
                                 </div>
 
                                 {!isMaxed && (
                                     <div className="text-[9px] font-mono text-zinc-500 mt-1 flex items-center gap-1">
                                         <span>NEXT:</span>
-                                        <span className="text-green-400">{drone.effectDescription(lvl + 1)}</span>
+                                        <span className="text-green-400">{t(drone.effectDescription(lvl + 1), lang)}</span>
                                     </div>
                                 )}
                             </div>
+
 
                             {!isMaxed ? (
                                 <div className="space-y-1 mb-3">

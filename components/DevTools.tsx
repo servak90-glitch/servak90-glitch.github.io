@@ -5,9 +5,11 @@ import { EVENTS } from '../services/eventRegistry';
 import { ARTIFACTS } from '../services/artifactRegistry';
 import { REGIONS } from '../constants/regions';
 import type { BaseType } from '../types';
+import { t } from '../services/localization';
 
 const DevTools: React.FC = () => {
   const store = useGameStore();
+  const lang = store.settings.language;
   const [activeTab, setActiveTab] = useState<'RES' | 'STATE' | 'NAV' | 'EVENT' | 'GLOBAL'>('RES');
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
@@ -133,7 +135,7 @@ const DevTools: React.FC = () => {
                   className="flex-1 bg-black border border-green-700 text-green-400 text-[10px]"
                 >
                   {ARTIFACTS.map(a => (
-                    <option key={a.id} value={a.id}>{a.name} ({a.rarity})</option>
+                    <option key={a.id} value={a.id}>{t(a.name, lang)} ({a.rarity})</option>
                   ))}
                 </select>
                 <button
@@ -228,7 +230,7 @@ const DevTools: React.FC = () => {
                 onClick={() => store.adminTriggerEvent(ev.id)}
                 className="w-full text-left p-1 border-b border-green-900 hover:text-white truncate text-[10px]"
               >
-                {ev.id} - {ev.title}
+                {ev.id} - {t(ev.title, lang)}
               </button>
             ))}
             <button onClick={store.adminClearEvents} className="w-full text-center p-2 border border-red-900 text-red-500 mt-2">CLEAR QUEUE</button>
@@ -259,7 +261,7 @@ const DevTools: React.FC = () => {
                     className={`border border-green-700 hover:bg-green-900/30 p-1 text-[8px] truncate ${store.currentRegion === region.id ? 'bg-green-800 text-white' : ''
                       }`}
                   >
-                    {region.name.substring(0, 12)}
+                    {t(region.name, lang).substring(0, 12)}
                   </button>
                 ))}
               </div>

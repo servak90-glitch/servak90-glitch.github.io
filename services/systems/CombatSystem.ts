@@ -59,6 +59,7 @@ export interface CombatResult {
     resourceChanges: ResourceChanges;
     newInventoryItems: Record<string, InventoryItem>;
     events: VisualEvent[];
+    questUpdates?: { target: string, type: 'DEFEAT_BOSS' }[];
 }
 
 export const checkWeakness = (bossType: BossType, abilityType: AbilityType): boolean => {
@@ -283,10 +284,30 @@ export function processCombat(
                 }
             }
 
+            const questUpdates: { target: string, type: 'DEFEAT_BOSS' }[] = [
+                { target: currentBoss.id, type: 'DEFEAT_BOSS' },
+                { target: currentBoss.type, type: 'DEFEAT_BOSS' }
+            ];
+
             lastBossDepth = currentBoss.isMob ? lastBossDepth : Math.floor(state.depth);
             currentBoss = null;
             combatMinigame = null;
 
+            return {
+                update: {
+                    currentBoss,
+                    combatMinigame,
+                    bossAttackTick,
+                    lastBossDepth,
+                    integrity: integrity !== state.integrity ? integrity : undefined,
+                    xp: xp !== state.xp ? xp : undefined,
+                    minigameCooldown
+                },
+                resourceChanges,
+                newInventoryItems,
+                events,
+                questUpdates
+            };
         }
     } else if (state.depth > 200 && (state.depth - lastBossDepth) >= 500 && Math.random() < 0.005) {
         currentBoss = generateBoss(state.depth, "Unknown");

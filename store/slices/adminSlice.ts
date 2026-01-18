@@ -25,7 +25,7 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
     adminAddResources: (c, r) => set(s => {
         const nr = { ...s.resources };
         Object.keys(nr).forEach(k => {
-            if (['clay', 'stone', 'copper', 'iron', 'silver', 'gold'].includes(k)) nr[k as ResourceType] += c;
+            if (['clay', 'stone', 'copper', 'iron', 'silver', 'gold', 'coal', 'oil', 'gas'].includes(k)) nr[k as ResourceType] += c;
             else nr[k as ResourceType] += r;
         });
         return { resources: nr };

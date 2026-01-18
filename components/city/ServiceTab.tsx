@@ -4,6 +4,9 @@ import { ResourceType, Resources } from '../../types';
 import { useGameStore } from '../../store/gameStore';
 import { calculateRepairCost, getResourceLabel } from '../../services/gameMath';
 import { CITY_SERVICE, PREMIUM_BUFFS } from '../../constants/balance';
+import { t } from '../../services/localization';
+
+
 
 const ServiceTab: React.FC<ServiceTabProps> = ({
     resources,
@@ -15,6 +18,8 @@ const ServiceTab: React.FC<ServiceTabProps> = ({
     onRepair
 }) => {
     const buyCityBuff = useGameStore(s => s.buyCityBuff);
+    const lang = useGameStore(s => s.settings.language);
+
 
     const isPaidCooling = depth >= CITY_SERVICE.PAID_COOLING_DEPTH;
     const coolingRes = depth > CITY_SERVICE.GOLD_COOLING_DEPTH ? 'gold' : 'stone';
@@ -47,7 +52,7 @@ const ServiceTab: React.FC<ServiceTabProps> = ({
                     <span className="text-[10px] text-zinc-500 font-mono">СТОИМОСТЬ:</span>
                     {isPaidCooling ? (
                         <span className={`text-xs font-bold ${canAffordCooling ? 'text-white' : 'text-red-500'}`}>
-                            {coolingCost} {getResourceLabel(coolingRes)}
+                            {coolingCost} {t(getResourceLabel(coolingRes), lang)}
                         </span>
                     ) : (
                         <span className="text-xs font-bold text-green-400">БЕСПЛАТНО</span>
@@ -87,7 +92,7 @@ const ServiceTab: React.FC<ServiceTabProps> = ({
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] text-zinc-500 font-mono">ПОЛНЫЙ РЕМОНТ:</span>
                     <span className={`text-xs font-bold ${canAffordRepair ? 'text-white' : 'text-red-500'}`}>
-                        {fullRepairCost} {getResourceLabel(repairRes)}
+                        {fullRepairCost} {t(getResourceLabel(repairRes), lang)}
                     </span>
                 </div>
 
@@ -114,7 +119,8 @@ const ServiceTab: React.FC<ServiceTabProps> = ({
                                 <div className="flex items-center gap-3">
                                     <div className="text-2xl">{buff.icon}</div>
                                     <div>
-                                        <div className={`text-xs font-bold ${buff.color} pixel-text`}>{buff.name}</div>
+                                        <div className={`text-xs font-bold ${buff.color} pixel-text`}>{t(buff.name, lang)}</div>
+
                                         <div className="text-[10px] text-zinc-500 font-mono">{buff.desc}</div>
                                     </div>
                                 </div>
@@ -123,7 +129,7 @@ const ServiceTab: React.FC<ServiceTabProps> = ({
                                     disabled={!canBuy}
                                     className={`w-full md:w-auto mt-2 md:mt-0 px-3 py-1.5 text-[10px] font-mono border transition-all active:scale-95 ${canBuy ? 'border-amber-500 text-amber-400 hover:bg-amber-900/30' : 'border-zinc-800 text-zinc-600 cursor-not-allowed'}`}
                                 >
-                                    {buff.cost} {getResourceLabel(buff.res)}
+                                    {buff.cost} {t(getResourceLabel(buff.res), lang)}
                                 </button>
                             </div>
                         )

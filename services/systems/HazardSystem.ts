@@ -17,7 +17,7 @@ export interface HazardUpdate {
 const HAZARD_COOLDOWN = 15 * 60; // 15 секунд (при 60 FPS)
 const MIN_DEPTH_FOR_HAZARDS = 2000; // Начинаются с 2км
 
-export function processHazards(state: GameState, dt: number): { update: HazardUpdate; events: VisualEvent[] } {
+export function processHazards(state: GameState, dt: number, activePerks: string[] = []): { update: HazardUpdate; events: VisualEvent[] } {
     const events: VisualEvent[] = [];
     const update: HazardUpdate = {};
 
@@ -34,7 +34,12 @@ export function processHazards(state: GameState, dt: number): { update: HazardUp
     // Вероятность проверяется каждый тик, поэтому масштабируем шанс через dt.
     const deepness = Math.max(0, state.depth - MIN_DEPTH_FOR_HAZARDS);
     // chancePerSecond: 0.5% - 2% в секунду
-    const chancePerSecond = Math.min(0.02, 0.005 + deepness / 2000000);
+    let chancePerSecond = Math.min(0.02, 0.005 + deepness / 2000000);
+
+    // Perk: Quantum Stability (Science Level 10) - -50% hazard frequency
+    if (activePerks.includes('QUANTUM_STABILITY')) {
+        chancePerSecond *= 0.5;
+    }
 
     // Доп. защита от спама: если недавно было событие (eventQueue не пуст), не триггерим
     if (state.eventQueue.length > 0) return { update, events };

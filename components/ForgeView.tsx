@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { DrillSlot } from '../types';
-import { BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS } from '../constants';
+import { BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS } from '../constants';
 import { calculateStats } from '../services/gameMath';
 import { UpgradeCard, FusionTab, DronesTab } from './forge';
 
@@ -48,6 +48,7 @@ const ForgeView: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                         <UpgradeCard title="ЛОГИКА" current={drill.logic} next={LOGIC_CORES[LOGIC_CORES.findIndex(p => p.id === drill.logic.id) + 1]} type={DrillSlot.LOGIC} resources={resources} onBuy={buyUpgrade} />
                         <UpgradeCard title="УПРАВЛЕНИЕ" current={drill.control} next={CONTROL_UNITS[CONTROL_UNITS.findIndex(p => p.id === drill.control.id) + 1]} type={DrillSlot.CONTROL} resources={resources} onBuy={buyUpgrade} />
+                        <UpgradeCard title="ГРУЗОВОЙ ОТСЕК" current={drill.cargoBay} next={CARGO_BAYS[CARGO_BAYS.findIndex(p => p.id === drill.cargoBay.id) + 1]} type={DrillSlot.CARGO_BAY} resources={resources} onBuy={buyUpgrade} />
                         <UpgradeCard title="РЕДУКТОР" current={drill.gearbox} next={GEARBOXES[GEARBOXES.findIndex(p => p.id === drill.gearbox.id) + 1]} type={DrillSlot.GEARBOX} resources={resources} onBuy={buyUpgrade} />
                     </div>
                 );

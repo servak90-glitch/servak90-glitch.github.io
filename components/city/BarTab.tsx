@@ -4,6 +4,8 @@ import { ResourceType } from '../../types';
 import { useGameStore } from '../../store/gameStore';
 import { getResourceLabel } from '../../services/gameMath';
 import { BAR_DRINKS, GAMBLING } from '../../constants/balance';
+import { t } from '../../services/localization';
+
 
 // Тип результата броска
 type DiceResult = { won: boolean; amount: number } | null;
@@ -17,6 +19,8 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
 
     const buyCityBuff = useGameStore(s => s.buyCityBuff);
     const gambleResources = useGameStore(s => s.gambleResources);
+    const lang = useGameStore(s => s.settings.language);
+
 
     // Обёртка для броска с анимацией результата
     const handleRoll = () => {
@@ -67,7 +71,8 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
                                     <div className="flex items-center gap-3">
                                         <div className="text-2xl">{drink.icon}</div>
                                         <div>
-                                            <div className={`text-xs font-bold ${drink.color} pixel-text`}>{drink.name}</div>
+                                            <div className={`text-xs font-bold ${drink.color} pixel-text`}>{t(drink.name, lang)}</div>
+
                                             <div className="text-[9px] text-zinc-400 font-mono max-w-[150px]">{drink.desc}</div>
                                         </div>
                                     </div>
@@ -78,7 +83,7 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
                       ${canAfford ? 'border-amber-600 text-amber-500 hover:bg-amber-900/20' : 'border-zinc-800 text-zinc-600 cursor-not-allowed'}
                     `}
                                     >
-                                        {drink.cost} {getResourceLabel(drink.res)}
+                                        {drink.cost} {t(getResourceLabel(drink.res), lang)}
                                     </button>
                                 </div>
                             );
@@ -124,7 +129,7 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
                                 className="w-full accent-purple-500 h-1 bg-zinc-700 appearance-none cursor-pointer"
                             />
                             <div className="text-center font-bold text-purple-300 pixel-text text-sm">
-                                {diceBetAmount} {getResourceLabel(diceBetRes)}
+                                {diceBetAmount} {t(getResourceLabel(diceBetRes), lang)}
                             </div>
                         </div>
 
@@ -137,7 +142,7 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
                             >
                                 {lastResult.won ? '🎉 ВЫИГРЫШ!' : '💀 ПРОИГРЫШ...'}
                                 <div className="text-sm font-mono mt-1">
-                                    {lastResult.won ? '+' : ''}{lastResult.amount} {getResourceLabel(diceBetRes)}
+                                    {lastResult.won ? '+' : ''}{lastResult.amount} {t(getResourceLabel(diceBetRes), lang)}
                                 </div>
                             </div>
                         )}

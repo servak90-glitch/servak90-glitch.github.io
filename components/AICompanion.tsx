@@ -1,6 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { AIState } from '../types';
+import { useGameStore } from '../store/gameStore';
+import { t, TEXT_IDS } from '../services/localization';
+
 
 interface AICompanionProps {
   state: AIState;
@@ -22,7 +24,9 @@ const COLORS: Record<AIState, string> = {
 };
 
 const AICompanion: React.FC<AICompanionProps> = ({ state, heat }) => {
+  const lang = useGameStore(s => s.settings.language);
   const [frame, setFrame] = useState(0);
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -58,14 +62,16 @@ const AICompanion: React.FC<AICompanionProps> = ({ state, heat }) => {
       <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[size:100%_4px] opacity-20" />
 
       {/* Label */}
-      <div className="absolute top-1 left-1 text-[8px] font-mono text-zinc-500">AI-CORE</div>
+      <div className="absolute top-1 left-1 text-[8px] font-mono text-zinc-500">{t(TEXT_IDS.AI_CORE_LABEL, lang)}</div>
+
 
       {/* Face */}
       <div
         className={`text-xs md:text-2xl font-black pixel-text ${color} ${animClass} whitespace-nowrap`}
         style={breathing}
       >
-        {state === 'BROKEN' ? (Math.random() > 0.5 ? face : '[ ERROR ]') : face}
+        {state === 'BROKEN' ? (Math.random() > 0.5 ? face : t(TEXT_IDS.AI_ERROR, lang)) : face}
+
       </div>
 
       {/* Status Bar */}

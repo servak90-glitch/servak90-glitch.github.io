@@ -9,6 +9,7 @@ import { tunnelAtmosphere } from '../services/systems/TunnelAtmosphere'; // [DEV
 // [DEV_CONTEXT: PATTERN] Persistent Singleton for PixiJS v8
 let globalApp: Application | null = null;
 let initPromise: Promise<Application | null> | null = null;
+let activeComponentsCount = 0;
 
 // Global refs to access Pixi objects from imperative handle
 let globalTextures: { debris: Texture; spark: Texture; smoke: Texture; dust: Texture } | null = null;
@@ -54,14 +55,18 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
     }, [onObjectClick, onDrillClick]);
 
     useEffect(() => {
+        let isMounted = true;
+
         const initPixi = async () => {
+            activeComponentsCount++;
+
             if (!globalApp) {
                 if (!initPromise) {
                     initPromise = (async () => {
                         const app = new Application();
                         try {
                             await app.init({
-                                resizeTo: window,
+                                // [DEV_CONTEXT: STABILITY] Removed resizeTo: window to prevent race conditions during init
                                 backgroundAlpha: 0,
                                 antialias: false,
                                 resolution: Math.min(window.devicePixelRatio || 1, 2),
@@ -89,7 +94,6 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                         globalParticleLayer = particleLayer;
 
                         // [DEV_CONTEXT: FILTERS] Using pixi-filters library
-                        // CRT Filter: Retro look (vignette removed in pixi-filters 6.x)
                         const crtFilter = new CRTFilter({
                             curvature: 1,
                             lineWidth: 1,
@@ -97,7 +101,6 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                             noise: 0.1
                         });
 
-                        // RGB Split: Chromatic Aberration (Glitch effect)
                         const rgbSplitFilter = new RGBSplitFilter(
                             { x: 0, y: 0 },
                             { x: 0, y: 0 },
@@ -106,19 +109,16 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
 
                         app.stage.filters = [rgbSplitFilter, crtFilter];
 
-                        // [DEV_CONTEXT: ATMOSPHERE] Initialize tunnel atmosphere system FIRST (background layers)
                         tunnelAtmosphere.init(app.stage, {
                             screenWidth: app.screen.width,
                             screenHeight: app.screen.height
                         });
 
-                        // Then add game layers ON TOP of atmosphere
                         app.stage.addChild(dustLayer);
                         app.stage.addChild(objectLayer);
                         app.stage.addChild(droneLayer);
                         app.stage.addChild(particleLayer);
 
-                        // --- TEXTURE GENERATION ---
                         const generateTexture = (draw: (ctx: CanvasRenderingContext2D) => void, w: number, h: number) => {
                             const canvas = document.createElement('canvas');
                             canvas.width = w;
@@ -141,7 +141,6 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                             }, 4, 4),
                         };
 
-                        // INIT DUST
                         for (let i = 0; i < 60; i++) {
                             const sprite = new Sprite(globalTextures.dust);
                             sprite.anchor.set(0.5);
@@ -156,305 +155,290 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                             });
                         }
 
-                        // --- GLOBAL TICKER ---
                         app.ticker.add((ticker) => {
-                            const dt = ticker.deltaTime;
-                            const time = performance.now() / 1000;
-                            if (!app.screen) return;
+                            // [DEV_CONTEXT: SAFETY] Check if app or components are still active
+                            // Fix: Use renderer check separately to avoid TS errors
+                            const isRenderDestroyed = app.renderer ? (app.renderer as any).destroyed : false;
+                            if (activeComponentsCount <= 0 || !app.screen || isRenderDestroyed) return;
 
-                            const screenW = app.screen.width;
-                            const screenH = app.screen.height;
-                            const cx = screenW / 2;
-                            const cy = screenH * 0.4;
+                            try {
+                                const dt = ticker.deltaTime;
+                                const time = performance.now() / 1000;
 
-                            // [DEV_CONTEXT: DIRECT ACCESS] Pulling fresh state every tick without prop drilling
-                            const state = useGameStore.getState();
-                            const { activeDrones, droneLevels, flyingObjects, heat, integrity, depth } = state;
+                                const screenW = app.screen.width;
+                                const screenH = app.screen.height;
+                                const cx = screenW / 2;
+                                const cy = screenH * 0.4;
 
-                            // [DEV_CONTEXT: ATMOSPHERE] Update tunnel atmosphere
-                            const isDrillingActive = globalParticles.length > 0;
-                            const atmosphereShake = tunnelAtmosphere.update(dt, depth, isDrillingActive);
-                            app.stage.x = atmosphereShake.shakeX;
-                            app.stage.y = atmosphereShake.shakeY;
+                                const state = useGameStore.getState();
+                                const { activeDrones, droneLevels, flyingObjects, heat, integrity, depth } = state;
 
-                            // [DEV_CONTEXT: SHADER UPDATE]
-                            // Update filter uniforms dynamically
-
-                            // 1. Heat -> RGB Split (Glitch)
-                            const heatRatio = heat / 100;
-                            const glitchIntensity = Math.max(0, (heatRatio - 0.6) * 2.5); // Start glitching at 60% heat
-
-                            if (glitchIntensity > 0) {
-                                const offset = glitchIntensity * 5;
-                                rgbSplitFilter.red = { x: offset * Math.sin(time * 20), y: 0 };
-                                rgbSplitFilter.blue = { x: -offset * Math.cos(time * 15), y: 0 };
-                            } else {
-                                rgbSplitFilter.red = { x: 0, y: 0 };
-                                rgbSplitFilter.blue = { x: 0, y: 0 };
-                            }
-
-                            // 2. Integrity -> CRT Distortion / Noise
-                            const damageRatio = (100 - integrity) / 100;
-                            // Increase noise as damage increases
-                            crtFilter.noise = 0.1 + (damageRatio * 0.4);
-                            // Bend screen if critically damaged
-                            crtFilter.curvature = 1 + (damageRatio > 0.8 ? Math.sin(time * 10) * 0.5 : 0);
-                            crtFilter.time = time; // Animate noise
-
-                            // 0. DUST UPDATE
-                            const warpSpeed = isDrillingActive ? 25 : 1;
-
-                            dustParticles.forEach(p => {
-                                p.y -= p.speed * p.z * warpSpeed * dt;
-                                if (p.y < -10) {
-                                    p.y = screenH + 10;
-                                    p.x = Math.random() * screenW;
-                                }
-                                p.sprite.x = p.x;
-                                p.sprite.y = p.y;
-                                const targetScaleY = 1 + (warpSpeed - 1) * 0.1 * p.z;
-                                p.sprite.scale.y += (targetScaleY - p.sprite.scale.y) * 0.1;
-                                p.sprite.scale.x = Math.max(0.5, 1 - (targetScaleY - 1) * 0.1);
-                                p.sprite.alpha = p.z * 0.6;
-                            });
-
-                            // 1. PARTICLES
-                            for (let i = globalParticles.length - 1; i >= 0; i--) {
-                                const p = globalParticles[i];
-                                if (p.sprite.destroyed) { globalParticles.splice(i, 1); continue; }
-                                p.life -= dt;
-                                p.sprite.x += p.vx * dt;
-                                p.sprite.y += p.vy * dt;
-                                if (p.type === 'DEBRIS') { p.vy += 0.2 * dt; p.sprite.rotation += 0.1 * dt; }
-                                else if (p.type === 'SMOKE') { p.sprite.alpha = (p.life / p.maxLife) * 0.5; p.sprite.scale.x += 0.01 * dt; p.sprite.scale.y += 0.01 * dt; }
-                                else { p.sprite.alpha = p.life / p.maxLife; }
-                                if (p.life <= 0) { p.sprite.destroy(); globalParticles.splice(i, 1); }
-                            }
-
-                            // 2. DRONES RENDER LOGIC
-                            droneGraphicsMap.forEach((g, idx) => {
-                                if (idx >= activeDrones.length) {
-                                    g.destroy();
-                                    droneGraphicsMap.delete(idx);
-                                }
-                            });
-
-                            activeDrones.forEach((type, i) => {
-                                let g = droneGraphicsMap.get(i);
-                                if (!g || g.destroyed) {
-                                    g = new Graphics();
-                                    droneLayer.addChild(g);
-                                    droneGraphicsMap.set(i, g);
+                                // [OPTIMIZATION] Early exit if nothing rendering-intensive is active
+                                const hasParticles = globalParticles.length > 0;
+                                const hasDrones = activeDrones.length > 0;
+                                const hasObjects = flyingObjects.length > 0;
+                                if (!hasParticles && !hasDrones && !hasObjects && !tunnelAtmosphere.hasActiveHazard()) {
+                                    // We can skip most of the logic if nothing is happening, but we still update dust for ambiance
                                 }
 
-                                g.clear();
-                                const level = droneLevels[type] || 1;
-                                const scale = 1 + (level * 0.1); // Bigger with levels
-
-                                // Orbital Physics
-                                const radius = 90 + i * 35;
-                                const speed = (1 + (i % 3) * 0.3) * (i % 2 === 0 ? 1 : -1);
-                                const angle = time * speed + (i * 1.5);
-
-                                const dx = Math.cos(angle) * radius;
-                                const dy = Math.sin(angle) * (radius * 0.3); // Elliptical orbit
-
-                                const droneX = cx + dx;
-                                const droneY = cy + dy;
-
-                                // Draw Orbit Path (Faint)
-                                g.ellipse(cx, cy, radius, radius * 0.3)
-                                    .stroke({ width: 1, color: 0xffffff, alpha: 0.05 });
-
-                                // DRAW DRONE
-                                const size = 6 * scale;
-
-                                switch (type) {
-                                    case DroneType.COLLECTOR: {
-                                        const color = 0x00FF00;
-                                        g.poly([
-                                            droneX - size, droneY - size,
-                                            droneX + size, droneY - size,
-                                            droneX + size, droneY + size,
-                                            droneX - size, droneY + size
-                                        ]).stroke({ width: 2, color: color });
-                                        g.rect(droneX - size / 2, droneY - size / 2, size, size)
-                                            .fill({ color: color, alpha: 0.3 + Math.sin(time * 5) * 0.2 });
-                                        const open = Math.abs(Math.sin(time * 3)) * 3;
-                                        g.moveTo(droneX - size, droneY + size);
-                                        g.lineTo(droneX - size - 2, droneY + size + 4 + open);
-                                        g.moveTo(droneX + size, droneY + size);
-                                        g.lineTo(droneX + size + 2, droneY + size + 4 + open);
-                                        g.stroke({ width: 1, color: color });
-                                        break;
-                                    }
-                                    case DroneType.COOLER: {
-                                        const color = 0x00FFFF;
-                                        const rot = time * 10;
-                                        g.circle(droneX, droneY, size / 2).fill({ color });
-                                        for (let k = 0; k < 3; k++) {
-                                            const bladeAng = rot + (k * (Math.PI * 2 / 3));
-                                            const bx = droneX + Math.cos(bladeAng) * size * 1.5;
-                                            const by = droneY + Math.sin(bladeAng) * size * 1.5;
-                                            g.moveTo(droneX, droneY).lineTo(bx, by).stroke({ width: 2 * scale, color });
-                                        }
-                                        if (level >= 5) {
-                                            g.circle(droneX, droneY, size * 2)
-                                                .stroke({ width: 1, color, alpha: 0.2 });
-                                        }
-                                        break;
-                                    }
-                                    case DroneType.BATTLE: {
-                                        const color = 0xFF0000;
-                                        const headAng = angle + (speed > 0 ? Math.PI / 2 : -Math.PI / 2);
-                                        const p1x = droneX + Math.cos(headAng) * size * 1.5;
-                                        const p1y = droneY + Math.sin(headAng) * size * 1.5;
-                                        const p2x = droneX + Math.cos(headAng + 2.5) * size;
-                                        const p2y = droneY + Math.sin(headAng + 2.5) * size;
-                                        const p3x = droneX + Math.cos(headAng - 2.5) * size;
-                                        const p3y = droneY + Math.sin(headAng - 2.5) * size;
-                                        g.poly([p1x, p1y, p2x, p2y, p3x, p3y])
-                                            .fill({ color, alpha: 0.8 })
-                                            .stroke({ width: 1, color: 0xffffff });
-                                        if (level >= 3) {
-                                            g.circle(p1x, p1y, 2).fill({ color: 0xffff00 });
-                                        }
-                                        break;
-                                    }
-                                    case DroneType.REPAIR: {
-                                        const color = 0xFFD700;
-                                        g.rect(droneX - size / 3, droneY - size, size * 0.66, size * 2).fill({ color });
-                                        g.rect(droneX - size, droneY - size / 3, size * 2, size * 0.66).fill({ color });
-                                        g.ellipse(droneX, droneY, size * 1.5, size * 0.5)
-                                            .stroke({ width: 1, color, alpha: 0.5 });
-                                        break;
-                                    }
-                                    case DroneType.MINER: {
-                                        const color = 0xFF00FF;
-                                        g.poly([
-                                            droneX - size / 2, droneY - size,
-                                            droneX + size / 2, droneY - size,
-                                            droneX, droneY + size * 1.5
-                                        ]).fill({ color });
-                                        const offset = (time * 5) % size;
-                                        g.moveTo(droneX - size / 2, droneY - size + offset)
-                                            .lineTo(droneX + size / 2, droneY - size + offset + 2)
-                                            .stroke({ width: 1, color: 0xffffff });
-                                        break;
-                                    }
-                                }
-                            });
-
-                            // 3. FLYING OBJECTS
-                            const currentIds = new Set(flyingObjects.map(o => o.id));
-                            objectGraphicsMap.forEach((g, id) => {
-                                if (!currentIds.has(id)) { g.destroy(); objectGraphicsMap.delete(id); }
-                            });
-
-                            flyingObjects.forEach(obj => {
-                                let g = objectGraphicsMap.get(obj.id);
-                                if (!g || g.destroyed) {
-                                    g = new Graphics();
-                                    g.eventMode = 'static';
-                                    g.cursor = 'pointer';
-                                    g.hitArea = new Circle(0, 0, 30);
-                                    g.on('pointerdown', (e) => {
-                                        e.stopPropagation();
-                                        callbacksRef.current.onObjectClick(obj.id, e.global.x, e.global.y);
-                                    });
-                                    objectLayer.addChild(g);
-                                    objectGraphicsMap.set(obj.id, g);
+                                const isDrillingActive = hasParticles;
+                                const atmosphereShake = tunnelAtmosphere.update(dt, depth, isDrillingActive);
+                                if (app.stage) {
+                                    app.stage.x = atmosphereShake.shakeX;
+                                    app.stage.y = atmosphereShake.shakeY;
                                 }
 
-                                // Clear and redraw with animation
-                                g.clear();
+                                const heatRatio = heat / 100;
+                                const glitchIntensity = Math.max(0, (heatRatio - 0.6) * 2.5);
 
-                                // Pulsating scale based on time
-                                const pulse = 1 + Math.sin(time * 3) * 0.15;
-                                const healthPercent = obj.hp / obj.maxHp;
-
-                                // Rarity Effects
-                                let rarityScale = 1;
-                                let rarityGlowColor = 0x000000;
-                                let rarityGlowAlpha = 0;
-
-                                if (obj.rarity === 'RARE') {
-                                    rarityScale = 1.2;
-                                    rarityGlowColor = 0x00FFFF; // Cyan
-                                    rarityGlowAlpha = 0.3;
-                                } else if (obj.rarity === 'EPIC') {
-                                    rarityScale = 1.5;
-                                    rarityGlowColor = 0xFFD700; // Gold
-                                    rarityGlowAlpha = 0.5;
-                                }
-
-                                // Apply Rarity Glow (Underlay)
-                                if (obj.rarity !== 'COMMON') {
-                                    g.circle(0, 0, 25 * rarityScale * pulse)
-                                        .fill({ color: rarityGlowColor, alpha: rarityGlowAlpha * 0.5 + Math.sin(time * 10) * 0.1 });
-                                }
-
-                                if (obj.type === 'GEODE_SMALL') {
-                                    // Emerald crystal with glow
-                                    const r = 12 * pulse * rarityScale;
-                                    const path: number[] = [];
-                                    for (let k = 0; k < 8; k++) {
-                                        const ang = (k * Math.PI) / 4;
-                                        const rad = k % 2 === 0 ? r : r * 0.6;
-                                        path.push(Math.cos(ang) * rad, Math.sin(ang) * rad);
-                                    }
-                                    // Outer glow
-                                    g.drawPolygon(path.map((v, i) => v * 1.3))
-                                        .fill({ color: 0x00ff88, alpha: 0.15 });
-                                    // Main crystal
-                                    g.drawPolygon(path)
-                                        .fill({ color: 0x00ff88, alpha: 0.4 * healthPercent + 0.2 })
-                                        .stroke({ width: 2, color: 0x00ffaa });
-                                    // Inner highlight
-                                    g.circle(0, -r * 0.3, r * 0.2)
-                                        .fill({ color: 0xffffff, alpha: 0.5 });
-
-                                } else if (obj.type === 'GEODE_LARGE') {
-                                    // Purple rare geode
-                                    const s = 15 * pulse * rarityScale;
-                                    // Outer glow
-                                    g.rect(-s * 1.4, -s * 1.4, s * 2.8, s * 2.8)
-                                        .fill({ color: 0x9900ff, alpha: 0.1 });
-                                    // Main body
-                                    g.rect(-s, -s, s * 2, s * 2)
-                                        .fill({ color: 0xaa44ff, alpha: 0.35 * healthPercent + 0.15 })
-                                        .stroke({ width: 2, color: 0xcc66ff });
-                                    // Sparkle effect
-                                    const sparkX = Math.sin(time * 5) * s * 0.5;
-                                    const sparkY = Math.cos(time * 4) * s * 0.5;
-                                    g.circle(sparkX, sparkY, 3).fill({ color: 0xffffff, alpha: 0.8 });
-
+                                if (glitchIntensity > 0) {
+                                    const offset = glitchIntensity * 5;
+                                    rgbSplitFilter.red = { x: offset * Math.sin(time * 20), y: 0 };
+                                    rgbSplitFilter.blue = { x: -offset * Math.cos(time * 15), y: 0 };
                                 } else {
-                                    // Satellite debris - orange/yellow with sparks
-                                    const baseAlpha = 0.6 * healthPercent + 0.2;
-                                    // Main body (cross shape)
-                                    g.rect(-10 * pulse * rarityScale, -4 * pulse * rarityScale, 20 * pulse * rarityScale, 8 * pulse * rarityScale)
-                                        .fill({ color: 0xff8800, alpha: baseAlpha });
-                                    g.rect(-3 * pulse * rarityScale, -10 * pulse * rarityScale, 6 * pulse * rarityScale, 20 * pulse * rarityScale)
-                                        .fill({ color: 0xffaa00, alpha: baseAlpha });
-                                    // Sparks (small dots around)
-                                    for (let sp = 0; sp < 4; sp++) {
-                                        const sparkAngle = time * 2 + sp * (Math.PI / 2);
-                                        const sparkDist = 15 * rarityScale + Math.sin(time * 8 + sp) * 3;
-                                        g.circle(
-                                            Math.cos(sparkAngle) * sparkDist,
-                                            Math.sin(sparkAngle) * sparkDist,
-                                            2
-                                        ).fill({ color: 0xffff00, alpha: 0.7 });
-                                    }
-                                    // Center light
-                                    g.circle(0, 0, 4 * pulse * rarityScale).fill({ color: 0xffcc00, alpha: 0.9 });
+                                    rgbSplitFilter.red = { x: 0, y: 0 };
+                                    rgbSplitFilter.blue = { x: 0, y: 0 };
                                 }
 
-                                g.x = (obj.x / 100) * screenW;
-                                g.y = (obj.y / 100) * screenH;
-                                g.rotation = time * 0.5;
-                            });
+                                const damageRatio = (100 - integrity) / 100;
+                                crtFilter.noise = 0.1 + (damageRatio * 0.4);
+                                crtFilter.curvature = 1 + (damageRatio > 0.8 ? Math.sin(time * 10) * 0.5 : 0);
+                                crtFilter.time = time;
+
+                                const warpSpeed = isDrillingActive ? 25 : 1;
+
+                                dustParticles.forEach(p => {
+                                    p.y -= p.speed * p.z * warpSpeed * dt;
+                                    if (p.y < -10) {
+                                        p.y = screenH + 10;
+                                        p.x = Math.random() * screenW;
+                                    }
+                                    p.sprite.x = p.x;
+                                    p.sprite.y = p.y;
+                                    const targetScaleY = 1 + (warpSpeed - 1) * 0.1 * p.z;
+                                    p.sprite.scale.y += (targetScaleY - p.sprite.scale.y) * 0.1;
+                                    p.sprite.scale.x = Math.max(0.5, 1 - (targetScaleY - 1) * 0.1);
+                                    p.sprite.alpha = p.z * 0.6;
+                                });
+
+                                for (let i = globalParticles.length - 1; i >= 0; i--) {
+                                    const p = globalParticles[i];
+                                    if (p.sprite.destroyed) { globalParticles.splice(i, 1); continue; }
+                                    p.life -= dt;
+                                    p.sprite.x += p.vx * dt;
+                                    p.sprite.y += p.vy * dt;
+                                    if (p.type === 'DEBRIS') { p.vy += 0.2 * dt; p.sprite.rotation += 0.1 * dt; }
+                                    else if (p.type === 'SMOKE') { p.sprite.alpha = (p.life / p.maxLife) * 0.5; p.sprite.scale.x += 0.01 * dt; p.sprite.scale.y += 0.01 * dt; }
+                                    else { p.sprite.alpha = p.life / p.maxLife; }
+                                    if (p.life <= 0) { p.sprite.destroy(); globalParticles.splice(i, 1); }
+                                }
+
+                                droneGraphicsMap.forEach((g, idx) => {
+                                    if (idx >= activeDrones.length) {
+                                        g.destroy();
+                                        droneGraphicsMap.delete(idx);
+                                    }
+                                });
+
+                                activeDrones.forEach((type, i) => {
+                                    let g = droneGraphicsMap.get(i);
+                                    if (!g || g.destroyed) {
+                                        g = new Graphics();
+                                        droneLayer.addChild(g);
+                                        droneGraphicsMap.set(i, g);
+                                    }
+
+                                    g.clear();
+                                    const level = droneLevels[type] || 1;
+                                    const scale = 1 + (level * 0.1);
+
+                                    const radius = 90 + i * 35;
+                                    const speed = (1 + (i % 3) * 0.3) * (i % 2 === 0 ? 1 : -1);
+                                    const angle = time * speed + (i * 1.5);
+
+                                    const dx = Math.cos(angle) * radius;
+                                    const dy = Math.sin(angle) * (radius * 0.3);
+
+                                    const droneX = cx + dx;
+                                    const droneY = cy + dy;
+
+                                    g.ellipse(cx, cy, radius, radius * 0.3)
+                                        .stroke({ width: 1, color: 0xffffff, alpha: 0.05 });
+
+                                    const size = 6 * scale;
+
+                                    switch (type) {
+                                        case DroneType.COLLECTOR: {
+                                            const color = 0x00FF00;
+                                            g.poly([
+                                                droneX - size, droneY - size,
+                                                droneX + size, droneY - size,
+                                                droneX + size, droneY + size,
+                                                droneX - size, droneY + size
+                                            ]).stroke({ width: 2, color: color });
+                                            g.rect(droneX - size / 2, droneY - size / 2, size, size)
+                                                .fill({ color: color, alpha: 0.3 + Math.sin(time * 5) * 0.2 });
+                                            const open = Math.abs(Math.sin(time * 3)) * 3;
+                                            g.moveTo(droneX - size, droneY + size);
+                                            g.lineTo(droneX - size - 2, droneY + size + 4 + open);
+                                            g.moveTo(droneX + size, droneY + size);
+                                            g.lineTo(droneX + size + 2, droneY + size + 4 + open);
+                                            g.stroke({ width: 1, color: color });
+                                            break;
+                                        }
+                                        case DroneType.COOLER: {
+                                            const color = 0x00FFFF;
+                                            const rot = time * 10;
+                                            g.circle(droneX, droneY, size / 2).fill({ color });
+                                            for (let k = 0; k < 3; k++) {
+                                                const bladeAng = rot + (k * (Math.PI * 2 / 3));
+                                                const bx = droneX + Math.cos(bladeAng) * size * 1.5;
+                                                const by = droneY + Math.sin(bladeAng) * size * 1.5;
+                                                g.moveTo(droneX, droneY).lineTo(bx, by).stroke({ width: 2 * scale, color });
+                                            }
+                                            if (level >= 5) {
+                                                g.circle(droneX, droneY, size * 2)
+                                                    .stroke({ width: 1, color, alpha: 0.2 });
+                                            }
+                                            break;
+                                        }
+                                        case DroneType.BATTLE: {
+                                            const color = 0xFF0000;
+                                            const headAng = angle + (speed > 0 ? Math.PI / 2 : -Math.PI / 2);
+                                            const p1x = droneX + Math.cos(headAng) * size * 1.5;
+                                            const p1y = droneY + Math.sin(headAng) * size * 1.5;
+                                            const p2x = droneX + Math.cos(headAng + 2.5) * size;
+                                            const p2y = droneY + Math.sin(headAng + 2.5) * size;
+                                            const p3x = droneX + Math.cos(headAng - 2.5) * size;
+                                            const p3y = droneY + Math.sin(headAng - 2.5) * size;
+                                            g.poly([p1x, p1y, p2x, p2y, p3x, p3y])
+                                                .fill({ color, alpha: 0.8 })
+                                                .stroke({ width: 1, color: 0xffffff });
+                                            if (level >= 3) {
+                                                g.circle(p1x, p1y, 2).fill({ color: 0xffff00 });
+                                            }
+                                            break;
+                                        }
+                                        case DroneType.REPAIR: {
+                                            const color = 0xFFD700;
+                                            g.rect(droneX - size / 3, droneY - size, size * 0.66, size * 2).fill({ color });
+                                            g.rect(droneX - size, droneY - size / 3, size * 2, size * 0.66).fill({ color });
+                                            g.ellipse(droneX, droneY, size * 1.5, size * 0.5)
+                                                .stroke({ width: 1, color, alpha: 0.5 });
+                                            break;
+                                        }
+                                        case DroneType.MINER: {
+                                            const color = 0xFF00FF;
+                                            g.poly([
+                                                droneX - size / 2, droneY - size,
+                                                droneX + size / 2, droneY - size,
+                                                droneX, droneY + size * 1.5
+                                            ]).fill({ color });
+                                            const offset = (time * 5) % size;
+                                            g.moveTo(droneX - size / 2, droneY - size + offset)
+                                                .lineTo(droneX + size / 2, droneY - size + offset + 2)
+                                                .stroke({ width: 1, color: 0xffffff });
+                                            break;
+                                        }
+                                    }
+                                });
+
+                                const currentIds = new Set(flyingObjects.map(o => o.id));
+                                objectGraphicsMap.forEach((g, id) => {
+                                    if (!currentIds.has(id)) { g.destroy(); objectGraphicsMap.delete(id); }
+                                });
+
+                                flyingObjects.forEach(obj => {
+                                    let g = objectGraphicsMap.get(obj.id);
+                                    if (!g || g.destroyed) {
+                                        g = new Graphics();
+                                        g.eventMode = 'static';
+                                        g.cursor = 'pointer';
+                                        g.hitArea = new Circle(0, 0, 30);
+                                        g.on('pointerdown', (e) => {
+                                            e.stopPropagation();
+                                            callbacksRef.current.onObjectClick(obj.id, e.global.x, e.global.y);
+                                        });
+                                        objectLayer.addChild(g);
+                                        objectGraphicsMap.set(obj.id, g);
+                                    }
+
+                                    g.clear();
+
+                                    const pulse = 1 + Math.sin(time * 5) * 0.15; // Increased pulse speed
+                                    const healthPercent = obj.hp / obj.maxHp;
+
+                                    let rarityScale = 1;
+                                    let rarityGlowColor = 0x000000;
+                                    let rarityGlowAlpha = 0;
+
+                                    if (obj.rarity === 'RARE') {
+                                        rarityScale = 1.2;
+                                        rarityGlowColor = 0x00FFFF;
+                                        rarityGlowAlpha = 0.3;
+                                    } else if (obj.rarity === 'EPIC') {
+                                        rarityScale = 1.5;
+                                        rarityGlowColor = 0xFFD700;
+                                        rarityGlowAlpha = 0.5;
+                                    }
+
+                                    if (obj.rarity !== 'COMMON') {
+                                        g.circle(0, 0, 25 * rarityScale * pulse)
+                                            .fill({ color: rarityGlowColor, alpha: rarityGlowAlpha * 0.5 + Math.sin(time * 10) * 0.1 });
+                                    }
+
+                                    if (obj.type === 'GEODE_SMALL') {
+                                        const r = 12 * pulse * rarityScale;
+                                        const path: number[] = [];
+                                        for (let k = 0; k < 8; k++) {
+                                            const ang = (k * Math.PI) / 4;
+                                            const rad = k % 2 === 0 ? r : r * 0.6;
+                                            path.push(Math.cos(ang) * rad, Math.sin(ang) * rad);
+                                        }
+                                        g.drawPolygon(path.map((v, i) => v * 1.3))
+                                            .fill({ color: 0x00ff88, alpha: 0.15 });
+                                        g.drawPolygon(path)
+                                            .fill({ color: 0x00ff88, alpha: 0.4 * healthPercent + 0.2 })
+                                            .stroke({ width: 2, color: 0x00ffaa });
+                                        g.circle(0, -r * 0.3, r * 0.2)
+                                            .fill({ color: 0xffffff, alpha: 0.5 });
+
+                                    } else if (obj.type === 'GEODE_LARGE') {
+                                        const s = 15 * pulse * rarityScale;
+                                        g.rect(-s * 1.4, -s * 1.4, s * 2.8, s * 2.8)
+                                            .fill({ color: 0x9900ff, alpha: 0.1 });
+                                        g.rect(-s, -s, s * 2, s * 2)
+                                            .fill({ color: 0xaa44ff, alpha: 0.35 * healthPercent + 0.15 })
+                                            .stroke({ width: 2, color: 0xcc66ff });
+                                        const sparkX = Math.sin(time * 5) * s * 0.5;
+                                        const sparkY = Math.cos(time * 4) * s * 0.5;
+                                        g.circle(sparkX, sparkY, 3).fill({ color: 0xffffff, alpha: 0.8 });
+
+                                    } else {
+                                        const baseAlpha = 0.6 * healthPercent + 0.2;
+                                        g.rect(-10 * pulse * rarityScale, -4 * pulse * rarityScale, 20 * pulse * rarityScale, 8 * pulse * rarityScale)
+                                            .fill({ color: 0xff8800, alpha: baseAlpha });
+                                        g.rect(-3 * pulse * rarityScale, -10 * pulse * rarityScale, 6 * pulse * rarityScale, 20 * pulse * rarityScale)
+                                            .fill({ color: 0xffaa00, alpha: baseAlpha });
+                                        for (let sp = 0; sp < 4; sp++) {
+                                            const sparkAngle = time * 2 + sp * (Math.PI / 2);
+                                            const sparkDist = 15 * rarityScale + Math.sin(time * 8 + sp) * 3;
+                                            g.circle(
+                                                Math.cos(sparkAngle) * sparkDist,
+                                                Math.sin(sparkAngle) * sparkDist,
+                                                2
+                                            ).fill({ color: 0xffff00, alpha: 0.7 });
+                                        }
+                                        g.circle(0, 0, 4 * pulse * rarityScale).fill({ color: 0xffcc00, alpha: 0.9 });
+                                    }
+
+                                    g.x = (obj.x / 100) * screenW;
+                                    g.y = (obj.y / 100) * screenH;
+                                    g.rotation = time * 0.5;
+                                });
+                            } catch (error) {
+                                console.error("Pixi Ticker Error:", error);
+                            }
                         });
 
                         globalApp = app;
@@ -464,19 +448,42 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                 await initPromise;
             }
 
+            // [DEV_CONTEXT: STABILITY] Safety check before DOM manipulation
+            if (!isMounted) {
+                activeComponentsCount--;
+                return;
+            }
+
             if (containerRef.current && globalApp && globalApp.canvas) {
-                while (containerRef.current.firstChild) {
-                    containerRef.current.removeChild(containerRef.current.firstChild);
+                try {
+                    while (containerRef.current.firstChild) {
+                        containerRef.current.removeChild(containerRef.current.firstChild);
+                    }
+                    containerRef.current.appendChild(globalApp.canvas);
+
+                    // Explicit resize instead of auto-resize to window to avoid race conditions
+                    globalApp.renderer.resize(window.innerWidth, window.innerHeight);
+                    tunnelAtmosphere.resize(globalApp.screen.width, globalApp.screen.height);
+                } catch (e) {
+                    console.error("Pixi Setup Error:", e);
                 }
-                containerRef.current.appendChild(globalApp.canvas);
-                globalApp.resize();
+            }
+
+            const isAppActive = globalApp && globalApp.renderer && !(globalApp.renderer as any).destroyed;
+            if (activeComponentsCount > 0 && isAppActive) {
+                globalApp!.ticker.start();
             }
         };
 
         initPixi();
 
         return () => {
-            // Singleton cleanup logic
+            isMounted = false;
+            activeComponentsCount--;
+            const isAppActive = globalApp && globalApp.renderer && !(globalApp.renderer as any).destroyed;
+            if (activeComponentsCount <= 0 && isAppActive) {
+                globalApp!.ticker.stop();
+            }
         };
     }, []);
 

@@ -79,39 +79,43 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         const data = exportSaveString();
         if (data) {
             navigator.clipboard.writeText(data).then(() => {
-                setExportMessage("СКОПИРОВАНО В БУФЕР!");
+                setExportMessage(t(TEXT_IDS.MSG_COPIED, language));
                 setTimeout(() => setExportMessage(""), 2000);
             });
         } else {
-            setExportMessage("ОШИБКА ЭКСПОРТА");
+            setExportMessage(t(TEXT_IDS.MSG_EXPORT_ERROR, language));
         }
+
     };
 
     const handleImport = () => {
         if (!importString) return;
         const success = importSaveString(importString);
         if (!success) {
-            setImportError("НЕВЕРНЫЙ ФОРМАТ СОХРАНЕНИЯ");
+            setImportError(t(TEXT_IDS.MSG_IMPORT_ERROR, language));
             setTimeout(() => setImportError(""), 3000);
         }
+
     };
 
     const handleManualSave = () => {
         manualSave();
-        setSaveMessage("ДАННЫЕ ЗАПИСАНЫ");
+        setSaveMessage(t(TEXT_IDS.MSG_DATA_SAVED, language));
         setTimeout(() => setSaveMessage(""), 2000);
     };
+
 
     const handleManualLoad = () => {
         const success = manualLoad();
         if (success) {
-            setSaveMessage("ДАННЫЕ ЗАГРУЖЕНЫ");
+            setSaveMessage(t(TEXT_IDS.MSG_DATA_LOADED, language));
             setTimeout(() => onClose(), 500); // Close to show game
         } else {
-            setSaveMessage("НЕТ ДАННЫХ ДЛЯ ЗАГРУЗКИ");
+            setSaveMessage(t(TEXT_IDS.MSG_NO_DATA, language));
             setTimeout(() => setSaveMessage(""), 2000);
         }
     };
+
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
@@ -136,9 +140,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <div className="border border-green-900 bg-green-950/20 p-4">
                             <div className="flex justify-between items-start mb-2">
                                 <div>
-                                    <h3 className="text-green-500 font-black text-sm pixel-text">ЧЕРНЫЙ ЯЩИК</h3>
-                                    <p className="text-[9px] text-zinc-500 font-mono leading-tight">РУЧНОЕ УПРАВЛЕНИЕ ПАМЯТЬЮ</p>
+                                    <h3 className="text-green-500 font-black text-sm pixel-text">{t(TEXT_IDS.SETTINGS_BLACK_BOX, language)}</h3>
+                                    <p className="text-[9px] text-zinc-500 font-mono leading-tight">{t(TEXT_IDS.SETTINGS_MANUAL_MEM, language)}</p>
                                 </div>
+
                                 {saveMessage && <span className="text-[10px] text-green-300 font-mono animate-pulse bg-green-900/50 px-2 py-1">{saveMessage}</span>}
                             </div>
 
@@ -147,20 +152,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     onClick={handleManualSave}
                                     className="py-3 bg-zinc-900 border border-green-700 hover:bg-green-900/50 text-green-400 font-bold font-mono text-xs flex flex-col items-center justify-center"
                                 >
-                                    <span>[ ЗАПИСЬ ]</span>
-                                    <span className="text-[8px] opacity-50 mt-1">СОХРАНИТЬ ТЕКУЩЕЕ</span>
+                                    <span>{t(TEXT_IDS.SETTINGS_SAVE_BTN, language)}</span>
+                                    <span className="text-[8px] opacity-50 mt-1">{t(TEXT_IDS.SETTINGS_SAVE_SUB, language)}</span>
                                 </button>
+
                                 <button
                                     onClick={handleManualLoad}
                                     className="py-3 bg-zinc-900 border border-zinc-600 hover:bg-zinc-800 text-zinc-300 font-bold font-mono text-xs flex flex-col items-center justify-center"
                                 >
-                                    <span>[ ЧТЕНИЕ ]</span>
-                                    <span className="text-[8px] opacity-50 mt-1">ЗАГРУЗИТЬ ПОСЛЕДНЕЕ</span>
+                                    <span>{t(TEXT_IDS.SETTINGS_LOAD_BTN, language)}</span>
+                                    <span className="text-[8px] opacity-50 mt-1">{t(TEXT_IDS.SETTINGS_LOAD_SUB, language)}</span>
                                 </button>
+
                             </div>
                             <p className="text-[8px] text-red-500/80 mt-2 text-center font-mono">
-                                ВНИМАНИЕ: ПРОГРЕСС НЕ СОХРАНЯЕТСЯ АВТОМАТИЧЕСКИ.
+                                {t(TEXT_IDS.SETTINGS_SAVE_WARNING, language)}
                             </p>
+
                         </div>
 
                         {/* LANGUAGE */}
@@ -228,39 +236,42 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 onClick={() => setShowDataSection(!showDataSection)}
                                 className="w-full p-3 flex justify-between items-center text-xs font-bold text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
                             >
-                                <span>РЕЗЕРВНОЕ КОПИРОВАНИЕ</span>
+                                <span>{t(TEXT_IDS.SETTINGS_BACKUP_TITLE, language)}</span>
                                 <span>{showDataSection ? '▲' : '▼'}</span>
                             </button>
+
 
                             {showDataSection && (
                                 <div className="p-3 border-t border-zinc-800 space-y-4 animate-in slide-in-from-top-2">
                                     {/* EXPORT */}
                                     <div>
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-[10px] text-zinc-500">КОД (BASE64)</span>
+                                            <span className="text-[10px] text-zinc-500">{t(TEXT_IDS.SETTINGS_CODE_LABEL, language)}</span>
                                             {exportMessage && <span className="text-[10px] text-green-400 animate-pulse">{exportMessage}</span>}
                                         </div>
                                         <button onClick={handleExport} className="w-full py-2 bg-zinc-800 hover:bg-cyan-900/50 border border-zinc-600 text-cyan-400 text-xs font-mono">
-                                            СКОПИРОВАТЬ В БУФЕР
+                                            {t(TEXT_IDS.SETTINGS_COPY_CLIPBOARD, language)}
                                         </button>
                                     </div>
+
 
                                     {/* IMPORT */}
                                     <div>
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-[10px] text-zinc-500">ВОССТАНОВЛЕНИЕ</span>
+                                            <span className="text-[10px] text-zinc-500">{t(TEXT_IDS.SETTINGS_RESTORE_LABEL, language)}</span>
                                             {importError && <span className="text-[10px] text-red-500 animate-pulse">{importError}</span>}
                                         </div>
                                         <textarea
                                             value={importString}
                                             onChange={(e) => setImportString(e.target.value)}
-                                            placeholder="Вставьте код сохранения..."
+                                            placeholder={t(TEXT_IDS.SETTINGS_IMPORT_PLACEHOLDER, language)}
                                             className="w-full h-16 bg-black border border-zinc-700 text-green-500 font-mono text-[9px] p-2 outline-none focus:border-green-500 resize-none mb-2"
                                         />
                                         <button onClick={handleImport} className="w-full py-2 bg-zinc-800 hover:bg-green-900/50 border border-zinc-600 text-green-400 text-xs font-mono">
-                                            ПРИМЕНИТЬ КОД
+                                            {t(TEXT_IDS.SETTINGS_APPLY_CODE, language)}
                                         </button>
                                     </div>
+
                                 </div>
                             )}
                         </div>

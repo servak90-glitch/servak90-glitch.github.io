@@ -37,17 +37,26 @@ export const IsometricCanvas: React.FC<IsometricCanvasProps> = ({ regions, activ
     useEffect(() => { dataRef.current = { bases, caravans }; }, [bases, caravans]);
 
     useEffect(() => {
-        if (!containerRef.current) return;
+        let isMounted = true;
 
         const initApp = async () => {
             const app = new PIXI.Application();
-            await app.init({
-                resizeTo: containerRef.current!,
-                backgroundAlpha: 0,
-                antialias: true
-            });
+            try {
+                await app.init({
+                    resizeTo: containerRef.current!,
+                    backgroundAlpha: 0,
+                    antialias: true
+                });
+            } catch (e) {
+                console.error("Isometric Pixi Init Error:", e);
+                return;
+            }
 
-            if (!containerRef.current) { app.destroy(); return; }
+            if (!isMounted || !containerRef.current) {
+                app.destroy(true);
+                return;
+            }
+
             containerRef.current.appendChild(app.canvas);
             appRef.current = app;
 
@@ -142,8 +151,6 @@ export const IsometricCanvas: React.FC<IsometricCanvasProps> = ({ regions, activ
                 sprite.on('pointerout', () => {
                     sprite.alpha = 1.0;
                     sprite.scale.set(1.0);
-                    // Dim inactive regions slightly
-                    // sprite.tint = activeRegion === regionId ? 0xFFFFFF : 0xAAAAAA;
                 });
 
                 terrainLayer.addChild(sprite);
@@ -175,6 +182,9 @@ export const IsometricCanvas: React.FC<IsometricCanvasProps> = ({ regions, activ
 
             // Game Loop
             app.ticker.add(() => {
+                const isRenderDestroyed = app.renderer ? (app.renderer as any).destroyed : false;
+                if (!isMounted || isRenderDestroyed) return;
+
                 const { bases, caravans } = dataRef.current;
                 const now = Date.now();
 
@@ -184,21 +194,17 @@ export const IsometricCanvas: React.FC<IsometricCanvasProps> = ({ regions, activ
                     const regPos = REGION_POSITIONS[base.regionId];
                     if (regPos) {
                         const iso = gridToIso(regPos.x, regPos.y);
-                        // Center on tile
                         const centerX = iso.x + TILE_WIDTH / 2;
                         const centerY = iso.y + TILE_HEIGHT / 2;
 
                         let tex = baseTextures[base.type] || baseTextures['outpost'];
                         const sprite = new PIXI.Sprite(tex);
 
-                        sprite.anchor.set(0.5, 1.0); // Bottom center anchor for buildings
+                        sprite.anchor.set(0.5, 1.0);
                         sprite.x = centerX;
-                        sprite.y = centerY + 10; // Adjust for 3D depth
-
-                        // Z-Index based on Y position for depth sorting
+                        sprite.y = centerY + 10;
                         sprite.zIndex = centerY;
 
-                        // Add Base Label
                         const label = new PIXI.Text({
                             text: `BASE (${base.type})`,
                             style: {
@@ -236,56 +242,45 @@ export const IsometricCanvas: React.FC<IsometricCanvasProps> = ({ regions, activ
                             const elapsed = now - caravan.departureTime;
                             const progress = Math.min(1, Math.max(0, elapsed / totalTime));
 
-                            // Lerp Grid Coords
                             const curX = fromPos.x + (toPos.x - fromPos.x) * progress;
                             const curY = fromPos.y + (toPos.y - fromPos.y) * progress;
 
                             const iso = gridToIso(curX, curY);
-
-                            // Enhanced Caravan Sprite (Wobble Effect for Movement)
                             const bounce = Math.sin(now / 100 * Math.PI) * 2;
 
                             const sprite = new PIXI.Graphics();
-                            // Body
                             sprite.rect(-12, -8, 24, 12);
-                            sprite.fill(0x00FF00); // Green Truck
+                            sprite.fill(0x00FF00);
                             sprite.stroke({ width: 1, color: 0xFFFFFF });
-                            // Wheels
                             sprite.circle(-8, 4, 3);
                             sprite.circle(8, 4, 3);
                             sprite.fill(0x000000);
 
                             sprite.x = iso.x + TILE_WIDTH / 2;
-                            sprite.y = iso.y + TILE_HEIGHT / 2 + bounce - 5; // -5 to float slightly above ground
-
-                            // Depth Sort
+                            sprite.y = iso.y + TILE_HEIGHT / 2 + bounce - 5;
                             sprite.zIndex = sprite.y;
-
-                            // Label
-                            // const label = new PIXI.Text({ text: '🚛', style: { fontSize: 10 } });
-                            // label.y = -15;
-                            // label.x = -5;
-                            // sprite.addChild(label);
 
                             unitLayer.addChild(sprite);
                         }
                     }
                 });
 
-                // Pixi sort
                 objLayer.sortChildren();
                 unitLayer.sortChildren();
 
-                // Floating Animation for whole map
-                mapContainer.y = app.screen.height / 2 + Math.sin(now / 2000) * 5;
+                if (app.screen) {
+                    mapContainer.y = app.screen.height / 2 + Math.sin(now / 2000) * 5;
+                }
             });
         };
 
         if (!appRef.current) initApp();
 
         return () => {
+            isMounted = false;
             if (appRef.current) {
-                appRef.current.destroy(true, { children: true, texture: true });
+                // [DEV_CONTEXT: STABILITY] Soft destroy without purging global caches
+                appRef.current.destroy(true, { children: true });
                 appRef.current = null;
             }
         };

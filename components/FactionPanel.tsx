@@ -3,10 +3,11 @@ import { useGameStore } from '../store/gameStore';
 import { FACTIONS, REPUTATION_TIERS } from '../constants/factions';
 import { FactionId, FactionPerk } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TL } from '../services/localization';
+import { TL, t } from '../services/localization';
 
 const FactionPanel: React.FC = () => {
-    const { reputation, getReputationLevel, getReputationTierName, getActivePerks } = useGameStore();
+    const { reputation, getReputationLevel, getReputationTierName, getActivePerks, settings } = useGameStore();
+    const lang = settings.language;
     const [selectedFaction, setSelectedFaction] = useState<FactionId>('CORPORATE');
 
     const factions: FactionId[] = ['CORPORATE', 'SCIENCE', 'REBELS'];
@@ -41,7 +42,7 @@ const FactionPanel: React.FC = () => {
                             : 'bg-black/40 border-zinc-700 text-zinc-500 hover:text-zinc-300'
                             }`}
                     >
-                        <span className="font-bold pixel-text">{TL.factions.names[fid]}</span>
+                        <span className="font-bold pixel-text">{t(TL.factions.names[fid], lang)}</span>
                     </button>
                 ))}
             </div>
@@ -59,22 +60,22 @@ const FactionPanel: React.FC = () => {
                     {/* Header Info */}
                     <div className="mb-6 border-b border-white/10 pb-4">
                         <h2 className="text-2xl font-black text-white mb-1 pixel-text uppercase">
-                            {TL.factions.names[selectedFaction].toUpperCase()}
+                            {t(TL.factions.names[selectedFaction], lang).toUpperCase()}
                         </h2>
                         <p className="text-sm text-zinc-400 font-mono mb-4">
-                            {TL.factions.descriptions[selectedFaction]}
+                            {t(TL.factions.descriptions[selectedFaction], lang)}
                         </p>
 
                         {(selectedFaction === 'CORPORATE' && reputation['REBELS'] > 0) && (
                             <p className="mb-4 text-xs font-bold text-red-400 border border-red-900/50 bg-red-900/20 px-3 py-2 rounded flex items-center gap-2">
                                 <span>⚠️</span>
-                                <span>{TL.factions.rivalry} {TL.factions.names['REBELS']} (-50%)</span>
+                                <span>{t(TL.factions.rivalry, lang)} {t(TL.factions.names['REBELS'], lang)} (-50%)</span>
                             </p>
                         )}
                         {(selectedFaction === 'REBELS' && reputation['CORPORATE'] > 0) && (
                             <p className="mb-4 text-xs font-bold text-red-400 border border-red-900/50 bg-red-900/20 px-3 py-2 rounded flex items-center gap-2">
                                 <span>⚠️</span>
-                                <span>{TL.factions.rivalry} {TL.factions.names['CORPORATE']} (-50%)</span>
+                                <span>{t(TL.factions.rivalry, lang)} {t(TL.factions.names['CORPORATE'], lang)} (-50%)</span>
                             </p>
                         )}
 
@@ -82,14 +83,14 @@ const FactionPanel: React.FC = () => {
                         <div className="bg-black/30 p-4 rounded border border-white/5">
                             <div className="flex justify-between items-end mb-2">
                                 <div>
-                                    <span className="text-xs text-zinc-500 uppercase block mb-1">{TL.factions.standing}</span>
+                                    <span className="text-xs text-zinc-500 uppercase block mb-1">{t(TL.factions.standing, lang)}</span>
                                     <span className={`text-xl font-bold ${currentRep >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
                                         {tierName} <span className="text-sm text-zinc-500">(Lvl {currentLevel})</span>
                                     </span>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-2xl font-mono text-white">{Math.floor(currentRep)}</span>
-                                    <span className="text-xs text-zinc-500 block">{TL.factions.reputation}</span>
+                                    <span className="text-xs text-zinc-500 block">{t(TL.factions.reputation, lang)}</span>
                                 </div>
                             </div>
 
@@ -106,7 +107,7 @@ const FactionPanel: React.FC = () => {
                             </div>
                             <div className="flex justify-between text-[10px] font-mono text-zinc-600">
                                 <span>{prevTierMin}</span>
-                                <span>{TL.factions.nextTier}: {nextTier ? nextTier.name.toUpperCase() : TL.factions.max} ({nextTierMin})</span>
+                                <span>{t(TL.factions.nextTier, lang)}: {nextTier ? nextTier.name.toUpperCase() : t(TL.factions.max, lang)} ({nextTierMin})</span>
                             </div>
                         </div>
                     </div>
@@ -114,7 +115,7 @@ const FactionPanel: React.FC = () => {
                     {/* Perks Section */}
                     <div>
                         <h3 className="text-sm font-bold text-zinc-300 uppercase mb-3 flex items-center gap-2">
-                            <span className="text-cyan-500">◈</span> {TL.factions.perkTitle}
+                            <span className="text-cyan-500">◈</span> {t(TL.factions.perkTitle, lang)}
                         </h3>
 
                         <div className="space-y-3">
@@ -131,14 +132,14 @@ const FactionPanel: React.FC = () => {
                                     >
                                         <div className="flex justify-between items-start mb-1">
                                             <span className={`font-bold text-sm ${isUnlocked ? 'text-cyan-300' : 'text-zinc-500'}`}>
-                                                {perkInfo.name}
+                                                {typeof perkInfo.name === 'string' ? perkInfo.name : t(perkInfo.name, lang)}
                                             </span>
                                             <span className="text-[10px] font-mono py-0.5 px-1.5 rounded bg-black/50 text-zinc-500 border border-zinc-800">
                                                 LVL {perk.levelRequired}
                                             </span>
                                         </div>
                                         <p className="text-xs text-zinc-400 leading-relaxed">
-                                            {perkInfo.desc || perkInfo.description}
+                                            {typeof (perkInfo.desc || perkInfo.description) === 'string' ? (perkInfo.desc || perkInfo.description) : t((perkInfo.desc || perkInfo.description), lang)}
                                         </p>
                                     </div>
                                 );

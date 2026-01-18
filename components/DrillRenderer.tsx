@@ -91,7 +91,7 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             // Calculate Biome Color
             let currentBiome = BIOMES[0];
             if (selectedBiome) {
-                currentBiome = BIOMES.find(b => b.name === selectedBiome) || BIOMES[0];
+                currentBiome = BIOMES.find(b => (typeof b.name === 'string' ? b.name : b.name.EN) === selectedBiome) || BIOMES[0];
             } else {
                 currentBiome = BIOMES.slice().reverse().find(b => depth >= b.depth) || BIOMES[0];
             }

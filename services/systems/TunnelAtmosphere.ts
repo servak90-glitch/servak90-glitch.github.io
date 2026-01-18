@@ -320,6 +320,13 @@ export class TunnelAtmosphere {
     };
   }
 
+  /**
+   * Check if any hazard is currently active.
+   */
+  hasActiveHazard(): boolean {
+    return this.activeHazard !== null;
+  }
+
   private updateHazards(dt: number): void {
     if (!this.activeHazard) return;
 

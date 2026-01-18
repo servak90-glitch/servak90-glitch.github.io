@@ -11,6 +11,7 @@ import { calculateStats, recalculateCargoWeight } from './gameMath';
 import { narrativeManager } from './narrativeManager';
 
 import { audioEngine } from './audioEngine';
+import { getActivePerkIds } from './factionLogic';
 import {
     processEffects,
     processAnalyzer,
@@ -30,8 +31,9 @@ import { abilitySystem } from './systems/AbilitySystem';
 import { expeditionSystem } from './systems/ExpeditionSystem';
 
 export class GameEngine {
-    tick(state: GameState, dt: number): { partialState: Partial<GameState>, events: VisualEvent[] } {
+    tick(state: GameState, dt: number): { partialState: Partial<GameState>, events: VisualEvent[], questUpdates: { target: string, type: 'DEFEAT_BOSS' }[] } {
         const visualEvents: VisualEvent[] = [];
+        const questUpdates: { target: string, type: 'DEFEAT_BOSS' }[] = [];
 
         // === КРИТИЧЕСКОЕ ПОВРЕЖДЕНИЕ: СМЕРТЬ ===
         if (state.integrity <= 0 && !state.isGodMode) {
@@ -55,7 +57,8 @@ export class GameEngine {
                     combatMinigame: null,
                     shieldCharge: 0,
                 },
-                events: visualEvents
+                events: visualEvents,
+                questUpdates: []
             };
         }
 
@@ -69,6 +72,7 @@ export class GameEngine {
         // === СБОР ИЗМЕНЕНИЙ ОТ ПОДСИСТЕМ ===
         const resourceChanges: ResourceChanges = {};
         const inventoryUpdates: Record<string, any> = {};
+        const activePerks = getActivePerkIds(state.reputation);
 
         // 1. Эффекты (баффы/дебаффы)
         const effectsResult = processEffects(state);
@@ -102,7 +106,8 @@ export class GameEngine {
             // Assume drilling continues unless heat stops it
             heatResult.update.isDrilling,
             heatResult.update.isOverheated,
-            dt
+            dt,
+            activePerks
         );
         visualEvents.push(...drillResult.events);
         Object.assign(resourceChanges, drillResult.resourceChanges);
@@ -117,6 +122,7 @@ export class GameEngine {
         visualEvents.push(...combatResult.events);
         Object.assign(resourceChanges, combatResult.resourceChanges);
         Object.assign(inventoryUpdates, combatResult.newInventoryItems);
+        if (combatResult.questUpdates) questUpdates.push(...combatResult.questUpdates);
 
         // 8. Летающие объекты
         const entityResult = processEntities({
@@ -160,10 +166,13 @@ export class GameEngine {
 
             // [PHASE 2] Check caravan completions every 10 ticks (~10 seconds)
             // This is a side-effect action that modifies the store directly
-            // TODO: Refactor to return caravan updates from this function
-            // For now, calling the action is acceptable since it's in the game loop
-            (state as any).checkAllCaravans?.();
-            (state as any).checkAllQuestsProgress?.(); // [PHASE 3.1] Quest System check
+            // [HARDCORE RESILIENCE] Wrap side systems in try-catch to prevent core loop failure
+            try {
+                (state as any).checkAllCaravans?.();
+                (state as any).checkAllQuestsProgress?.(); // [PHASE 3.1] Quest System check
+            } catch (e) {
+                console.error("Side system tick failure:", e);
+            }
         }
 
         let integrity = eventsResult.update.integrity ?? heatResult.update.integrity ?? combatResult.update.integrity ?? state.integrity;
@@ -198,7 +207,7 @@ export class GameEngine {
             heat, // Use current accumulated heat
             integrity, // Use current accumulated integrity
             depth
-        }, dt);
+        }, dt, activePerks);
         if (hazardResult.update.integrity !== undefined) integrity = hazardResult.update.integrity;
         if (hazardResult.update.heat !== undefined) heat = hazardResult.update.heat;
         visualEvents.push(...hazardResult.events);
@@ -345,7 +354,8 @@ export class GameEngine {
                 // Let's add activeExpeditions if changed
                 ...(state.eventCheckTick % 10 === 0 ? { activeExpeditions } : {})
             },
-            events: visualEvents
+            events: visualEvents,
+            questUpdates
         };
     }
 }

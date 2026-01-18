@@ -63,18 +63,31 @@ export function checkQuestAutoProgress(quest: Quest, state: GameState): Quest | 
             }
 
             case 'COLLECT': {
-                // Проверка ресурсов в инвентаре
-                const resourceAmount = state.resources[obj.target as any] || 0;
-                if (resourceAmount !== newCurrent) {
-                    newCurrent = Math.min(resourceAmount, obj.required);
-                    hasChanges = true;
+                // Проверка ресурсов в инвентаре ИЛИ артефактов в инвентаре
+                if (obj.target === 'artifact') {
+                    // Считаем количество артефактов в инвентаре (инвариант Record)
+                    const artifactCount = Object.keys(state.inventory || {}).length;
+
+                    if (artifactCount !== newCurrent) {
+                        newCurrent = Math.min(artifactCount, obj.required);
+                        hasChanges = true;
+                    }
+                } else {
+                    const resourceAmount = state.resources[obj.target as any] || 0;
+                    if (resourceAmount !== newCurrent) {
+                        newCurrent = Math.min(resourceAmount, obj.required);
+                        hasChanges = true;
+                    }
                 }
                 break;
             }
 
             case 'BUILD_BASE': {
-                // Проверка построенных баз
-                const basesInRegion = state.playerBases.filter(b => b.regionId === obj.target).length;
+                // Проверка построенных баз в конкретном регионе или вообще
+                const basesInRegion = obj.target === 'any'
+                    ? state.playerBases.length
+                    : state.playerBases.filter(b => b.regionId === obj.target).length;
+
                 if (basesInRegion !== newCurrent) {
                     newCurrent = Math.min(basesInRegion, obj.required);
                     hasChanges = true;

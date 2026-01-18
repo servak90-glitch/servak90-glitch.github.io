@@ -23,11 +23,16 @@ const StatusStrip: React.FC = () => {
     const energyLoad = Math.min(100, energyLoadRaw);
     const isOverloaded = energyLoadRaw > 100;
 
-    // Fuel Calculation (coal + oil*1.5 + gas*2 для "эффективных единиц")
     const totalFuel = (resources.coal || 0) + (resources.oil || 0) * 1.5 + (resources.gas || 0) * 2;
-    const maxFuel = 1000;  // Условный максимум для отображения
+    const maxFuel = 10000;  // Увеличил лимит для отображения
     const fuelPercent = Math.min(100, (totalFuel / maxFuel) * 100);
-    const isLowFuel = totalFuel < 100;
+    const isLowFuel = totalFuel < 500;
+
+    // Cargo Calculation
+    const currentCargoWeight = useGameStore(s => s.currentCargoWeight);
+    const cargoCapacity = stats.totalCargoCapacity || 1;
+    const isCargoOverloaded = currentCargoWeight > cargoCapacity;
+    const cargoPercent = Math.min(100, (currentCargoWeight / cargoCapacity) * 100);
 
     return (
         <div className="w-full h-6 bg-black/80 border-b border-zinc-800 flex items-stretch z-40 relative pointer-events-none">
@@ -74,6 +79,19 @@ const StatusStrip: React.FC = () => {
                     <div
                         className={`h-full transition-all duration-300 ${isOverloaded ? 'bg-red-500' : 'bg-yellow-500'}`}
                         style={{ width: `${energyLoad}%` }}
+                    />
+                </div>
+            </div>
+
+            {/* 4. CARGO (NEW) */}
+            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden">
+                <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
+                    <span className={`text-[10px] font-bold ${isCargoOverloaded ? 'text-red-500 animate-pulse' : 'text-blue-400'}`}>📦</span>
+                </div>
+                <div className="flex-1 h-2 mx-1 bg-zinc-900 rounded-sm overflow-hidden relative">
+                    <div
+                        className={`h-full transition-all duration-300 ${isCargoOverloaded ? 'bg-red-500' : 'bg-blue-500'}`}
+                        style={{ width: `${cargoPercent}%` }}
                     />
                 </div>
             </div>
