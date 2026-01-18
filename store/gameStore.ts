@@ -143,6 +143,8 @@ const INITIAL_STATE: GameState = {
     debugUnlocked: false,
     isGodMode: false,
     isInfiniteCoolant: false,
+    isInfiniteFuel: false,
+    isZeroWeight: false,
     isOverdrive: false,
     isDebugUIOpen: false,
     isDrilling: false,

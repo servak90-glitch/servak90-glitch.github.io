@@ -73,7 +73,7 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
         const maxCapacity = stats.totalCargoCapacity;
 
-        if (s.currentCargoWeight > maxCapacity) {
+        if (!s.isZeroWeight && s.currentCargoWeight > maxCapacity) {
             const event: VisualEvent = {
                 type: 'LOG',
                 msg: `⚠️ ПЕРЕГРУЗ! Вес: ${s.currentCargoWeight}/${maxCapacity}. Сбросьте груз перед перемещением!`,
@@ -85,14 +85,14 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
 
         // Расчёт расстояния и топлива
         const distance = calculateDistance(s.currentRegion, targetRegion);
-        const cargoRatio = maxCapacity > 0 ? s.currentCargoWeight / maxCapacity : 0;
+        const cargoRatio = (s.isZeroWeight || maxCapacity <= 0) ? 0 : s.currentCargoWeight / maxCapacity;
         const activePerks = getActivePerkIds(s.reputation);
         const fuelCost = calculateFuelCost(distance, fuelType, cargoRatio, activePerks);
 
         // Проверка 3: Достаточно топлива?
         const availableFuel = s.resources[fuelType] || 0;
 
-        if (!hasSufficientFuel(availableFuel, fuelCost)) {
+        if (!s.isInfiniteFuel && !hasSufficientFuel(availableFuel, fuelCost)) {
             const event: VisualEvent = {
                 type: 'LOG',
                 msg: `⛽ НЕДОСТАТОЧНО ТОПЛИВА! Требуется: ${fuelCost} ${getFuelLabel(fuelType)}, есть: ${availableFuel}`,
@@ -104,7 +104,7 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
 
         // ✅ Все проверки пройдены — ПЕРЕМЕЩЕНИЕ
         audioEngine.playTravelStart();
-        const newResources = {
+        const newResources = s.isInfiniteFuel ? s.resources : {
             ...s.resources,
             [fuelType]: s.resources[fuelType] - fuelCost
         };
@@ -136,7 +136,7 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         const distance = calculateDistance(s.currentRegion, targetRegion);
         const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
         const maxCapacity = stats.totalCargoCapacity || 1;
-        const cargoRatio = s.currentCargoWeight / maxCapacity;
+        const cargoRatio = s.isZeroWeight ? 0 : s.currentCargoWeight / maxCapacity;
         const activePerks = getActivePerkIds(s.reputation);
 
         return calculateFuelCost(distance, fuelType, cargoRatio, activePerks);

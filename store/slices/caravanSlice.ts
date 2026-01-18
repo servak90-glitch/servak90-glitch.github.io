@@ -80,7 +80,7 @@ export const createCaravanSlice: SliceCreator<CaravanSlice> = (set, get) => ({
 
         // Проверка возможности отправки
         const validation = canSendCaravan(cargo, '1star', fromBase.storedResources, activePerks);
-        if (!validation.canSend) {
+        if (!state.isZeroWeight && !validation.canSend) {
             console.warn(`❌ ${validation.reason}`);
             return;
         }

@@ -11,8 +11,11 @@ export interface AdminActions {
     adminAddArtifact: (defId: string) => void;
     adminSetGodMode: (enabled: boolean) => void;
     adminSetInfiniteCoolant: (enabled: boolean) => void;
+    adminSetInfiniteFuel: (enabled: boolean) => void;
+    adminSetZeroWeight: (enabled: boolean) => void;
     adminSetOverdrive: (enabled: boolean) => void;
     adminUnlockAll: () => void;
+    adminUnlockLicenses: () => void;
     adminMaxTech: () => void;
     adminSetDepth: (depth: number) => void;
     adminSkipBiome: () => void;
@@ -43,8 +46,51 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
 
     adminSetGodMode: (v) => set({ isGodMode: v }),
     adminSetInfiniteCoolant: (v) => set({ isInfiniteCoolant: v }),
+    adminSetInfiniteFuel: (v) => set({ isInfiniteFuel: v }),
+    adminSetZeroWeight: (v) => set({ isZeroWeight: v }),
     adminSetOverdrive: (v) => set({ isOverdrive: v }),
-    adminUnlockAll: () => set({ forgeUnlocked: true, cityUnlocked: true, skillsUnlocked: true, storageLevel: 2 }),
+
+    adminUnlockAll: () => set(s => {
+        const hasBaseInRegion = s.playerBases.find(b => b.regionId === s.currentRegion);
+        let newBases = s.playerBases;
+        if (!hasBaseInRegion) {
+            newBases = [...s.playerBases, {
+                id: `dev_base_${Date.now()}`,
+                regionId: s.currentRegion,
+                type: 'station',
+                status: 'active',
+                storageCapacity: 10000,
+                storedResources: {},
+                hasWorkshop: true,
+                workshopTierRange: [1, 10],
+                hasFuelFacilities: true,
+                hasMarket: true,
+                hasFortification: true,
+                hasGuards: true,
+                constructionStartTime: Date.now(),
+                constructionCompletionTime: Date.now(),
+                lastVisitedAt: Date.now(),
+                upgradeLevel: 1,
+                facilities: []
+            }];
+        } else if (hasBaseInRegion.type !== 'station') {
+            newBases = s.playerBases.map(b => b.regionId === s.currentRegion ? { ...b, type: 'station', hasMarket: true } : b);
+        }
+
+        return {
+            forgeUnlocked: true,
+            cityUnlocked: true,
+            skillsUnlocked: true,
+            storageLevel: 2,
+            debugUnlocked: true,
+            playerBases: newBases,
+            caravanUnlocks: s.caravanUnlocks.map(u => ({ ...u, unlocked: true })),
+            unlockedLicenses: ['green', 'yellow', 'red'] as any[]
+        };
+    }),
+
+    adminUnlockLicenses: () => set({ unlockedLicenses: ['green', 'yellow', 'red'] as any[] }),
+
     adminMaxTech: () => set(s => ({ resources: { ...s.resources, ancientTech: 99999, nanoSwarm: 99999 } })),
 
     adminSetDepth: (d) => set(s => ({

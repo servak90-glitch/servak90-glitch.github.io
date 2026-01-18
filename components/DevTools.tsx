@@ -103,7 +103,7 @@ const DevTools: React.FC = () => {
 
       {/* TABS */}
       <div className="flex border-b border-green-800">
-        {(['RES', 'STATE', 'NAV', 'EVENT'] as const).map(tab => (
+        {(['RES', 'STATE', 'NAV', 'EVENT', 'GLOBAL'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -167,6 +167,18 @@ const DevTools: React.FC = () => {
               <span>OVERDRIVE (x100)</span>
               <button onClick={() => store.adminSetOverdrive(!store.isOverdrive)} className={`${store.isOverdrive ? 'text-red-500 font-bold' : 'text-zinc-500'}`}>
                 [{store.isOverdrive ? 'ON' : 'OFF'}]
+              </button>
+            </div>
+            <div className="flex justify-between items-center border border-green-800 p-2">
+              <span>INFINITE FUEL</span>
+              <button onClick={() => store.adminSetInfiniteFuel(!store.isInfiniteFuel)} className={`${store.isInfiniteFuel ? 'text-cyan-300 font-bold' : 'text-zinc-500'}`}>
+                [{store.isInfiniteFuel ? 'ON' : 'OFF'}]
+              </button>
+            </div>
+            <div className="flex justify-between items-center border border-green-800 p-2">
+              <span>ZERO WEIGHT</span>
+              <button onClick={() => store.adminSetZeroWeight(!store.isZeroWeight)} className={`${store.isZeroWeight ? 'text-amber-300 font-bold' : 'text-zinc-500'}`}>
+                [{store.isZeroWeight ? 'ON' : 'OFF'}]
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
@@ -270,6 +282,9 @@ const DevTools: React.FC = () => {
             {/* ЛИЦЕНЗИИ */}
             <div className="border-t border-green-800 pt-2">
               <div className="text-green-500 text-[10px] mb-1">🎫 LICENSES</div>
+              <div className="grid grid-cols-2 gap-1 mb-1">
+                <button onClick={() => store.adminUnlockLicenses()} className="border border-green-600 hover:bg-green-900/30 p-1 text-[9px] col-span-2">UNLOCK ALL LICENSES</button>
+              </div>
               <div className="grid grid-cols-3 gap-1">
                 <button onClick={() => (store as any).adminUnlockLicense?.('green')} className="border border-green-600 hover:bg-green-900/30 p-1 text-[9px]">GREEN</button>
                 <button onClick={() => (store as any).adminUnlockLicense?.('yellow')} className="border border-yellow-600 hover:bg-yellow-900/30 p-1 text-[9px]">YELLOW</button>
