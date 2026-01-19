@@ -126,7 +126,7 @@ export const GlobalMapView = () => {
                 {renderTabs()}
             </div>
 
-            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-4 relative z-10 overflow-y-auto overflow-x-hidden scrollbar-hide">
+            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-4 relative z-10 overflow-y-auto overflow-x-hidden touch-pan-y">
                 {activeTab === 'map' && (
                     <div className="flex-1 flex flex-col gap-4">
                         <div className="bg-gray-800/50 border-2 border-cyan-500/30 rounded-lg p-3 md:p-4">
@@ -153,7 +153,7 @@ export const GlobalMapView = () => {
                         </div>
 
                         <div
-                            className="w-full flex-1 min-h-[300px] md:min-h-[500px] bg-black/40 border-2 border-gray-700 rounded-lg overflow-hidden relative shadow-inner"
+                            className="w-full h-[300px] md:h-[400px] bg-black/40 border-2 border-gray-700 rounded-lg overflow-hidden relative shadow-inner"
                             style={{ touchAction: 'none' }}
                         >
                             <IsometricCanvas
@@ -208,16 +208,16 @@ export const GlobalMapView = () => {
                     </div>
                 )}
 
-                {activeTab === 'market' && <MarketView />}
+                {activeTab === 'market' && <div className="overflow-y-auto touch-pan-y"><MarketView /></div>}
                 {activeTab === 'caravans' && (
-                    <div className="flex-1 flex flex-col p-2">
+                    <div className="flex-1 flex flex-col p-2 overflow-y-auto touch-pan-y">
                         <h1 className="text-2xl md:text-4xl font-bold text-purple-400 mb-2">🚛 {t(TL.caravan.title, lang)}</h1>
                         <p className="text-gray-400 text-xs md:text-sm mb-6">{t(TL.caravan.subtitle, lang)}</p>
                         <CaravanPanel />
                     </div>
                 )}
-                {activeTab === 'quests' && <div className="flex-1 h-[500px]"><QuestPanel /></div>}
-                {activeTab === 'factions' && <FactionPanel />}
+                {activeTab === 'quests' && <div className="flex-1 overflow-y-auto touch-pan-y"><QuestPanel /></div>}
+                {activeTab === 'factions' && <div className="overflow-y-auto touch-pan-y"><FactionPanel /></div>}
             </div>
         </div>
     );

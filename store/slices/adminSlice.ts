@@ -73,12 +73,12 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
             newBases = [...s.playerBases, {
                 id: `dev_base_${Date.now()}`,
                 regionId: s.currentRegion,
-                type: 'station',
-                status: 'active',
+                type: 'station' as const,
+                status: 'active' as const,
                 storageCapacity: 10000,
                 storedResources: {},
                 hasWorkshop: true,
-                workshopTierRange: [1, 10],
+                workshopTierRange: [1, 10] as [number, number],
                 hasFuelFacilities: true,
                 hasMarket: true,
                 hasFortification: true,
@@ -90,7 +90,7 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
                 facilities: []
             }];
         } else {
-            newBases = s.playerBases.map(b => b.regionId === s.currentRegion ? { ...b, type: 'station', hasMarket: true, status: 'active' } : b);
+            newBases = s.playerBases.map(b => b.regionId === s.currentRegion ? { ...b, type: 'station' as const, hasMarket: true, status: 'active' as const } : b);
         }
 
         // Подготовка всех разрешений
@@ -104,17 +104,18 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
             };
         });
 
-        set({
+        set((state) => ({
+            ...state,
             forgeUnlocked: true,
             cityUnlocked: true,
             skillsUnlocked: true,
             storageLevel: 2,
             debugUnlocked: true,
             playerBases: newBases,
-            caravanUnlocks: s.caravanUnlocks.map(u => ({ ...u, unlocked: true })),
-            unlockedLicenses: ['green', 'yellow', 'red'] as any[],
+            caravanUnlocks: state.caravanUnlocks.map(u => ({ ...u, unlocked: true })),
+            unlockedLicenses: ['green', 'yellow', 'red'],
             activePermits: allPermits
-        });
+        }));
     },
 
     adminUnlockAllPermits: () => {

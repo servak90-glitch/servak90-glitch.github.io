@@ -326,21 +326,11 @@ const App: React.FC = () => {
             <div className="absolute inset-0 z-10 flex flex-col pointer-events-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
 
                 {/* NEW HEADER & STATUS STRIP */}
-                {(!isMobile || (activeView !== View.DRILL && activeView !== View.COMBAT)) && (
-                    <GameHeader onOpenMenu={() => setIsMenuOpen(true)} />
-                )}
+                <GameHeader onOpenMenu={() => setIsMenuOpen(true)} />
 
-                {/* Mobile Menu Trigger (when header is hidden) */}
-                {isMobile && (activeView === View.DRILL || activeView === View.COMBAT) && (
-                    <button
-                        onClick={() => setIsMenuOpen(true)}
-                        className="absolute top-2 right-2 z-50 p-2 bg-black/40 border border-zinc-800 rounded text-zinc-400 pointer-events-auto"
-                    >
-                        ☰
-                    </button>
-                )}
+                {/* Mobile Menu Trigger (убрано, т.к. GameHeader всегда виден) */}
 
-                {(activeView === View.DRILL || activeView === View.COMBAT) && !isMobile && <StatusStrip />}
+                {(activeView === View.DRILL || activeView === View.COMBAT) && <StatusStrip />}
                 <ActiveEffects />
 
                 {/* MAIN VIEWPORT */}

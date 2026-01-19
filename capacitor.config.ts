@@ -10,10 +10,15 @@ const config: CapacitorConfig = {
   },
   plugins: {
     StatusBar: {
+      // Полностью скрываем статус-бар для fullscreen игры
       style: 'DARK',
-      overlaysWebView: true,
-      backgroundColor: '#00000000'
+      overlaysWebView: false,
+      backgroundColor: '#000000'
     },
+    SplashScreen: {
+      launchShowDuration: 0,
+      backgroundColor: '#000000'
+    }
   }
 };
 

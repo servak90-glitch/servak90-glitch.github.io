@@ -84,6 +84,44 @@
      (повторяется бесконечно)
 ```
 
+### Визуализация Core Loop:
+
+```mermaid
+graph TD
+    START([Старт игры]) --> DRILL[🔨 БУРЕНИЕ]
+    DRILL --> HEAT{Heat \u003e 90%?}
+    HEAT -->|Да| VENT[❄️ VENT / Пауза]
+    HEAT -->|Нет| CONTINUE[Продолжить]
+    VENT --> DRILL
+    CONTINUE --> BOSS_CHECK{5000м<br/>босс?}
+    BOSS_CHECK -->|Да| COMBAT[⚔️ COMBAT]
+    BOSS_CHECK -->|Нет| RESOURCES[📦 Сбор ресурсов]
+    COMBAT --> BOSS_REWARDS[🎁 Награды босса<br/>XP, Resources,<br/>Artifacts]
+    RESOURCES --> CITY[🏙️ CITY / FORGE]
+    BOSS_REWARDS --> CITY
+    CITY --> UPGRADES[⬆️ Улучшения<br/>Drill, Skills,<br/>Equipment]
+    UPGRADES --> GLMAP{Global Map<br/>Unlocked?}
+    GLMAP -->|Да| TRAVEL[🗺️ Travel / Trade]
+    GLMAP -->|Нет| DRILL
+    TRAVEL --> NEW_REGION[🌍 Новый регион]
+    NEW_REGION --> DRILL
+    
+    style START fill:#3b82f6,color:#fff
+    style COMBAT fill:#ef4444,color:#fff
+    style BOSS_REWARDS fill:#10b981,color:#fff
+    style UPGRADES fill:#8b5cf6,color:#fff
+    style TRAVEL fill:#f59e0b,color:#fff
+```
+
+**Пояснение диаграммы:**
+- 🔨 **БУРЕНИЕ** — основная активность
+- ❄️ **VENT** — управление перегревом
+- ⚔️ **COMBAT** — бой с боссами каждые 5000м
+- 🏙️ **CITY/FORGE** — улучшения и крафт
+- 🗺️ **TRAVEL** — метапрогрессия через Global Map
+
+---
+
 ### Метапрогрессия:
 
 ```
@@ -109,6 +147,184 @@
   → Переход в новое ИЗМЕРЕНИЕ
   → Hard reset с новыми механиками
 ```
+
+---
+
+## 🎓 ONBOARDING И TUTORIAL
+
+### Философия обучения:
+
+**"Учим через игру, а не через чтение"**
+
+- Минимум текста, maximum hands-on experience
+- Progressive disclosure: механики раскрываются постепенно
+- Никаких блокирующих tutorial окон
+- Опциональные подсказки (можно отключить)
+
+---
+
+### Первые 5 минут игры:
+
+#### **Шаг 1: Приветствие** (0:00-0:30)
+
+**Визуал:**
+- Короткая текстовая заставка на фоне планеты:
+  ```
+  2287 год
+  Планета Aegis-7
+  Сектор NGC-7742
+  
+  Ваша миссия проста:
+  БУРИТЕ. ГЛУБЖЕ. ДО ЯДРА.
+  ```
+  
+**Действия:**
+- Автоматический старт бурения (автобур работает)
+- Интерфейс минималистичный: только HeatBar и depth counter
+- Звук бурения создаёт атмосферу
+
+---
+
+#### **Шаг 2: Первый клик** (0:30-1:00)
+
+**Подсказка** (popup снизу справа):
+> 💡 "ЛКМ для ускорения бурения"
+
+**Когда игрок кликает:**
+- Визуальные искры от бура
+- Урон увеличивается
+- Heat Bar начинает расти быстрее
+- Новая подсказка появляется:
+  > ⚠️ "Heat генерируется от бурения"
+
+---
+
+#### **Шаг 3: Первый перегрев** (1:00-2:00)
+
+**Когда Heat достигает 70%:**
+- Heat Bar становится оранжевой
+- Предупреждение (пульсация):
+  > 🔥 "ВНИМАНИЕ: Перегрев! Нажмите [VENT] для охлаждения"
+
+**После нажатия VENT:**
+- Heat резко падает на 30%
+- Подсказка:
+  > ✅ "Отлично! Используйте VENT для управления теплом"
+  
+- Разблокировка: кнопка VENT теперь постоянно видна
+
+---
+
+#### **Шаг 4: Первые ресурсы** (2:00-3:00)
+
+**Достигнуто 100м глубины:**
+- Собрано ~50 Clay
+- Анимация: ресурсы "всплывают" в StatusStrip
+- Разблокировка вкладки **CITY** (иконка светится)
+
+**Подсказка:**
+> 🏙️ "Город разблокирован! Посетите его для апгрейдов"
+
+**Игрок открывает CITY:**
+- Короткий tour по вкладкам (Market, Workshop, Bar, Services)
+- Выделена кнопка Workshop → "Repair Drill" (если нужно)
+- Никаких покупок пока недоступно (не хватает ресурсов)
+
+---
+
+#### **Шаг 5: Первый босс** (3:00-5:00)
+
+**На глубине 500м:**
+- Бурение останавливается
+- Экран затемняется
+- Появляется **SEISMIC DRILL** (первый босс)
+
+**Tutorial боя:**
+
+1. **Базовая атака:**
+   > 💪 "Кликайте по боссу для атаки!"
+   
+2. **Первая мини-игра (TIMING):**
+   > 🎯 "Кликните когда индикаторы совпадут!"
+   - Если успех → x2.0 урон, подсказка: "Отлично! x2.0 урон"
+   - Если провал → x0.5 урон, подсказка: "Промах. Попробуйте снова"
+
+3. **Победа над боссом:**
+   - Награды: 500 XP, 100 Stone, 1 COMMON артефакт
+   - Level UP! → Level 2
+   - Разблокировка: Skill Points (но SKILLS view пока закрыт)
+
+**После боя:**
+> 🎉 "Первый босс повержён! Продолжайте углубляться"
+
+---
+
+### Progressive Unlocks:
+
+Механики и view разблокируются по мере прохождения:
+
+| Глубина | Unlock | Tutorial | Длительность |
+|---------|--------|----------|--------------|
+| **0м** | Drilling + Heat | Клик, VENT | 2 мин |
+| **100м** | CITY view | Workshop, Market | 1 мин |
+| **500м** | **Первый босс** | Combat, Minigames | 2 мин |
+| **1,000м** | FORGE view | Crafting, Blueprints | 2 мин |
+| **2,000м** | ARTIFACTS view | Analyzer, Identification | 1 мин |
+| **5,000м** | **SKILLS view** | Skill tree, SP allocation | 3 мин |
+| **10,000м** | **GLOBAL MAP** | Regions, Travel, Fuel | 5 мин |
+| **15,000м** | CODEX view | Lore, Bestiary | Опционально |
+
+**Итого:** Базовые механики освоены за **10-15 минут игры**.
+
+---
+
+### Настройки Tutorial:
+
+Игрок может контролировать обучение через Settings:
+
+```typescript
+interface TutorialSettings {
+  enabled: boolean;           // Включить/выключить tutorial
+  hintsEnabled: boolean;      // Показывать подсказки
+  autoProgress: boolean;      // Автоматически проходить tutorial
+  skipCompleted: boolean;     // Пропустить уже пройденные шаги
+}
+```
+
+**Опции в Settings:**
+
+- ✅ **Tutorial Enabled** — Показывать обучение (по умолчанию ON для новых игроков)
+- ✅ **Show Hints** — Всплывающие подсказки (можно отключить после обучения)
+- ⏭️ **Skip Tutorial** — Пропустить сразу в игру (для опытных игроков)
+- 🔄 **Replay Tutorial** — Повторить обучение в любой момент
+
+---
+
+### Индикация прогресса tutorial:
+
+**В правом верхнем углу (опционально):**
+
+```
+📚 Tutorial: 3/7 ✓
+```
+
+- Показывает текущий прогресс обучения
+- Исчезает после завершения всех шагов
+- Можно скрыть в настройках
+
+---
+
+### Адаптивность tutorial:
+
+**Для разных типов игроков:**
+
+1. **Новички** → Full tutorial (все подсказки)
+2. **Опытные в жанре** → Minimal hints (только ключевые механики)
+3. **Speedrunners** → Skip tutorial (сразу в игру)
+
+**Система автоматически определяет:**
+- Если игрок быстро понимает механику → Пропускает следующие подсказки
+- Если игрок долго не взаимодействует → Показывает дополнительные hints
 
 ---
 
@@ -605,6 +821,60 @@ fuelType = 'gas' → 1 unit = 500 км
 - **Attack Speed** — частота атак
 - **Phases** — фазы боя (смена паттернов)
 - **Weak Points** — слабые точки для увеличенного урона
+
+---
+
+### Визуализация Combat Flow:
+
+```mermaid
+sequenceDiagram
+    participant P as 🎮 Игрок
+    participant B as 👾 Босс
+    participant M as 🎯 Minigame
+    
+    P->>B: Вход в бой (Depth = 5000м)
+    B->>B: Инициализация (HP, Phases)
+    
+    loop Основной цикл боя
+        B->>P: Атака (каждые 2 сек)
+        Note over P: Получен урон<br/>Integrity -10%
+        
+        P->>B: Клик для атаки
+        Note over B: Получен урон<br/>HP -100
+        
+        B->>M: Spawn Minigame (RNG 30%)
+        M->>P: Показать TIMING/MEMORY/etc
+        
+        alt Успех
+            P->>M: Правильное действие
+            M->>B: x2.0 урон
+            Note over B: HP -200 (boosted)
+        else Провал
+            P->>M: Ошибка
+            M->>B: x0.5 урон
+            Note over B: HP -50 (reduced)
+        end
+        
+        opt Клик по Weak Point
+            P->>B: Попадание в слабую точку
+            Note over B: x1.5 доп. урон<br/>HP -150
+        end
+        
+        alt HP \u003c 50%
+            B->>B: Phase 2 Transition
+            Note over B: Ускорение атак<br/>+50% Attack Speed
+        end
+    end
+    
+    B->>B: HP = 0
+    B->>P: Награды (XP, Resources, Artifact)
+    P->>P: Victory!
+```
+
+**Пояснение диаграммы:**
+- 🎮 **Игрок** атакует кликами и проходит мини-игры
+- 👾 **Босс** атакует каждые 2 секунды, меняет фазы
+- 🎯 **Minigame** появляется с шансом 30%, даёт бонусный урон
 
 ---
 
@@ -1135,6 +1405,292 @@ droneEnergyConsumption = numDrones * 10
 - **30 FPS** на Mobile
 - **Время загрузки** < 3 секунды
 - **Размер бандла** < 2 МБ (gzipped)
+
+---
+
+## 💾 SAVE SYSTEM / PERSISTENCE
+
+### localStorage Structure:
+
+Все данные игры хранятся в `localStorage` браузера под единым ключом:
+
+```typescript
+const SAVE_KEY = 'cosmic_excavator_save';
+
+interface SaveData {
+  version: string;              // "0.3.1"
+  timestamp: number;            // Unix timestamp последнего сохранения
+  
+  // Игрок
+  player: {
+    level: number;
+    xp: number;
+    depth: number;
+    skillPoints: number;
+  };
+  
+  // Бурововая установка
+  drill: DrillState;            // Все 10 слотов снаряжения
+  
+  // Ресурсы и экономика
+  resources: Resources;         // Все 15+ типов ресурсов
+  
+  // Прогрессия
+  skills: Record<string, number>;      // skill_id → level
+  artifacts: InventoryItem[];          // Коллекция артефактов
+  unlockedBlueprints: string[];        // ID разблокированных чертежей
+  
+  // Global Map
+  globalMap: {
+    currentRegion: RegionId;
+    unlockedRegions: RegionId[];
+    bases: PlayerBase[];
+    caravans: Caravan[];
+    licenses: License[];
+    permits: Permit[];
+    travelHistory: TravelLog[];
+  };
+  
+  // Квесты и фракции
+  quests: Quest[];
+  reputation: ReputationState;  // Corporate, Science, Rebels
+  completedQuestIds: string[];
+  
+  // Настройки и прогресс
+  settings: GameSettings;       // Музыка, SFX, язык
+  tutorialProgress: {
+    completed: boolean;
+    currentStep: number;
+    skippedSteps: string[];
+  };
+  
+  // Статистика (опционально)
+  stats?: {
+    totalPlayTime: number;      // В секундах
+    totalClicks: number;
+    bossesDefeated: number;
+    deepestDepth: number;
+  };
+}
+```
+
+---
+
+### Версионирование сохранений:
+
+Каждая версия игры может изменять структуру сохранений. Система автоматически мигрирует старые сейвы:
+
+| Version | Changes | Migration Strategy |
+|---------|---------|-------------------|
+| **v1.0** (0.1.0) | Initial save format | N/A |
+| **v2.0** (0.2.0) | + Global Map data | Auto-add `globalMap: { currentRegion: 'rust_valley', bases: [], ... }` |
+| **v3.0** (0.3.0) | + Quest System | Auto-add `quests: [], completedQuestIds: []` |
+| **v4.0** (0.3.1) | + Reputation | Auto-add `reputation: { CORPORATE: 0, SCIENCE: 0, REBELS: 0 }` |
+| **v5.0** (Future) | Side Tunnels tracking | Auto-add `sideTunnelsExplored: []` |
+
+**Migration function:**
+
+```typescript
+function migrateSave(oldSave: any): SaveData {
+  const version = oldSave.version || '0.1.0';
+  let migrated = { ...oldSave };
+  
+  // v1 → v2
+  if (compareVersions(version, '0.2.0') < 0) {
+    migrated.globalMap = createDefaultGlobalMapState();
+  }
+  
+  // v2 → v3
+  if (compareVersions(version, '0.3.0') < 0) {
+    migrated.quests = [];
+    migrated.completedQuestIds = [];
+  }
+  
+  // v3 → v4
+  if (compareVersions(version, '0.3.1') < 0) {
+    migrated.reputation = { CORPORATE: 0, SCIENCE: 0, REBELS: 0 };
+  }
+  
+  migrated.version = CURRENT_VERSION;
+  return migrated as SaveData;
+}
+```
+
+---
+
+### Auto-Save:
+
+Игра автоматически сохраняется для предотвращения потери прогресса:
+
+**Частота auto-save:**
+- **Каждые 30 секунд** (фоновое сохранение)
+- **При critical events**:
+  - Boss defeated
+  - Level up
+  - Resource sell/buy (крупная транзакция)
+  - Base construction complete
+  - Quest completed
+  - Settings changed
+
+**Backup система:**
+
+Для защиты от corruption создаются 3 backup:
+
+```typescript
+const BACKUP_KEYS = [
+  'cosmic_excavator_save_backup_1',  // Последний автосейв
+  'cosmic_excavator_save_backup_2',  // Предпоследний
+  'cosmic_excavator_save_backup_3'   // Ещё старее
+];
+
+// Rotation: backup_1 → backup_2 → backup_3 → удаляется
+```
+
+**Recovery:**
+
+```typescript
+function loadSave(): SaveData | null {
+  // Попытка 1: Главное сохранение
+  let save = localStorage.getItem(SAVE_KEY);
+  if (save && validateSave(save)) return JSON.parse(save);
+  
+  // Попытка 2-4: Backups
+  for (const backupKey of BACKUP_KEYS) {
+    save = localStorage.getItem(backupKey);
+    if (save && validateSave(save)) {
+      console.warn('Main save corrupted, loaded from backup');
+      return JSON.parse(save);
+    }
+  }
+  
+  // Все сохранения повреждены
+  console.error('All saves corrupted');
+  return null;
+}
+```
+
+---
+
+### Import / Export:
+
+Игрок может экспортировать/импортировать свои сохранения:
+
+**Export:**
+
+```typescript
+function exportSave(): string {
+  const save = loadSave();
+  if (!save) throw new Error('No save to export');
+  
+  // Добавляем checksum для валидации
+  const saveWithChecksum = {
+    data: save,
+    checksum: calculateChecksum(save)
+  };
+  
+  return btoa(JSON.stringify(saveWithChecksum));  // Base64 encode
+}
+```
+
+**Import:**
+
+```typescript
+function importSave(encodedSave: string): boolean {
+  try {
+    const decoded = atob(encodedSave);  // Base64 decode
+    const { data, checksum } = JSON.parse(decoded);
+    
+    // Validate checksum
+    if (calculateChecksum(data) !== checksum) {
+      throw new Error('Checksum mismatch - save may be corrupted or tampered');
+    }
+    
+    // Sanitize и migrate
+    const migrated = migrateSave(data);
+    const sanitized = sanitizeSave(migrated);
+    
+    // Save to localStorage
+    localStorage.setItem(SAVE_KEY, JSON.stringify(sanitized));
+    
+    // Reload game
+    window.location.reload();
+    return true;
+  } catch (error) {
+    console.error('Failed to import save:', error);
+    return false;
+  }
+}
+```
+
+**UI для Import/Export:**
+
+В Settings добавить кнопки:
+
+- 📤 **Export Save** → Копирует Base64 строку в clipboard
+- 📥 **Import Save** → Вставить Base64 строку из clipboard
+
+---
+
+### Защита от читерства:
+
+**1. Checksum Validation:**
+
+```typescript
+function calculateChecksum(save: SaveData): string {
+  const normalized = JSON.stringify(save, Object.keys(save).sort());
+  return sha256(normalized + SALT);  // SHA-256 hash with secret salt
+}
+```
+
+**2. Sanitize Input:**
+
+При импорте проверяем валидность значений:
+
+```typescript
+function sanitizeSave(save: SaveData): SaveData {
+  return {
+    ...save,
+    player: {
+      level: clamp(save.player.level, 1, 1000),           // Max level 1000
+      xp: clamp(save.player.xp, 0, Number.MAX_SAFE_INTEGER),
+      depth: clamp(save.player.depth, 0, 1000000),        // Max 1M meters
+      skillPoints: clamp(save.player.skillPoints, 0, 500)
+    },
+    resources: sanitizeResources(save.resources),  // Clamp all resources
+    // ... etc
+  };
+}
+
+function sanitizeResources(resources: Resources): Resources {
+  const sanitized = { ...resources };
+  for (const key of Object.keys(sanitized)) {
+    sanitized[key] = clamp(sanitized[key], 0, 1e12);  // Max 1 trillion per resource
+  }
+  return sanitized;
+}
+```
+
+**3. Rate Limiting:**
+
+Ограничение частоты импорта:
+
+```typescript
+const IMPORT_COOLDOWN = 60 * 1000;  // 1 минута
+let lastImportTime = 0;
+
+function canImport(): boolean {
+  const now = Date.now();
+  if (now - lastImportTime < IMPORT_COOLDOWN) {
+    return false;  // Too soon
+  }
+  lastImportTime = now;
+  return true;
+}
+```
+
+**Примечание:**  
+Игра офлайн и single-player, поэтому агрессивная anti-cheat не требуется.  
+Читерство не влияет на других игроков, так что умеренная защита достаточна.
 
 ---
 
