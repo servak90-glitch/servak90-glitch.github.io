@@ -29,10 +29,9 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
         setIsRolling(true);
         setLastResult(null);
 
-        // Симуляция броска (результат определяется в store, но мы копируем логику для UI)
+        // Симуляция броска (результат теперь берется из store, чтобы не было рассинхрона)
         setTimeout(() => {
-            const won = Math.random() < GAMBLING.WIN_CHANCE;
-            gambleResources(diceBetRes, diceBetAmount);
+            const won = gambleResources(diceBetRes, diceBetAmount);
             setLastResult({ won, amount: won ? diceBetAmount : -diceBetAmount });
             setIsRolling(false);
         }, 500);

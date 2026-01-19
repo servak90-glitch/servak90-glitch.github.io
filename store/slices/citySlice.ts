@@ -14,7 +14,7 @@ export interface CityActions {
     healCity: () => void;
     repairHull: () => void;
     buyCityBuff: (cost: number, res: ResourceType, effectId: string) => void;
-    gambleResources: (res: ResourceType, amount: number) => void;
+    gambleResources: (res: ResourceType, amount: number) => boolean;
     craftFuel: (recipeId: string) => void;  // NEW: Crafting топлива
 }
 
@@ -93,25 +93,31 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
         if (s.resources[res] >= amount) {
             const win = Math.random() < 0.45;
             const newRes = { ...s.resources };
-            newRes[res] -= amount;
+            
             if (win) {
-                newRes[res] += amount * 2;
-                const event: VisualEvent = { type: 'LOG', msg: `ВЫИГРЫШ! +${amount}`, color: 'text-green-500' };
+                // Выигрыш: +ставка (итого +amount)
+                newRes[res] += amount;
+                const event: VisualEvent = { type: 'LOG', msg: `ВЫИГРЫШ! +${amount} ${getResourceLabel(res)}`, color: 'text-green-500' };
                 set({
                     resources: newRes,
                     currentCargoWeight: recalculateCargoWeight(newRes),
                     actionLogQueue: pushLog(s, event)
                 });
                 audioEngine.playAchievement();
+                return true;
             } else {
-                const event: VisualEvent = { type: 'LOG', msg: `ПРОИГРЫШ...`, color: 'text-red-500' };
+                // Проигрыш: -ставка
+                newRes[res] -= amount;
+                const event: VisualEvent = { type: 'LOG', msg: `ПРОИГРЫШ... -${amount} ${getResourceLabel(res)}`, color: 'text-red-500' };
                 set({
                     resources: newRes,
                     currentCargoWeight: recalculateCargoWeight(newRes),
                     actionLogQueue: pushLog(s, event)
                 });
+                return false;
             }
         }
+        return false;
     },
 
     // === FUEL CRAFTING ===
