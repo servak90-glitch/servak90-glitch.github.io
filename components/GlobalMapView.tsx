@@ -12,6 +12,7 @@ import QuestPanel from './QuestPanel';
 import FactionPanel from './FactionPanel';
 import { IsometricCanvas } from './GlobalMap/IsometricCanvas';
 import { getActivePerkIds } from '../services/factionLogic';
+import { BuildBaseModal } from './BuildBaseModal';
 
 import { TL, t } from '../services/localization';
 
@@ -30,6 +31,7 @@ export const GlobalMapView = () => {
     const playerBases = useGameStore(s => s.playerBases);
     const caravans = useGameStore(s => s.caravans);
     const travelToRegion = useGameStore(s => s.travelToRegion);
+    const buildBase = useGameStore(s => s.buildBase);
     const lang = useGameStore(s => s.settings.language);
     const reputation = useGameStore(s => s.reputation);
 
@@ -47,6 +49,7 @@ export const GlobalMapView = () => {
     const [selectedRegion, setSelectedRegion] = useState<RegionId | null>(null);
     const [selectedFuel, setSelectedFuel] = useState<FuelType>(ResourceType.COAL);
     const [activeTab, setActiveTab] = useState<TabType>('map');
+    const [isBuildModalOpen, setIsBuildModalOpen] = useState(false);
 
     const activePerks = useMemo(() => getActivePerkIds(reputation), [reputation]);
 
@@ -205,6 +208,24 @@ export const GlobalMapView = () => {
                                 </div>
                             </div>
                         )}
+
+                        {/* Build Base button */}
+                        {selectedRegion && !playerBases.find(b => b.regionId === selectedRegion) && (
+                            <div className="bg-gray-800/80 border-2 border-green-500 rounded-lg p-4 md:p-6">
+                                <h3 className="text-lg md:text-2xl font-bold text-green-400 mb-3">
+                                    🏗️ {lang === 'RU' ? 'Построить базу' : 'Build Base'}
+                                </h3>
+                                <p className="text-sm text-gray-400 mb-4">
+                                    No base in {t(TL.regions[selectedRegion], lang)}. Build one to store resources and access facilities.
+                                </p>
+                                <button
+                                    onClick={() => setIsBuildModalOpen(true)}
+                                    className="w-full py-3 rounded-lg font-bold text-sm md:text-lg bg-green-600 hover:bg-green-500 text-white transition-all"
+                                >
+                                    🏗️ {lang === 'RU' ? 'ПОСТРОИТЬ БАЗУ' : 'BUILD BASE'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -219,6 +240,18 @@ export const GlobalMapView = () => {
                 {activeTab === 'quests' && <div className="flex-1 overflow-y-auto touch-pan-y"><QuestPanel /></div>}
                 {activeTab === 'factions' && <div className="overflow-y-auto touch-pan-y"><FactionPanel /></div>}
             </div>
+
+            {/* Build Base Modal */}
+            {isBuildModalOpen && selectedRegion && (
+                <BuildBaseModal
+                    regionId={selectedRegion}
+                    onClose={() => setIsBuildModalOpen(false)}
+                    onBuild={(baseType) => {
+                        buildBase(selectedRegion, baseType);
+                        setIsBuildModalOpen(false);
+                    }}
+                />
+            )}
         </div>
     );
 };
