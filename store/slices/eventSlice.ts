@@ -1,10 +1,10 @@
-
 import { SliceCreator } from './types';
 import { calculateStats } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 import { rollArtifact } from '../../services/artifactRegistry';
-import { createEffect } from '../../services/eventRegistry';
-import { InventoryItem, VisualEvent, GameState, EventActionId } from '../../types';
+import { createEffect, EVENTS } from '../../services/eventRegistry';
+import { InventoryItem, VisualEvent, GameState, GameEvent, EventTrigger, EventActionId } from '../../types';
+import { calculateRaidOutcome } from '../../services/raidService';
 import { sideTunnelSystem } from '../../services/systems/SideTunnelSystem';
 
 export interface EventActions {
@@ -13,6 +13,8 @@ export interface EventActions {
     setCoolingGame: (active: boolean) => void;
     forceVentHeat: (amount: number) => void;
     triggerOverheat: () => void;
+    pushEvent: (event: GameEvent) => void;
+    rollEventByTrigger: (trigger: EventTrigger) => GameEvent | null;
 }
 
 import { getActivePerkIds } from '../../services/factionLogic';
@@ -118,6 +120,65 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
                     logs.push(...result.logs);
                     break;
                 }
+                case EventActionId.BASE_DEFEND: {
+                    const base = s.playerBases.find(b => b.status === 'active' || b.status === 'under_attack');
+                    if (!base) break;
+
+                    // Fallback для старых баз без defense
+                    const baseDefense = base.defense ?? {
+                        integrity: 100,
+                        shields: 0,
+                        infantry: 0,
+                        drones: 0,
+                        turrets: 0
+                    };
+
+                    // Расчет силы атаки (зависит от региона или глубины, тут упростим)
+                    const attackPower = 20 + Math.random() * 50;
+                    const result = calculateRaidOutcome(base, attackPower);
+
+                    // Обновление базы
+                    const updatedBases = s.playerBases.map(b => b.id === base.id ? {
+                        ...b,
+                        defense: {
+                            integrity: Math.max(0, baseDefense.integrity - result.damageDealt),
+                            infantry: Math.max(0, baseDefense.infantry - result.unitsLost.infantry),
+                            drones: Math.max(0, baseDefense.drones - result.unitsLost.drones),
+                            turrets: Math.max(0, baseDefense.turrets - result.unitsLost.turrets),
+                            shields: 0 // Щиты садятся после боя
+                        },
+                        storedResources: Object.keys(b.storedResources).reduce((acc: any, res) => {
+                            acc[res] = Math.max(0, (b.storedResources[res as keyof typeof b.storedResources] || 0) - (result.resourceLoss[res as keyof typeof result.resourceLoss] || 0));
+                            return acc;
+                        }, {}),
+                        status: baseDefense.integrity - result.damageDealt <= 0 ? 'damaged' as const : 'active' as const
+                    } : b);
+
+                    updates.playerBases = updatedBases;
+                    logs.push({ type: 'LOG', msg: result.report.RU, color: result.success ? 'text-green-400' : 'text-red-500 font-bold' });
+                    if (!result.success) {
+                        logs.push({ type: 'LOG', msg: `💥 Потеряно юнитов и ресурсов во время прорыва!`, color: 'text-red-400' });
+                    }
+                    audioEngine.playExplosion();
+                    break;
+                }
+                case EventActionId.BASE_SURRENDER: {
+                    const base = s.playerBases.find(b => b.status === 'active' || b.status === 'under_attack');
+                    if (!base) break;
+
+                    const updatedBases = s.playerBases.map(b => b.id === base.id ? {
+                        ...b,
+                        storedResources: Object.keys(b.storedResources).reduce((acc: any, res) => {
+                            acc[res] = Math.floor((b.storedResources[res as keyof typeof b.storedResources] || 0) * 0.5); // Теряем половину
+                            return acc;
+                        }, {}),
+                        status: 'active' as const
+                    } : b);
+
+                    updates.playerBases = updatedBases;
+                    logs.push({ type: 'LOG', msg: '🏳️ База сдалась. Половина ресурсов со складов передана грабителям.', color: 'text-yellow-500' });
+                    break;
+                }
             }
         }
         else {
@@ -125,7 +186,7 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
                 const effect = createEffect(event.effectId, 1) as any;
                 if (effect) {
                     updates.activeEffects = [...s.activeEffects, { ...effect, id: effect.id + '_' + Date.now() }];
-                    logs.push({ type: 'LOG', msg: `>> НАЛОЖЕН ЭФФЕКТ: ${effect.name}`, color: 'text-yellow-400' });
+                    logs.push({ type: 'LOG', msg: `>> НАЛОЖЕН ЭФФЕКТ: ${effect.name} `, color: 'text-yellow-400' });
                 }
             }
             if (event.forceArtifactDrop) {
@@ -171,4 +232,23 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
             isCoolingGameActive: false
         };
     }),
+
+    pushEvent: (event: GameEvent) => {
+        set(s => ({ eventQueue: [...s.eventQueue, event] }));
+    },
+
+    rollEventByTrigger: (trigger: EventTrigger) => {
+        const s = get();
+        const available = EVENTS.filter(e => e.triggers?.includes(trigger));
+        if (available.length === 0) return null;
+
+        // Простой weighted random
+        const totalWeight = available.reduce((acc, e) => acc + (e.weight || 10), 0);
+        let roll = Math.random() * totalWeight;
+        for (const e of available) {
+            roll -= (e.weight || 10);
+            if (roll <= 0) return e;
+        }
+        return available[0];
+    }
 });

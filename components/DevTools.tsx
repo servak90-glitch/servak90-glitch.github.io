@@ -197,8 +197,9 @@ const DevTools: React.FC = () => {
               <button onClick={store.adminMaxTech} className="border border-green-700 hover:bg-green-900 p-1 text-[9px]">MAX TECH</button>
               <button onClick={store.adminMaxFactionReputation} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-1 text-[9px]">MAX REP</button>
               <button onClick={store.adminInstantHeal} className="border border-red-700 text-red-400 hover:bg-red-900/20 p-1 text-[9px]">INSTANT HEAL</button>
-              <button onClick={store.adminCompleteActiveQuests} className="border border-amber-700 text-amber-400 hover:bg-amber-900/20 p-1 text-[9px]">FINISH QUESTS</button>
-              <button onClick={() => store.adminInstantComplete()} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-1 text-[9px] col-span-2 text-center">FINISH EXPEDITIONS</button>
+              <button onClick={() => store.adminCompleteActiveQuests()} className="border border-amber-700 text-amber-400 hover:bg-amber-900/20 p-1 text-[9px]">FINISH QUESTS</button>
+              <button onClick={() => store.adminInstantComplete()} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-1 text-[9px]">FINISH EXPEDITIONS</button>
+              <button onClick={() => (store as any).adminInstantCompleteCrafting?.()} className="border border-yellow-700 text-yellow-400 hover:bg-yellow-900/30 p-1 text-[9px] col-span-2 text-center">FINISH CRAFTING</button>
 
               {/* HORIZONTAL PROGRESSION DEBUG */}
               <div className="col-span-2 border-t border-zinc-800 pt-2 mt-2">

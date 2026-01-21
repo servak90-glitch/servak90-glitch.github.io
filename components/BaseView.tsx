@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { PlayerBase, ResourceType, FacilityId } from '../types';
+import { PlayerBase, ResourceType, FacilityId, DefenseUnitType, Resources } from '../types';
 import { FUEL_RECIPES } from '../constants/fuelRecipes';
 import { FUEL_FACILITIES } from '../constants/fuelFacilities';
+import { DEFENSE_UNITS, BASE_REPAIR_COST } from '../constants/defenseUnits';
 import { TL } from '../services/localization';
 import { t } from '../services/localization';
 import { getResourceLabel } from '../services/gameMath';
@@ -13,12 +14,22 @@ interface BaseViewProps {
 }
 
 export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
-    const { settings, resources, transferResources, refineResource, buildFacility } = useGameStore();
+    const { settings, resources, transferResources, refineResource, buildFacility, startDefenseProduction, repairBase } = useGameStore();
     const lang = settings.language;
-    const [activeTab, setActiveTab] = useState<'storage' | 'facilities' | 'refinery'>('storage');
+    const [activeTab, setActiveTab] = useState<'storage' | 'facilities' | 'refinery' | 'garrison'>('storage');
 
     const totalStored = Object.values(base.storedResources).reduce((sum, a) => sum + (a || 0), 0);
     const storagePercent = (totalStored / base.storageCapacity) * 100;
+
+    // Fallback для старых баз без defense
+    const defense = base.defense ?? {
+        integrity: 100,
+        shields: 0,
+        infantry: 0,
+        drones: 0,
+        turrets: 0
+    };
+    const productionQueue = base.productionQueue ?? [];
 
     return (
         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
@@ -46,7 +57,8 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
                     {[
                         { id: 'storage', label: lang === 'RU' ? '📦 Хранилище' : '📦 Storage' },
                         { id: 'facilities', label: lang === 'RU' ? '🏭 Модули' : '🏭 Facilities' },
-                        { id: 'refinery', label: lang === 'RU' ? '⚗️ Переработка' : '⚗️ Refinery', hidden: !base.facilities.includes('basic_refinery') }
+                        { id: 'refinery', label: lang === 'RU' ? '⚗️ Переработка' : '⚗️ Refinery', hidden: !base.facilities.includes('basic_refinery') },
+                        { id: 'garrison', label: lang === 'RU' ? '🛡️ Гарнизон' : '🛡️ Garrison' }
                     ].map(tab => !tab.hidden && (
                         <button
                             key={tab.id}
@@ -204,6 +216,139 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
                                     </div>
                                 );
                             })}
+                        </div>
+                    )}
+
+                    {activeTab === 'garrison' && (
+                        <div className="space-y-6">
+                            {/* Base Health and Info */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                                    <div className="text-gray-400 text-xs mb-1 uppercase font-bold">{lang === 'RU' ? 'Целостность базы' : 'Base Integrity'}</div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-1 h-3 bg-gray-950 rounded-full overflow-hidden border border-gray-800">
+                                            <div className="h-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" style={{ width: `${defense.integrity}%` }} />
+                                        </div>
+                                        <span className="text-white font-mono font-bold">{defense.integrity}%</span>
+                                    </div>
+                                    {defense.integrity < 100 && (
+                                        <button
+                                            onClick={() => repairBase(base.id)}
+                                            className="w-full mt-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-bold rounded transition-all uppercase"
+                                        >
+                                            🛠️ {lang === 'RU' ? `Отремонтировать` : `Repair Base`} ({BASE_REPAIR_COST.scrap} Scrap, {BASE_REPAIR_COST.iron} Iron)
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                                    <div className="text-gray-400 text-xs mb-1 uppercase font-bold">{lang === 'RU' ? 'Мощность щита' : 'Shield Power'}</div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-1 h-3 bg-gray-950 rounded-full overflow-hidden border border-gray-800">
+                                            <div className="h-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" style={{ width: `${defense.shields}%` }} />
+                                        </div>
+                                        <span className="text-white font-mono font-bold">{defense.shields}%</span>
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                                    <div className="text-gray-400 text-xs mb-1 uppercase font-bold">{lang === 'RU' ? 'Сила Обороны' : 'Defense Rating'}</div>
+                                    <div className="text-2xl font-black text-cyan-400 italic">
+                                        {defense.infantry * DEFENSE_UNITS.infantry.defensePower +
+                                            defense.drones * DEFENSE_UNITS.drone.defensePower +
+                                            defense.turrets * DEFENSE_UNITS.turret.defensePower} DP
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Units Current */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {[
+                                    { type: 'infantry', icon: '💂', count: defense.infantry, def: DEFENSE_UNITS.infantry },
+                                    { type: 'drone', icon: '🛸', count: defense.drones, def: DEFENSE_UNITS.drone },
+                                    { type: 'turret', icon: '📡', count: defense.turrets, def: DEFENSE_UNITS.turret }
+                                ].map(unit => (
+                                    <div key={unit.type} className="bg-gray-800/30 p-4 rounded-xl border border-gray-800 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-3xl">{unit.icon}</span>
+                                            <div>
+                                                <div className="text-white font-bold">{t(unit.def.name, lang)}</div>
+                                                <div className="text-gray-500 text-[10px] uppercase font-mono">{unit.def.defensePower} DP per unit</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-2xl font-black text-white">{unit.count}</div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Production Section */}
+                            <div className="space-y-4">
+                                <h3 className="text-xl font-bold text-cyan-400 border-l-4 border-cyan-500 pl-3 uppercase tracking-wider">
+                                    🏗️ {lang === 'RU' ? 'Инженерный цех' : 'Engineering Workshop'}
+                                </h3>
+
+                                {/* Queue */}
+                                {productionQueue.length > 0 && (
+                                    <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 space-y-2">
+                                        <p className="text-cyan-400 text-[10px] uppercase font-bold mb-2">В производстве:</p>
+                                        {productionQueue.map(job => {
+                                            const def = DEFENSE_UNITS[job.unitType];
+                                            const total = job.completionTime - job.startTime;
+                                            const current = Date.now() - job.startTime;
+                                            const progress = Math.min(100, (current / total) * 100);
+                                            return (
+                                                <div key={job.id} className="flex flex-col gap-1">
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-white font-bold">{t(def.name, lang).toUpperCase()}</span>
+                                                        <span className="text-cyan-400 font-mono">{Math.ceil((job.completionTime - Date.now()) / 1000)}s</span>
+                                                    </div>
+                                                    <div className="h-1.5 bg-gray-900 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-cyan-500" style={{ width: `${progress}%` }} />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                {/* Available for Production */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {(Object.keys(DEFENSE_UNITS) as DefenseUnitType[]).map(unitType => {
+                                        const unit = DEFENSE_UNITS[unitType];
+                                        const canAfford = Object.entries(unit.cost).every(([res, amount]) => (resources[res as keyof Resources] || 0) >= (amount || 0));
+
+                                        return (
+                                            <div key={unitType} className={`p-4 rounded-xl border-2 transition-all ${canAfford ? 'border-gray-700 bg-gray-800/30' : 'border-gray-800 bg-gray-900/50 opacity-60'}`}>
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <h4 className="text-lg font-bold text-white">{t(unit.name, lang)}</h4>
+                                                        <p className="text-[10px] text-gray-500 mb-2">{t(unit.description, lang)}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-2 mb-4">
+                                                    {Object.entries(unit.cost).map(([res, amount]) => (
+                                                        <div key={res} className="text-[9px] bg-black/40 px-2 py-0.5 rounded border border-gray-700 flex gap-1">
+                                                            <span className="text-gray-400 uppercase">{t(getResourceLabel(res), lang)}:</span>
+                                                            <span className={resources[res as keyof Resources] >= (amount || 0) ? 'text-green-400' : 'text-red-500'}>
+                                                                {amount}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                <button
+                                                    disabled={!canAfford}
+                                                    onClick={() => startDefenseProduction(base.id, unitType)}
+                                                    className={`w-full py-2 rounded-lg font-bold text-xs transition-all ${canAfford ? 'bg-cyan-600 hover:bg-cyan-500 text-white active:scale-95 shadow-lg shadow-cyan-900/20' : 'bg-gray-800 text-gray-600 cursor-not-allowed'}`}
+                                                >
+                                                    {lang === 'RU' ? 'ЗАПУСТИТЬ ПРОИЗВОДСТВО' : 'START PRODUCTION'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

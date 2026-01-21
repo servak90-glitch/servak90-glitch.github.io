@@ -41,7 +41,14 @@ export enum ResourceType {
   DIAMONDS = 'diamonds',
   COAL = 'coal',
   OIL = 'oil',
-  GAS = 'gas'
+  GAS = 'gas',
+  ICE = 'ice',           // NEW: Phase 3
+  SCRAP = 'scrap',
+  CREDITS = 'credits',
+  // Consumables as resources for easy count tracking
+  REPAIR_KIT = 'repairKit',
+  COOLANT_PASTE = 'coolantPaste',
+  ADVANCED_COOLANT = 'advancedCoolant'
 }
 
 export type Resources = {
@@ -128,13 +135,25 @@ export interface FactionDef {
 // === PLAYER BASES ===
 
 export type BaseType = 'outpost' | 'camp' | 'station';
-export type BaseStatus = 'building' | 'active' | 'abandoned' | 'damaged';
+export type BaseStatus = 'building' | 'active' | 'abandoned' | 'damaged' | 'under_attack';
+
+export interface BaseDefense {
+  infantry: number;   // "Стражи"
+  drones: number;     // "Перехватчики"
+  turrets: number;    // "Сентинелы"
+  integrity: number;  // 0-100%
+  shields: number;    // Заряд щита базы
+}
+
+export type DefenseUnitType = 'infantry' | 'drone' | 'turret' | 'shield_gen';
 
 export interface PlayerBase {
   id: string;
   regionId: RegionId;
   type: BaseType;
   status: BaseStatus;
+
+  defense: BaseDefense;
 
   // Storage
   storageCapacity: number;
@@ -157,6 +176,16 @@ export interface PlayerBase {
 
   // === PHASE 2: FUEL FACILITIES ===
   facilities: FacilityId[];  // Построенные facilities в этой базе
+
+  // === PHASE 4: DEFENSE PRODUCTION ===
+  productionQueue: DefenseProductionJob[];
+}
+
+export interface DefenseProductionJob {
+  id: string;
+  unitType: DefenseUnitType;
+  startTime: number;
+  completionTime: number;
 }
 
 // === PHASE 2: FUEL FACILITIES ===
@@ -873,6 +902,48 @@ export interface TunnelPropDef {
 // --- ACTIVE COOLING (RHYTHM) ---
 
 
+// === PHASE 2.1: CRAFTING QUEUE ===
+
+export interface CraftingJob {
+  id: string;              // Уникальный ID задания (UUID)
+  partId: string;          // Что крафтим (bit_5, engine_12, etc.)
+  slotType: DrillSlot;     // Тип детали (BIT, ENGINE, HULL...)
+
+  startTime: number;       // timestamp начала (Date.now())
+  completionTime: number;  // startTime + T_craft (из mathEngine!)
+
+  status: 'in_progress' | 'ready_to_collect';
+}
+
+// === PHASE 2.2: UNIFIED INVENTORY ===
+
+export interface EquipmentItem {
+  instanceId: string;      // Уникальный ID (UUID)
+  partId: string;          // bit_5, engine_12, etc.
+  slotType: DrillSlot;     // BIT, ENGINE, HULL...
+
+  tier: number;            // 1-15
+
+  acquiredAt: number;      // timestamp получения
+  isEquipped: boolean;     // Установлен ли на буре
+
+  // Scrap value для разборки
+  scrapValue: number;      // Сколько Scrap даст при разборке (tier * 10)
+}
+
+// === PHASE 2.3: TRAVEL SYSTEM ===
+
+export interface TravelState {
+  targetRegion: RegionId;
+  startTime: number;      // timestamp
+  duration: number;       // ms
+  fuelType: ResourceType;
+  fuelCost: number;
+  distance: number;
+}
+
+// === GAME STATE ===
+
 export interface GameState {
   depth: number;
   resources: Resources;
@@ -943,6 +1014,13 @@ export interface GameState {
   cityUnlocked: boolean;
   skillsUnlocked: boolean;
 
+  // === PHASE 3: CONSUMABLES ===
+  consumables: {
+    repairKit: number;
+    coolantPaste: number;
+    advancedCoolant: number;
+  };
+
   // NARRATIVE STATE
   aiState: AIState;
 
@@ -979,6 +1057,15 @@ export interface GameState {
 
   combatMinigame: CombatMinigame | null;
   minigameCooldown: number;
+
+  // === PHASE 2.1: CRAFTING QUEUE ===
+  craftingQueue: CraftingJob[];  // Очередь крафта equipment с таймерами
+
+  // === PHASE 2.2: UNIFIED INVENTORY ===
+  equipmentInventory: EquipmentItem[];  // Inventory для equipment (запасные детали)
+
+  // === PHASE 2.3: TRAVEL ===
+  travel: TravelState | null;           // Текущее состояние путешествия (null если не в пути)
 }
 
 export type VisualEvent =

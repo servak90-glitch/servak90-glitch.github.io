@@ -12,13 +12,15 @@ import {
 export type AnyDrillPart = DrillPart | EnginePart | CoolerPart | HullPart |
     LogicPart | ControlPart | GearboxPart | PowerCorePart | ArmorPart | CargoBayPart;
 
+export type ForgeTab = 'DRILL' | 'SYSTEMS' | 'HULL' | 'FUSION' | 'DRONES' | 'SUPPLY';
+
 export interface UpgradeCardProps {
     title: string;
     current: AnyDrillPart;
     next?: AnyDrillPart;
     type: DrillSlot;
     resources: Resources;
-    onBuy: (type: DrillSlot) => void;
+    onStartCraft: (partId: string, type: DrillSlot | 'CONSUMABLE') => void;
 }
 
 export interface DrillTabProps {
@@ -28,7 +30,7 @@ export interface DrillTabProps {
         cooling: CoolerPart;
     };
     resources: Resources;
-    onBuy: (type: DrillSlot) => void;
+    onStartCraft: (partId: string, type: DrillSlot | 'CONSUMABLE') => void;
 }
 
 export interface SystemsTabProps {
@@ -38,7 +40,7 @@ export interface SystemsTabProps {
         gearbox: GearboxPart;
     };
     resources: Resources;
-    onBuy: (type: DrillSlot) => void;
+    onStartCraft: (partId: string, type: DrillSlot | 'CONSUMABLE') => void;
 }
 
 export interface HullTabProps {
@@ -48,7 +50,7 @@ export interface HullTabProps {
         armor: ArmorPart;
     };
     resources: Resources;
-    onBuy: (type: DrillSlot) => void;
+    onStartCraft: (partId: string, type: DrillSlot | 'CONSUMABLE') => void;
 }
 
 export interface FusionTabProps {

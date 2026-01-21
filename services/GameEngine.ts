@@ -31,7 +31,8 @@ import { tunnelAtmosphere } from './systems/TunnelAtmosphere';
 import { abilitySystem } from './systems/AbilitySystem';
 import { expeditionSystem } from './systems/ExpeditionSystem';
 import { raidSystem } from './systems/RaidSystem';
-import { EventTrigger } from '../types';
+import { EventTrigger, PlayerBase, DefenseUnitType } from '../types';
+import { DEFENSE_UNITS } from '../constants/defenseUnits';
 
 export class GameEngine {
     tick(state: GameState, dt: number): { partialState: Partial<GameState>, events: VisualEvent[], questUpdates: { target: string, type: 'DEFEAT_BOSS' }[] } {
@@ -183,7 +184,46 @@ export class GameEngine {
 
         // [RAID SYSTEM] Check every 600 ticks (~1 min)
         // Only if player has bases
-        let playerBases = state.playerBases;
+        let playerBases = state.playerBases || [];
+        const nowMs = Date.now();
+
+        // 11. [PHASE 4] Base Construction & Defense Production
+        let basesChanged = false;
+        playerBases = playerBases.map(base => {
+            let baseUpdated = false;
+            let updatedBase = { ...base };
+
+            // Construction
+            if (updatedBase.status === 'building' && nowMs >= updatedBase.constructionCompletionTime) {
+                updatedBase.status = 'active';
+                baseUpdated = true;
+                basesChanged = true;
+                visualEvents.push({ type: 'LOG', msg: `🏢 БАЗА В ${updatedBase.regionId.toUpperCase()} ПОСТРОЕНА!`, color: 'text-green-400 font-bold' });
+                audioEngine.playLog();
+            }
+
+            // Production Queue
+            const queue = updatedBase.productionQueue ?? [];
+            const completedJobs = queue.filter(job => nowMs >= job.completionTime);
+            if (completedJobs.length > 0) {
+                const newDefense = { ...(updatedBase.defense ?? { integrity: 100, shields: 0, infantry: 0, drones: 0, turrets: 0 }) };
+                completedJobs.forEach(job => {
+                    if (job.unitType === 'infantry') newDefense.infantry++;
+                    else if (job.unitType === 'drone') newDefense.drones++;
+                    else if (job.unitType === 'turret') newDefense.turrets++;
+                    else if (job.unitType === 'shield_gen') newDefense.shields = 100;
+                });
+                updatedBase.defense = newDefense;
+                updatedBase.productionQueue = queue.filter(job => nowMs < job.completionTime);
+                baseUpdated = true;
+                basesChanged = true;
+                visualEvents.push({ type: 'LOG', msg: '🛡️ ПРОИЗВОДСТВО ОБОРОНЫ ЗАВЕРШЕНО!', color: 'text-green-400 font-bold' });
+                audioEngine.playLog();
+            }
+
+            return baseUpdated ? updatedBase : base;
+        });
+
         if (state.eventCheckTick % 600 === 0 && playerBases.length > 0) {
             const raidResult = raidSystem.processBaseRaids(
                 playerBases,

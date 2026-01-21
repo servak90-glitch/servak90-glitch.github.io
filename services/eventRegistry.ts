@@ -5,7 +5,7 @@
  * TODO: восстановить полный список событий из git истории
  */
 
-import { GameEvent, EventTrigger } from '../types';
+import { GameEvent, EventTrigger, EventActionId } from '../types';
 import { sideTunnelSystem } from './systems/SideTunnelSystem';
 
 // Базовые события для работы игры
@@ -175,6 +175,38 @@ export const EVENTS: GameEvent[] = [
                 actionId: 'mine_coal',
                 label: '⛏️ Добыть уголь',
                 risk: '+50-100 угля'
+            }
+        ]
+    },
+    {
+        id: 'PIRATE_BASE_RAID',
+        type: 'COMBAT_EVENT',
+        title: { RU: '🏴‍☠️ Налет Пиратов', EN: '🏴‍☠️ Pirate Raid' },
+        description: { RU: 'Сканеры зафиксировали приближение пиратского отряда. Они нацелились на ваши склады!', EN: 'Scanners detected an approaching pirate squad. They are targeting your storage!' },
+        triggers: [EventTrigger.BASE_RAID],
+        weight: 10,
+        options: [
+            {
+                actionId: EventActionId.BASE_DEFEND,
+                label: { RU: '🛡️ Активировать гарнизон', EN: '🛡️ Activate Garrison' }
+            },
+            {
+                actionId: EventActionId.BASE_SURRENDER,
+                label: { RU: '📦 Отдать часть припасов', EN: '📦 Hand over supplies' }
+            }
+        ]
+    },
+    {
+        id: 'VOID_SABOTAGE',
+        type: 'ANOMALY',
+        title: { RU: '🌀 Саботаж Пустоты', EN: '🌀 Void Sabotage' },
+        description: { RU: 'Странное влияние Пустоты дестабилизирует механизмы базы. Нужна срочная защита!', EN: 'Strange Void influence destabilizes base machinery. Urgent protection needed!' },
+        triggers: [EventTrigger.BASE_RAID],
+        weight: 5,
+        options: [
+            {
+                actionId: EventActionId.BASE_DEFEND,
+                label: { RU: '🛠️ Отразить помехи', EN: '🛠️ Deflect interference' }
             }
         ]
     }

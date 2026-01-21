@@ -43,8 +43,10 @@ import ActiveEffects from './components/layout/ActiveEffects';
 import MenuOverlay from './components/MenuOverlay';
 import CombatOverlay from './components/CombatOverlay';
 import { GlobalMapView } from './components/GlobalMapView';
+import { EquipmentInventoryView } from './components/EquipmentInventoryView';
+import { ConsumableBar } from './components/ConsumableBar';
 
-const GAME_VERSION = "v3.0.0 (MODULAR)";
+const GAME_VERSION = "v4.0.0 (THE GREAT AUDIT)";
 
 const App: React.FC = () => {
     // --- OPTIMIZED STORE ACCESS (Grouped Selectors) ---
@@ -68,6 +70,7 @@ const App: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const [isInventoryOpen, setIsInventoryOpen] = useState(false); // NEW: Equipment Inventory
     const [showFirstRunModal, setShowFirstRunModal] = useState(false);
     const [logs, setLogs] = useState<{ msg: string, color?: string }[]>([
         { msg: t(TEXT_IDS.AI_INIT, lang), color: 'text-zinc-400' }
@@ -322,7 +325,10 @@ const App: React.FC = () => {
             <div className="absolute inset-0 z-10 flex flex-col pointer-events-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
 
                 {/* NEW HEADER & STATUS STRIP */}
-                <GameHeader onOpenMenu={() => setIsMenuOpen(true)} />
+                <GameHeader
+                    onOpenMenu={() => setIsMenuOpen(true)}
+                    onOpenInventory={() => setIsInventoryOpen(true)}
+                />
 
                 {/* Mobile Menu Trigger (убрано, т.к. GameHeader всегда виден) */}
 
@@ -393,6 +399,10 @@ const App: React.FC = () => {
                                         />
                                     </svg>
                                 </button>
+                            </div>
+
+                            <div className="absolute bottom-4 left-4 z-40 pointer-events-auto">
+                                <ConsumableBar />
                             </div>
 
                             <CoolingMinigame isVisible={isCoolingGameActive} heat={heat} onSuccess={(amount) => forceVentHeat(amount)} onFail={triggerOverheat} onClose={() => setCoolingGame(false)} />
@@ -488,6 +498,7 @@ const App: React.FC = () => {
 
             {isSettingsOpen && <SettingsModal settings={settings} onClose={() => setIsSettingsOpen(false)} onUpdateSettings={updateSettings} onResetProgress={resetProgress} language={lang} onSetLanguage={setLanguage} />}
             {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
+            {isInventoryOpen && <EquipmentInventoryView onClose={() => setIsInventoryOpen(false)} />}
         </div>
     );
 };

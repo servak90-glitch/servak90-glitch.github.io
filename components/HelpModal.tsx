@@ -38,7 +38,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                     <div className="flex justify-between items-center p-4 border-b border-zinc-800 bg-zinc-900/80 z-10">
                         <div>
                             <h2 className="pixel-text text-lg md:text-xl text-cyan-400 tracking-widest">{t(TEXT_IDS.MANUAL_BUTTON, lang)}</h2>
-                            <p className="text-[10px] text-zinc-500 font-mono">АКТУАЛЬНО ДЛЯ: v0.3.0 (QUESTS & TUNNELS UPDATE)</p>
+                            <p className="text-[10px] text-zinc-500 font-mono">АКТУАЛЬНО ДЛЯ: v4.0.0 (THE GREAT AUDIT UPDATE)</p>
                         </div>
                         <button onClick={() => { audioEngine.playUIPanelClose(); onClose(); }} className="text-zinc-500 hover:text-white text-xl px-2">✕</button>
                     </div>
@@ -49,359 +49,159 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                         {/* 1. OBJECTIVE */}
                         <section>
                             <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">1. ЦЕЛЬ И ЗАДАЧИ</h3>
-                            <p className="mb-2"><span className="text-cyan-400 font-bold">ОСНОВНАЯ ЗАДАЧА:</span> Бурить вглубь до 100,000 метров (Радиоактивное Ядро).</p>
-                            <p>Собирайте ресурсы, улучшайте бур в Цехе, изучайте древние технологии (Ancient Tech) и сражайтесь со стражами глубин.</p>
+                            <p className="mb-2"><span className="text-cyan-400 font-bold">ОСНОВНАЯ ЦЕЛЬ:</span> Пробиться сквозь 5 регионов к Радиоактивному Ядру на глубине <span className="text-white font-bold">100,000 метров</span>.</p>
+                            <p>Мир Aegis-7 живет по своим законам. Вы не просто кликаете — вы управляете сложной инженерной машиной в условиях агрессивной среды.</p>
                         </section>
 
-                        {/* 2. HUD & MECHANICS */}
+                        {/* 2. HUD & INTERFACE */}
+                        <section className="bg-zinc-900 border border-zinc-700 p-3 rounded">
+                            <h3 className="text-blue-400 font-bold mb-2 text-sm md:text-base pixel-text">2. ИНТЕРФЕЙС УПРАВЛЕНИЯ (HUD)</h3>
+                            <div className="space-y-2 text-[10px] md:text-xs">
+                                <p><span className="text-red-400 font-bold">HULL (HP):</span> Прочность бура. Падает при ударах, перегреве и инцидентах. 0% = Поражение.</p>
+                                <p><span className="text-orange-400 font-bold">HEAT:</span> Температура. Растет при бурении. Выше 95% — блокировка спуска.</p>
+                                <p><span className="text-blue-400 font-bold">SHIELD:</span> Энергополе. Поглощает урон. Заряжается только при работе бура.</p>
+                                <p><span className="text-amber-500 font-bold">FUEL:</span> Запас топлива. Если кончится в пути — вы застрянете (шанс потери груза при эвакуации).</p>
+                                <p><span className="text-purple-400 font-bold">XP / LEVEL:</span> Прогресс пилота. Дает очки навыков для прокачки в меню SKILLS.</p>
+                            </div>
+                        </section>
+
+                        {/* 3. THERMODYNAMICS & SHIELD */}
                         <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">2. ИНТЕРФЕЙС И МЕХАНИКИ</h3>
-                            <ul className="list-disc pl-4 space-y-2">
-                                <li>
-                                    <span className="text-orange-400 font-bold">НАГРЕВ:</span> При бурении температура растет.
-                                    <br /><span className="text-zinc-500 text-[10px]">95% &rarr; Активируется аварийная блокировка.</span>
-                                    <br /><span className="text-zinc-500 text-[10px]">100% &rarr; Урон обшивке.</span>
-                                </li>
-                                <li>
-                                    <span className="text-amber-400 font-bold">ЭНЕРГИЯ (LOAD):</span> Если потребление (Cons) превышает выработку (Prod), скорость бурения падает.
-                                </li>
+                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">3. ТЕРМОДИНАМИКА И ТАКТИКА</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <h4 className="text-orange-400 font-bold text-xs uppercase tracking-tighter">НАГРЕВ И ОХЛАЖДЕНИЕ</h4>
+                                    <ul className="list-disc pl-4 text-[10px] md:text-xs space-y-1">
+                                        <li>При <span className="text-white">95%</span> срабатывает <span className="text-orange-400 italic">Locked Out</span>. Требуется мини-игра "Cooled Purge".</li>
+                                        <li><span className="text-red-500 font-bold">ПЕРЕГРЕВ (100%):</span> Бур плавится. -10% HP каждые 5 сек.</li>
+                                        <li><span className="text-cyan-400">ВЕНТИЛЯЦИЯ:</span> Скорость остывания зависит от стата <span className="text-white italic">Cooling</span> и региональных условий.</li>
+                                    </ul>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="text-blue-400 font-bold text-xs uppercase tracking-tighter">СИСТЕМА ЩИТА</h4>
+                                    <ul className="list-disc pl-4 text-[10px] md:text-xs space-y-1">
+                                        <li><span className="text-white font-bold">АКТИВАЦИЯ:</span> Отпустите бурение за мгновение до столкновения.</li>
+                                        <li><span className="text-green-400">ЭФФЕКТ:</span> Щит поглощает 80-90% входящего урона за счет накопленной энергии.</li>
+                                        <li><span className="text-zinc-500 italic">LEAKAGE:</span> Щит теряет 1% заряда в секунду, если бур не работает.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 4. FORGE & TIMED CRAFTING */}
+                        <section className="bg-zinc-900 border border-zinc-700 p-3 rounded">
+                            <h3 className="text-yellow-400 font-bold mb-2 text-sm md:text-base pixel-text">4. КУЗНИЦА И ПРОИЗВОДСТВО</h3>
+                            <div className="space-y-3">
+                                <p className="text-[11px]"><span className="text-white font-bold">TIMED CRAFTING:</span> Предметы крафтятся в реальном времени. Чем выше тир, тем дольше идет сборка.</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px]">
+                                    <div className="border border-zinc-800 p-2 bg-black/40">
+                                        <div className="text-cyan-400 font-bold mb-1">ОБОРУДОВАНИЕ (BIT, ENG, TANK)</div>
+                                        <p>Улучшает базовые статы. После крафта деталь нужно <span className="text-white underline">ЗАБРАТЬ</span> из очереди (Collect), чтобы она появилась в инвентаре.</p>
+                                    </div>
+                                    <div className="border border-zinc-800 p-2 bg-black/40">
+                                        <div className="text-green-400 font-bold mb-1">СНАБЖЕНИЕ (SUPPLY)</div>
+                                        <p>Ремкомплекты и хладагенты. Можно крафтить пачками. Используются через Quickbar (клавиши 1, 2, 3) прямо во время бурения.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 5. SKILLS & PROGRESSION */}
+                        <section>
+                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">5. НАВЫКИ И ПРОГРЕССИЯ</h3>
+                            <p className="text-[10px] md:text-xs mb-2">За каждый уровень пилота вы получаете очки навыков. Прокачивайте их в меню <span className="text-purple-400 underline uppercase">Skills</span>:</p>
+                            <ul className="list-disc pl-4 text-[10px] md:text-xs space-y-1 grid grid-cols-1 md:grid-cols-2 gap-1">
+                                <li><span className="text-white">Driller:</span> Увеличивает множитель ресурсов (x1.1 ... x5.0).</li>
+                                <li><span className="text-white">Engineer:</span> Повышает прочность и снижает стоимость ремонта.</li>
+                                <li><span className="text-white">Chemist:</span> Усиливает эффект расходников и хладагентов.</li>
+                                <li><span className="text-white">Architect:</span> Повышает эффективность ваших баз на поверхности.</li>
                             </ul>
                         </section>
 
-                        {/* 2.1 COOLING TABLE */}
-                        <section className="bg-cyan-950/10 border border-cyan-900/30 p-3 rounded">
-                            <h3 className="text-cyan-400 font-bold mb-2 text-xs md:text-sm pixel-text">2.1 ТАЙМИНГИ ОХЛАЖДЕНИЯ (100% &rarr; 0%)</h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-[10px] md:text-xs border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-zinc-800 text-zinc-500 text-left">
-                                            <th className="pb-1 font-normal">СИСТЕМА</th>
-                                            <th className="pb-1 font-normal text-right">ВРЕМЯ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="text-zinc-400">
-                                        <tr className="border-b border-zinc-900/50">
-                                            <td className="py-1">Дырявый бак (Старт)</td>
-                                            <td className="py-1 text-right text-white">~5:30 мин</td>
-                                        </tr>
-                                        <tr className="border-b border-zinc-900/50">
-                                            <td className="py-1 text-cyan-800">Медный радиатор (T2)</td>
-                                            <td className="py-1 text-right text-cyan-400">~2:20 мин</td>
-                                        </tr>
-                                        <tr className="border-b border-zinc-900/50">
-                                            <td className="py-1 text-cyan-700">Вентилятор "Тайфун" (T3)</td>
-                                            <td className="py-1 text-right text-cyan-300">~1:30 мин</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="py-1 text-cyan-400 font-bold">КРИО-БОТ (Дрон)</td>
-                                            <td className="py-1 text-right text-green-400 font-bold">-1.5% / сек</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p className="mt-2 text-[9px] text-zinc-500 italic">* Глубина и горячая среда увеличивают время остывания.</p>
-                        </section>
-
-                        {/* 3. ARTIFACTS & LAB */}
+                        {/* 6. ARTIFACTS & CODEX */}
                         <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">3. СКЛАД И АРТЕФАКТЫ</h3>
-                            <div className="space-y-2">
-                                <p><span className="font-bold text-white">Неизвестные объекты:</span> Выпадают с боссов и событий. Требуют <span className="text-cyan-400">АНАЛИЗА</span> в лаборатории. Время анализа зависит от редкости (от 10 сек до 1 часа).</p>
-                                <p><span className="font-bold text-white">Трансмутация:</span> В меню "ЦЕХ" &rarr; "СИНТЕЗ" можно объединить 3 артефакта одной редкости, чтобы получить 1 артефакт более высокой редкости.</p>
-                                <p><span className="font-bold text-white">Сборка:</span> Вы можете экипировать до 3-х артефактов одновременно для получения пассивных бонусов.</p>
+                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">6. АРТЕФАКТЫ И КОДЕКС</h3>
+                            <div className="space-y-2 text-[10px] md:text-xs">
+                                <p>Во время бурения вы находите <span className="text-cyan-300 italic">Strange Samples</span>. Исследуйте их в разделе Artifacts.</p>
+                                <p><span className="text-white font-bold">ЭФФЕКТЫ:</span> Артефакты дают пассивные бонусы (например, +10% к шансу крита), которые активируются при экипировке в слот.</p>
+                                <p><span className="text-amber-400 font-bold">CODEX:</span> Содержит лор и описание всех добытых материалов. Собирайте коллекции для получения глобальных наград.</p>
                             </div>
                         </section>
 
-                        {/* 4. FORGE & FUSION */}
-                        <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">4. ЦЕХ (FORGE)</h3>
-                            <p className="mb-2">Стандартные улучшения доступны до 12 Тира (Legendary).</p>
-                            <div className="bg-purple-900/20 border border-purple-500/50 p-3 rounded">
-                                <div className="text-purple-400 font-bold mb-1 pixel-text text-xs">АТОМНЫЙ РЕКОНСТРУКТОР</div>
-                                <p className="text-[10px] md:text-xs">
-                                    Для создания предметов божественного уровня (Godly, Tier 13-15) требуется <span className="text-white font-bold">СИНТЕЗ</span>.
-                                    <br />Это требует редких ресурсов (Ancient Tech, Gems) и выполнения особых условий (например, достичь глубины без повреждений).
-                                </p>
-                            </div>
-                        </section>
-
-                        {/* 5. CITY */}
-                        <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">5. ГОРОД</h3>
-                            <ul className="list-disc pl-4 space-y-1 text-[10px] md:text-xs">
-                                <li><span className="text-amber-400">Рынок:</span> Обмен ресурсов. Цены меняются в зависимости от региона!</li>
-                                <li><span className="text-purple-400">Ювелир:</span> Продажа самоцветов за Деньги или XP.</li>
-                                <li><span className="text-white">Контракты:</span> Задания фракций. "Корпорация" платит ресурсами, "Ученые" — опытом.</li>
-                                <li><span className="text-green-400">Бар:</span> Рискованные напитки с мощными временными эффектами. <span className="text-cyan-400 font-bold">+ КВЕСТЫ!</span></li>
-                                <li><span className="text-cyan-400">Экспедиции:</span> Отправка дронов на добычу ресурсов. Требует Nano Swarm. Риск потери дронов!</li>
-                            </ul>
-                            <p className="mt-2 text-[10px] text-zinc-500 italic">* В разных городах разные цены на рынке. Используйте это для торговли!</p>
-                        </section>
-
-                        {/* 5.1 EXPEDITIONS */}
-                        <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">5.1 ЭКСПЕДИЦИИ (NEW)</h3>
-                            <p className="mb-2">Используйте <span className="text-cyan-400">Нановолокно (Nano Swarm)</span>, чтобы отправлять разведывательные дроны за пределы шахты.</p>
-                            <div className="bg-zinc-900 border border-cyan-900/50 p-2 rounded text-[10px] md:text-xs">
-                                <ul className="list-disc pl-4 space-y-2">
-                                    <li>
-                                        <span className="text-white font-bold">Риск vs Награда:</span> Чем выше сложность, тем больше ресурсов, но выше шанс потерять дроны.
-                                    </li>
-                                    <li>
-                                        <span className="text-white font-bold">Время:</span> Экспедиции проходят в реальном времени. Можно закрыть игру.
-                                    </li>
-                                    <li>
-                                        <span className="text-red-400 font-bold">Опасность:</span> На сложности "СМЕРТЕЛЬНО" можно потерять всю группу и груз.
-                                    </li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        {/* 6. COMBAT & DEFENSE */}
-                        <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">6. БОЕВАЯ СИСТЕМА И ЗАЩИТА</h3>
-                            <p className="mb-2">Каждые ~500м глубины есть шанс встретить Босса.</p>
-
-                            <div className="bg-zinc-900 border border-blue-900/50 p-3 mb-2 rounded">
-                                <h4 className="text-blue-400 font-bold mb-1 text-xs">ПРОТОКОЛЫ ВЫЖИВАНИЯ</h4>
-                                <ul className="list-disc pl-4 space-y-2 text-[10px] md:text-xs">
-                                    <li>
-                                        <span className="text-cyan-400 font-bold">КИНЕТИЧЕСКИЙ ЩИТ (ACTIVE):</span>
-                                        <br />Бур накапливает заряд щита во время работы.
-                                        <br /><b>ОТПУСТИТЕ КНОПКУ</b> прямо перед ударом босса, чтобы активировать щит. Это заблокирует <b>80%</b> урона.
-                                    </li>
-                                    <li>
-                                        <span className="text-zinc-400 font-bold">УКЛОНЕНИЕ (PASSIVE):</span>
-                                        <br />Шанс полностью избежать урона (MISS). Зависит от уровней <span className="text-white">Двигателя</span> и <span className="text-white">Логики</span>.
-                                        <br /><span className="text-red-400">Внимание:</span> При перегреве шанс уклонения падает на 50%.
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <ul className="list-disc pl-4 space-y-1 text-[10px] md:text-xs">
-                                <li><span className="text-red-400">Атака:</span> Кликайте, чтобы наносить урон.</li>
-                                <li><span className="text-purple-400">Взлом:</span> Если босс включает неуязвимость, выиграйте мини-игру, чтобы отключить его щит.</li>
-                            </ul>
-                        </section>
-
-                        {/* 7. ACTIVE SKILLS */}
-                        <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">7. АКТИВНЫЕ НАВЫКИ</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] md:text-xs">
-                                <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                    <div className="text-cyan-400 font-bold">⚡ EMP BURST</div>
-                                    <div className="text-zinc-400">Сброс щитов босса, оглушение дронов.</div>
-                                    <div className="mt-1 text-zinc-500">Кулдаун: 15с | Нагрев: +20</div>
+                        {/* 7. GLOBAL MAP & LOGISTICS */}
+                        <section className="bg-amber-950/10 border border-amber-900/40 p-3 rounded">
+                            <h3 className="text-amber-500 font-bold mb-2 text-sm md:text-base pixel-text">7. ЛОГИСТИКА И ФИЗИКА МИРА</h3>
+                            <div className="space-y-2 text-[10px] md:text-xs">
+                                <div className="flex gap-2">
+                                    <span className="text-white font-bold w-16 shrink-0">[ МАССА ]</span>
+                                    <span>Вес — ваш главный враг. Каждый кусок угля и каждый установленный двигатель увеличивают массу. Тяжелый бур потребляет больше топлива и медленнее перемещается.</span>
                                 </div>
-                                <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                    <div className="text-orange-400 font-bold">🔥 THERMAL STRIKE</div>
-                                    <div className="text-zinc-400">Урон от текущего перегрева. Охлаждает систему (-25%).</div>
-                                    <div className="mt-1 text-zinc-500">Кулдаун: 8с | Охлаждение</div>
+                                <div className="flex gap-2">
+                                    <span className="text-white font-bold w-16 shrink-0">[ ПЕРЕЕЗД ]</span>
+                                    <span>При переезде между регионами рассчитывается время пути. Вы не можете бурить во время перемещения.</span>
                                 </div>
-                                <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                    <div className="text-blue-400 font-bold">🛡️ VOID BARRIER</div>
-                                    <div className="text-zinc-400">Неуязвимость на 4 секунды.</div>
-                                    <div className="mt-1 text-zinc-500">Кулдаун: 20с | Нагрев: +10</div>
-                                </div>
-                                <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                    <div className="text-red-400 font-bold">☢️ SYSTEM OVERLOAD</div>
-                                    <div className="text-zinc-400">+200% Урона на 6 секунд. Экстремальный нагрев (+10/сек).</div>
-                                    <div className="mt-1 text-zinc-500">Кулдаун: 30с | Опасно!</div>
+                                <div className="flex gap-2">
+                                    <span className="text-white font-bold w-16 shrink-0">[ РИСКИ ]</span>
+                                    <span>Каждый километр пути несет риск "Инцидента" (поломка системы, кража груза). Риск выше в нестабильных регионах.</span>
                                 </div>
                             </div>
                         </section>
 
-                        {/* 8. BLACK BOX */}
-                        <section className="bg-red-950/20 border border-red-900 p-2">
-                            <h3 className="text-red-500 font-bold border-b border-red-900 pb-1 mb-2 text-sm md:text-base pixel-text">
-                                8. {t(TEXT_IDS.HELP_SECTION_SAVE_TITLE, lang)}
-                            </h3>
-                            <p className="text-zinc-300">
-                                {t(TEXT_IDS.HELP_SECTION_SAVE_BODY, lang)}
+                        {/* 8. FACTIONS & REPUTATION */}
+                        <section>
+                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">8. ФРАКЦИИ И РЕПУТАЦИЯ</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[9px] md:text-[10px]">
+                                <div className="border border-amber-900/50 p-2">
+                                    <span className="text-amber-500 font-bold">VOID IND.</span>
+                                    <p className="text-zinc-500 italic">Экономика и логистика. Дают скидки в магазинах.</p>
+                                </div>
+                                <div className="border border-cyan-900/50 p-2">
+                                    <span className="text-cyan-400 font-bold">AEGIS COLL.</span>
+                                    <p className="text-zinc-500 italic">Наука и Артефакты. Ускоряют исследования.</p>
+                                </div>
+                                <div className="border border-red-900/50 p-2">
+                                    <span className="text-red-500 font-bold">FREE MINERS</span>
+                                    <p className="text-zinc-500 italic">Выживание и контрабанда. Экономят топливо.</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 9. SIDE TUNNELS & HAZARDS */}
+                        <section>
+                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">9. АНОМАЛИИ В ТУННЕЛЯХ</h3>
+                            <div className="space-y-2 text-[10px] md:text-xs">
+                                <p><span className="text-cyan-400">SIDE TUNNELS:</span> Случайные ответвления. Могут вести к сокровищам или смерти.</p>
+                                <p><span className="text-red-500 font-bold">HAZARDS:</span> Газовые карманы, магма и обвалы. Требуют определенных навыков или расходников для нейтрализации.</p>
+                            </div>
+                        </section>
+
+                        {/* 10. COMBAT & BOSSES */}
+                        <section>
+                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">10. БОЕВАЯ СИСТЕМА</h3>
+                            <p className="text-[10px] md:text-xs">
+                                В конце каждого региона вас ждет <span className="text-red-500 font-bold uppercase">Страж</span>.
+                                Битва — это ритм-игра. Используйте щит для парирования атак и наносите ответные удары, когда босс открыт.
                             </p>
                         </section>
 
-                        {/* 9. BACKUP (NEW) */}
-                        <section className="bg-cyan-950/20 border border-cyan-900 p-2">
-                            <h3 className="text-cyan-500 font-bold border-b border-cyan-900 pb-1 mb-2 text-sm md:text-base pixel-text">
-                                9. {t(TEXT_IDS.HELP_SECTION_EXPORT_TITLE, lang)}
-                            </h3>
-                            <p className="text-zinc-300 whitespace-pre-wrap">
-                                {t(TEXT_IDS.HELP_SECTION_EXPORT_BODY, lang)}
-                            </p>
-                        </section>
-
-                        {/* 10. GLOBAL MAP */}
+                        {/* 11. BASES & CARAVANS */}
                         <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">10. ГЛОБАЛЬНАЯ КАРТА</h3>
-                            <p className="mb-2">Планета <span className="text-cyan-400 font-bold">Aegis-7</span> разделена на 5 регионов. Каждый регион имеет свои особенности и ресурсы.</p>
-
-                            <div className="bg-zinc-900 border border-zinc-700 p-3 rounded mb-2">
-                                <h4 className="text-cyan-400 font-bold mb-2 text-xs">РЕГИОНЫ</h4>
-                                <ul className="list-disc pl-4 space-y-1 text-[10px] md:text-xs">
-                                    <li><span className="text-orange-400">🏜️ Rust Valley</span> - стартовый регион (безопасный)</li>
-                                    <li><span className="text-cyan-400">💎 Crystal Wastes</span> - много кристаллов</li>
-                                    <li><span className="text-zinc-400">⚙️ Iron Steppes</span> - металлы и руды</li>
-                                    <li><span className="text-red-400">🔥 Molten Core</span> - экстремальная жара</li>
-                                    <li><span className="text-purple-400">🌌 Void Chasm</span> - опасная зона</li>
-                                </ul>
-                            </div>
-
-                            <div className="bg-amber-950/20 border border-amber-900/50 p-2 rounded text-[10px] md:text-xs">
-                                <p className="mb-1"><span className="text-amber-400 font-bold">⛽ ТОПЛИВО:</span> Путешествия расходуют топливо. Расход зависит от расстояния и веса груза.</p>
-                                <p className="mb-1"><span className="text-orange-400 font-bold">📦 ВЕС ГРУЗА:</span> Перегрузка блокирует путешествия! Следите за весом ресурсов.</p>
-                                <p><span className="text-green-400 font-bold">📜 ЛИЦЕНЗИИ:</span> Для доступа к опасным зонам (Yellow/Red) нужны лицензии.</p>
+                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">11. БАЗЫ И КАРАВАНЫ</h3>
+                            <div className="space-y-1 text-[10px] md:text-xs">
+                                <p><span className="text-white font-bold">Outposts:</span> Точки сохранения и переработки ресурсов.</p>
+                                <p><span className="text-white font-bold">Caravans:</span> Автоматические курьеры. Позволяют отправлять излишки ресурсов на главную базу, пока вы бурите.</p>
                             </div>
                         </section>
 
-                        {/* 11. QUEST SYSTEM */}
-                        <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">11. СИСТЕМА КВЕСТОВ</h3>
-                            <p className="mb-2">Квесты доступны в <span className="text-green-400">БАРЕ</span> городов. Выполнение квестов даёт награды и репутацию фракций.</p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 text-[10px] md:text-xs">
-                                <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                    <div className="text-blue-400 font-bold">📦 DELIVERY</div>
-                                    <div className="text-zinc-400">Доставить ресурсы в город</div>
-                                </div>
-                                <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                    <div className="text-green-400 font-bold">⛏️ COLLECTION</div>
-                                    <div className="text-zinc-400">Собрать определённые ресурсы</div>
-                                </div>
-                                <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                    <div className="text-purple-400 font-bold">🗺️ EXPLORATION</div>
-                                    <div className="text-zinc-400">Достичь глубины или посетить регион</div>
-                                </div>
-                                <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                    <div className="text-red-400 font-bold">⚔️ COMBAT</div>
-                                    <div className="text-zinc-400">Победить определённых врагов</div>
-                                </div>
+                        {/* 12. IMPORTANT: SAVE SYSTEM */}
+                        <section className="bg-red-600/20 border-2 border-red-500 p-4 rounded-lg animate-pulse">
+                            <h3 className="text-red-400 font-bold mb-2 text-sm md:text-base pixel-text uppercase">❗ ВНИМАНИЕ: СОХРАНЕНИЯ ❗</h3>
+                            <div className="space-y-2 text-[11px] md:text-[13px] text-white">
+                                <p className="font-bold underline italic">ИГРА НЕ СОХРАНЯЕТСЯ АВТОМАТИЧЕСКИ!</p>
+                                <p>Вы должны нажимать кнопку <span className="text-cyan-400 font-bold">"ЗАПИСЬ" (RECORD)</span> в меню настроек перед выходом.</p>
+                                <p className="text-zinc-300">Ваш прогресс хранится в локальной памяти браузера. Для надежности копируйте <span className="text-yellow-400">Base64-код</span> сохранения.</p>
+                                <p className="text-zinc-500 text-[10px]">Бур не прощает забывчивости. Нет записи — нет прогресса.</p>
                             </div>
-
-                            <div className="bg-purple-950/20 border border-purple-900/50 p-2 rounded text-[10px] md:text-xs">
-                                <p className="font-bold text-purple-400 mb-1">РЕПУТАЦИЯ ФРАКЦИЙ:</p>
-                                <ul className="list-disc pl-4 space-y-1">
-                                    <li><span className="text-amber-400">CORPORATE</span> - корпорации (ресурсы, скидки)</li>
-                                    <li><span className="text-cyan-400">SCIENCE</span> - учёные (опыт, технологии)</li>
-                                    <li><span className="text-red-400">REBELS</span> - повстанцы (боевые бонусы)</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        {/* 12. SIDE TUNNELS */}
-                        <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">12. БОКОВЫЕ ТУННЕЛИ</h3>
-                            <p className="mb-2">Во время бурения можно обнаружить <span className="text-cyan-400 font-bold">боковые туннели</span> с уникальными наградами и рисками.</p>
-
-                            <div className="space-y-2 text-[10px] md:text-xs">
-                                <div className="bg-cyan-950/20 border border-cyan-900/50 p-2 rounded">
-                                    <div className="text-cyan-400 font-bold mb-1">💎 CRYSTAL CAVES</div>
-                                    <p className="text-zinc-400 mb-1">Пещеры с кристаллами. Высокий риск резонанса (урон щиту).</p>
-                                    <p className="text-green-400">Награда: Много кристаллов (Rubies, Emeralds, Diamonds)</p>
-                                </div>
-
-                                <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                    <div className="text-orange-400 font-bold mb-1">🏗️ ABANDONED MINES</div>
-                                    <p className="text-zinc-400 mb-1">Заброшенные шахты. Риск обвалов.</p>
-                                    <p className="text-green-400">Награда: Ancient Tech, чертежи снаряжения</p>
-                                </div>
-
-                                <div className="bg-red-950/20 border border-red-900/50 p-2 rounded">
-                                    <div className="text-red-400 font-bold mb-1">🥚 ALIEN NESTS</div>
-                                    <p className="text-zinc-400 mb-1">Гнёзда чужих. Очень опасно!</p>
-                                    <p className="text-purple-400">Награда: Уникальный лут, артефакты</p>
-                                </div>
-                            </div>
-
-                            <div className="bg-blue-950/20 border border-blue-900/50 p-2 rounded mt-2 text-[10px] md:text-xs">
-                                <p><span className="text-blue-400 font-bold">🔍 ANOMALY SCANNER:</span> Разблокируйте чертёж сканера, чтобы видеть риски туннеля перед входом.</p>
-                            </div>
-                        </section>
-
-                        {/* 13. HAZARDS */}
-                        <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">13. ОПАСНОСТИ</h3>
-                            <p className="mb-2">Глубины полны опасностей. Будьте готовы!</p>
-
-                            <div className="space-y-2 text-[10px] md:text-xs">
-                                <div className="bg-zinc-900 border border-orange-900/50 p-2 rounded">
-                                    <div className="text-orange-400 font-bold">⚠️ CAVE-IN (Обвал)</div>
-                                    <p className="text-zinc-400">Урон буру. Шанс растёт с глубиной. Атаки боссов могут вызвать обвал.</p>
-                                </div>
-
-                                <div className="bg-green-950/20 border border-green-900/50 p-2 rounded">
-                                    <div className="text-green-400 font-bold">☠️ GAS (Газовый карман)</div>
-                                    <p className="text-zinc-400">Урон со временем. Появляется случайно при раскопках. Требует вентиляции.</p>
-                                </div>
-
-                                <div className="bg-red-950/20 border border-red-900/50 p-2 rounded">
-                                    <div className="text-red-400 font-bold">🔥 MAGMA (Магма)</div>
-                                    <p className="text-zinc-400">Сильный перегрев. Появляется только на больших глубинах. Нужен мощный охладитель!</p>
-                                </div>
-                            </div>
-
-                            <p className="mt-2 text-[10px] text-zinc-500 italic">* Опасности имеют кулдауны - не могут появиться одновременно.</p>
-                        </section>
-
-                        {/* 14. BASES & CARAVANS */}
-                        <section>
-                            <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">14. БАЗЫ И КАРАВАНЫ</h3>
-
-                            <div className="mb-3">
-                                <h4 className="text-cyan-400 font-bold mb-2 text-xs">БАЗЫ ИГРОКА</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[10px] md:text-xs">
-                                    <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                        <div className="text-green-400 font-bold">🏕️ OUTPOST</div>
-                                        <div className="text-zinc-400">Базовое хранилище</div>
-                                    </div>
-                                    <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                        <div className="text-blue-400 font-bold">🏭 STATION</div>
-                                        <div className="text-zinc-400">Полный функционал + рынок</div>
-                                    </div>
-                                    <div className="bg-zinc-900 border border-zinc-700 p-2 rounded">
-                                        <div className="text-red-400 font-bold">🏰 FORTRESS</div>
-                                        <div className="text-zinc-400">Защита от рейдов</div>
-                                    </div>
-                                </div>
-                                <p className="mt-2 text-[10px] text-zinc-400">Стройте базы в регионах для хранения ресурсов и производства топлива.</p>
-                            </div>
-
-                            <div className="bg-amber-950/20 border border-amber-900/50 p-2 rounded text-[10px] md:text-xs">
-                                <h4 className="text-amber-400 font-bold mb-2">🚚 КАРАВАНЫ</h4>
-                                <p className="mb-2">Отправляйте караваны для транспортировки ресурсов между базами.</p>
-                                <ul className="list-disc pl-4 space-y-1">
-                                    <li><span className="text-white">1★ Shuttle</span> - базовый транспорт (малая вместимость)</li>
-                                    <li><span className="text-cyan-400">2★ Hauler</span> - средний транспорт</li>
-                                    <li><span className="text-purple-400">3★ Freighter</span> - тяжёлый транспорт (большая вместимость)</li>
-                                </ul>
-                                <p className="mt-2 text-red-400 font-bold">⚠️ Риск: Караваны могут быть атакованы в пути!</p>
-                                <p className="text-green-400">✓ Работают в offline режиме</p>
-                            </div>
-                        </section>
-
-                        {/* 15. FACTIONS (PREVIEW) */}
-                        <section className="bg-purple-950/20 border border-purple-900 p-3">
-                            <h3 className="text-purple-400 font-bold border-b border-purple-900 pb-1 mb-2 text-sm md:text-base pixel-text">15. ФРАКЦИИ (PREVIEW)</h3>
-                            <p className="text-zinc-300 mb-2 text-[10px] md:text-xs">Три фракции борются за контроль над Aegis-7. Ваша репутация открывает уникальные перки.</p>
-
-                            <div className="space-y-2 text-[10px] md:text-xs">
-                                <div className="bg-zinc-900 border border-amber-900/50 p-2 rounded">
-                                    <div className="text-amber-400 font-bold">🏢 CORPORATE (Корпорации)</div>
-                                    <p className="text-zinc-400">Скидки на рынке, бонусы к ресурсам, доступ к премиум снаряжению</p>
-                                </div>
-
-                                <div className="bg-zinc-900 border border-cyan-900/50 p-2 rounded">
-                                    <div className="text-cyan-400 font-bold">🔬 SCIENCE (Учёные)</div>
-                                    <p className="text-zinc-400">Бонус к опыту, быстрый анализ артефактов, улучшенные сканеры</p>
-                                </div>
-
-                                <div className="bg-zinc-900 border border-red-900/50 p-2 rounded">
-                                    <div className="text-red-400 font-bold">⚔️ REBELS (Повстанцы)</div>
-                                    <p className="text-zinc-400">Боевые бонусы, защита караванов, доступ к чёрному рынку</p>
-                                </div>
-                            </div>
-
-                            <p className="mt-2 text-[10px] text-purple-400 italic">* Система фракций находится в разработке. Больше контента скоро!</p>
                         </section>
 
 

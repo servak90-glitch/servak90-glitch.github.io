@@ -83,6 +83,8 @@ export const RESOURCE_WEIGHTS: Record<keyof Resources, number> = {
     coal: 3,
     oil: 2,
     gas: 1,
+    scrap: 2,
+    credits: 0,
 };
 
 /**
@@ -326,6 +328,7 @@ const calculateStatsInternal = (
         integrity: drill.hull.baseStats.maxIntegrity,
         regen: drill.hull.baseStats.regen || 0,
         droneEfficiency: drill.power.baseStats.droneEfficiency || 1.0,
+        travelSpeed: 50 + (drill.engine.tier * 25), // км/ч
         skillMods,
         artifactMods,
         // Exposed for UI/Logic

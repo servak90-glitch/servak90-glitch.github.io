@@ -39,10 +39,11 @@ export function processHeat(
     let integrity = state.integrity;
 
     // Температура не может быть ниже окружающей (ambient heat)
-    if (heat < stats.ambientHeat && !state.isInfiniteCoolant) {
+    const hasImmunity = activeEffects.some(e => e.id === 'IMMUNITY');
+    if (heat < stats.ambientHeat && !state.isInfiniteCoolant && !hasImmunity) {
         heat = stats.ambientHeat;
     }
-    if (state.isInfiniteCoolant) heat = 0;
+    if (state.isInfiniteCoolant || hasImmunity) heat = 0;
 
     // Счётчик стабильности при низком нагреве (используем dt для секунд)
     if (heat <= 1) {

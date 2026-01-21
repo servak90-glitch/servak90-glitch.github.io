@@ -618,6 +618,19 @@ export class AudioEngine {
     const now = this.ctx.currentTime;
     env.gain.setValueAtTime(0, now);
 
+    osc.connect(env);
+
+    // Connect to specific Layer Bus -> Music Bus
+    env.connect(targetBus);
+
+    // Add Reverb/Delay wet send to melody and tension layers
+    if (layer !== 'combat') {
+      env.connect(this.musicFxBus);
+    }
+
+    // ВАЖНО: start() ДОЛЖЕН быть ПЕРЕД stop()
+    osc.start(now);
+
     // Specific envelope per layer
     if (layer === 'combat') {
       env.gain.linearRampToValueAtTime(0.15, now + 0.01);
@@ -632,18 +645,6 @@ export class AudioEngine {
       env.gain.exponentialRampToValueAtTime(0.001, now + 3.0);
       osc.stop(now + 3.1);
     }
-
-    osc.connect(env);
-
-    // Connect to specific Layer Bus -> Music Bus
-    env.connect(targetBus);
-
-    // Add Reverb/Delay wet send to melody and tension layers
-    if (layer !== 'combat') {
-      env.connect(this.musicFxBus);
-    }
-
-    osc.start();
 
     // Clean up
     osc.onended = () => {
@@ -1505,6 +1506,52 @@ export class AudioEngine {
       osc.start();
       osc.stop(t + 0.9);
     }
+  }
+
+  playCollect() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(440, t);
+    osc.frequency.exponentialRampToValueAtTime(880, t + 0.1);
+
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.2, t + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+
+    osc.connect(g);
+    g.connect(this.sfxBus);
+
+    osc.start();
+    osc.stop(t + 0.3);
+  }
+
+  playUpgrade() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+
+    // Плавный восходящий звук (Arpeggio style)
+    [440, 554.37, 659.25, 880].forEach((freq, i) => {
+      const osc = this.ctx!.createOscillator();
+      const g = this.ctx!.createGain();
+      const startTime = t + (i * 0.05);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      g.gain.setValueAtTime(0, startTime);
+      g.gain.linearRampToValueAtTime(0.1, startTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+
+      osc.connect(g);
+      g.connect(this.sfxBus!);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.2);
+    });
   }
 
   playTravelStart() {

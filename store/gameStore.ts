@@ -8,8 +8,9 @@
 
 import { create } from 'zustand';
 import {
-    GameState, View, VisualEvent, DrillSlot,
-    DroneType, RegionId
+    GameState, View, Resources, RegionId, EventTrigger,
+    PlayerBase, BaseType, BaseStatus, DefenseUnitType, DefenseProductionJob,
+    AbilityType, VisualEvent, DrillSlot, DroneType
 } from '../types';
 import {
     BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS,
@@ -22,7 +23,6 @@ import { audioEngine } from '../services/audioEngine';
 
 import { abilitySystem } from '../services/systems/AbilitySystem';
 import { damageBossWeakPoint } from '../services/systems/CombatSystem';
-import { AbilityType } from '../types';
 
 // Слайсы
 import {
@@ -38,7 +38,8 @@ import {
     createEventSlice, EventActions,
     createTravelSlice, TravelActions,
     createLicenseSlice, LicenseActions,
-    createBaseSlice, BaseActions
+    createBaseSlice, BaseActions,
+    createCraftSlice, CraftActions  // NEW: Phase 2.1
 } from './slices';
 import { createMarketSlice, MarketSlice } from './slices/marketSlice';
 import { createCaravanSlice, CaravanSlice } from './slices/caravanSlice';
@@ -65,9 +66,9 @@ interface CoreActions {
 // Полный тип store
 export interface GameStore extends GameState,
     CoreActions, EventActions, AdminActions,
-    DrillActions, CityActions, InventoryActions,
+    DrillActions, CityActions, InventoryActions,  // InventoryActions включает equipment actions
     UpgradeActions, EntityActions, SettingsActions, ExpeditionActions, FactionActions, TravelActions, LicenseActions, BaseActions,
-    MarketSlice, CaravanSlice, QuestSlice {
+    MarketSlice, CaravanSlice, QuestSlice, CraftActions {  // NEW: Phase 2.1
     isGameActive: boolean;
     activeView: View;
     actionLogQueue: VisualEvent[];
@@ -91,7 +92,12 @@ const INITIAL_STATE: GameState = {
         titanium: 0, uranium: 0, nanoSwarm: 0, ancientTech: 0,
         rubies: 0, emeralds: 0, diamonds: 0,
         // Fuel (MVP)
-        coal: 500, oil: 0, gas: 0  // Начальный запас топлива
+        coal: 500, oil: 0, gas: 0, ice: 0,  // Начальный запас топлива + лед
+        scrap: 0,  // NEW: Phase 2.2 - для разборки equipment
+        credits: 0,  // NEW: Phase 2.3 - основная валюта
+        repairKit: 0,
+        coolantPaste: 0,
+        advancedCoolant: 0
     },
     drill: {
         [DrillSlot.BIT]: BITS[0],
@@ -132,6 +138,13 @@ const INITIAL_STATE: GameState = {
     cityUnlocked: true,  // [REBALANCE] Глобальная карта доступна сразу
     skillsUnlocked: false,
 
+    // === PHASE 3: CONSUMABLES ===
+    consumables: {
+        repairKit: 0,
+        coolantPaste: 0,
+        advancedCoolant: 0
+    },
+
     // NARRATIVE STATE
     aiState: 'LUCID',
     narrativeTick: 0,
@@ -146,6 +159,8 @@ const INITIAL_STATE: GameState = {
     isInfiniteFuel: false,
     isInfiniteEnergy: false,
     isZeroWeight: false,
+    // === PHASE 2.3: TRAVEL ===
+    travel: null,
     isOverdrive: false,
     isDebugUIOpen: false,
     isDrilling: false,
@@ -188,7 +203,13 @@ const INITIAL_STATE: GameState = {
         { tier: '1star', unlocked: false },
         { tier: '2star', unlocked: false },
         { tier: '3star', unlocked: false },
-    ]
+    ],
+
+    // === PHASE 2.1: CRAFTING QUEUE ===
+    craftingQueue: [],  // Пустая очередь крафта
+
+    // === PHASE 2.2: UNIFIED INVENTORY ===
+    equipmentInventory: []  // Пустой инвентарь equipment
 };
 
 // === ПЕРСИСТЕНТНОСТЬ ===
@@ -202,7 +223,10 @@ const PERSISTENT_KEYS: (keyof GameState)[] = [
     'activeEffects', 'eventQueue', 'recentEventIds', 'lastQuestRefresh',
     'shieldCharge', 'currentCargoWeight', 'currentRegion',
     'globalReputation', 'unlockedLicenses', 'activePermits', 'playerBases',
-    'marketTransactionHistory', 'caravans', 'caravanUnlocks'  // Phase 2
+    'marketTransactionHistory', 'caravans', 'caravanUnlocks',  // Phase 2
+    'craftingQueue',  // Phase 2.1
+    'equipmentInventory',  // Phase 2.2
+    'consumables' // NEW: Phase 3
 ];
 
 const createSnapshot = (state: GameState): Partial<GameState> => {
@@ -294,6 +318,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     ...createMarketSlice(set, get),
     ...createCaravanSlice(set, get),
     ...createQuestSlice(set, get),
+    ...createCraftSlice(set, get),  // NEW: Phase 2.1
 
     // === CORE ACTIONS ===
 
@@ -360,6 +385,41 @@ export const useGameStore = create<GameStore>((set, get) => ({
             nextView = View.DRILL;
         }
 
+        // === НОВОЕ: Проверка Crafting Queue ===
+        const now = Date.now();
+        let queueUpdated = false;
+        const updatedQueue = s.craftingQueue.map(job => {
+            if (job.status === 'in_progress' && job.completionTime <= now) {
+                queueUpdated = true;
+                return { ...job, status: 'ready_to_collect' as const };
+            }
+            return job;
+        });
+
+        // Добавить notifications для завершенных заданий
+        if (queueUpdated) {
+            const completedJobs = updatedQueue.filter(
+                (j, idx) => j.status === 'ready_to_collect' && s.craftingQueue[idx]?.status === 'in_progress'
+            );
+
+            completedJobs.forEach(job => {
+                events.push({
+                    type: 'LOG',
+                    msg: `🔔 КРАФТ ЗАВЕРШЁН: ${job.partId}! Заберите в Forge.`,
+                    color: 'text-green-400 font-bold'
+                });
+            });
+
+            if (completedJobs.length > 0) {
+                audioEngine.playLog();  // Звук уведомления
+            }
+        }
+
+        // === НОВОЕ: Проверка завершения путешествия (Phase 2.3) ===
+        if (s.travel && s.travel.startTime + s.travel.duration <= now) {
+            s.completeTravel();
+        }
+
         const queue = s.actionLogQueue;
         const allEvents = [...events, ...queue];
 
@@ -367,7 +427,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
             ...partialState,
             activeView: nextView,
             actionLogQueue: [],
+            craftingQueue: updatedQueue
         });
+
+
 
         // Handle audio events from tick
         events.forEach(e => {

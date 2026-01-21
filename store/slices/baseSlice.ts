@@ -3,19 +3,23 @@
  */
 
 import { SliceCreator, pushLog } from './types';
-import type { RegionId, BaseType, PlayerBase, VisualEvent, FacilityId, Resources } from '../../types';
+import type { RegionId, BaseType, PlayerBase, VisualEvent, FacilityId, Resources, DefenseUnitType } from '../../types';
 import { BASE_COSTS, BASE_BUILD_TIMES, BASE_STORAGE_CAPACITY, WORKSHOP_TIER_RANGES } from '../../constants/playerBases';
 import { FUEL_FACILITIES, canBuildFacility } from '../../constants/fuelFacilities';
 import { FUEL_RECIPES, canCraftRecipe, getRecipeById } from '../../constants/fuelRecipes';
+import { DEFENSE_UNITS, BASE_REPAIR_COST } from '../../constants/defenseUnits';
 import { recalculateCargoWeight } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 
 export interface BaseActions {
     buildBase: (regionId: RegionId, baseType: BaseType) => void;
-    checkBaseCompletion: () => void;  // Проверка завершения строительства
     buildFacility: (baseId: string, facilityId: FacilityId) => void;  // Постройка facility
     transferResources: (baseId: string, resource: keyof Resources, amount: number, direction: 'to_base' | 'to_player') => void;
     refineResource: (baseId: string, recipeId: string, rounds?: number) => void;
+
+    // === PHASE 4: DEFENSE ACTIONS ===
+    startDefenseProduction: (baseId: string, unitType: DefenseUnitType) => void;
+    repairBase: (baseId: string) => void;
 }
 
 export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
@@ -95,7 +99,17 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
             lastVisitedAt: now,
 
             upgradeLevel: 1,
-            facilities: []  // Phase 2: пустой массив facilities при создании
+            facilities: [],  // Phase 2: пустой массив facilities при создании
+
+            // === PHASE 4: DEFENSE INITIALIZATION ===
+            defense: {
+                infantry: 0,
+                drones: 0,
+                turrets: 0,
+                integrity: 100,
+                shields: 0
+            },
+            productionQueue: []
         };
 
         const successEvent: VisualEvent = {
@@ -111,39 +125,6 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
         });
 
         audioEngine.playBaseBuild();
-    },
-
-    /**
-     * Проверка завершения строительства баз
-     * (вызывается из game loop)
-     */
-    checkBaseCompletion: () => {
-        const s = get();
-        const now = Date.now();
-        let hasCompletions = false;
-
-        const updatedBases = (s.playerBases || []).map(base => {
-            if (base.status === 'building' && now >= base.constructionCompletionTime) {
-                hasCompletions = true;
-                return { ...base, status: 'active' as const };
-            }
-            return base;
-        });
-
-        if (hasCompletions) {
-            const event: VisualEvent = {
-                type: 'LOG',
-                msg: '✅ ПОСТРОЙКА БАЗЫ ЗАВЕРШЕНА!',
-                color: 'text-cyan-400 font-bold'
-            };
-
-            set({
-                playerBases: updatedBases,
-                actionLogQueue: pushLog(s, event)
-            });
-
-            audioEngine.playBaseBuild();
-        }
     },
 
     /**
@@ -290,5 +271,83 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
         });
 
         audioEngine.playBaseBuild();
+    },
+
+    /**
+     * Начало производства юнита обороны
+     */
+    startDefenseProduction: (baseId, unitType) => {
+        const s = get();
+        const base = s.playerBases.find(b => b.id === baseId);
+        if (!base) return;
+
+        const unitDef = DEFENSE_UNITS[unitType];
+
+        // Проверка ресурсов
+        for (const [resource, amount] of Object.entries(unitDef.cost)) {
+            if ((s.resources[resource as keyof Resources] || 0) < (amount || 0)) {
+                const event: VisualEvent = { type: 'LOG', msg: `❌ НЕДОСТАТОЧНО РЕСУРСОВ ДЛЯ ${unitDef.name.RU.toUpperCase()}!`, color: 'text-red-500' };
+                set({ actionLogQueue: pushLog(s, event) });
+                return;
+            }
+        }
+
+        // Списание ресурсов
+        const newResources = { ...s.resources };
+        for (const [resource, amount] of Object.entries(unitDef.cost)) {
+            newResources[resource as keyof Resources] -= (amount || 0);
+        }
+
+        const now = Date.now();
+        const newJob = {
+            id: `def_${unitType}_${now}`,
+            unitType,
+            startTime: now,
+            completionTime: now + unitDef.buildTime
+        };
+
+        set({
+            resources: newResources,
+            playerBases: s.playerBases.map(b => b.id === baseId ? {
+                ...b,
+                productionQueue: [...(b.productionQueue || []), newJob]
+            } : b),
+            actionLogQueue: pushLog(s, { type: 'LOG', msg: `🛡️ ПРОИЗВОДСТВО ${unitDef.name.RU.toUpperCase()} НАЧАТО!`, color: 'text-cyan-400' })
+        });
+    },
+
+
+
+    /**
+     * Ремонт базы
+     */
+    repairBase: (baseId) => {
+        const s = get();
+        const base = s.playerBases.find(b => b.id === baseId);
+        if (!base) return;
+
+        // Fallback для старых баз без defense
+        const baseDefense = base.defense ?? { integrity: 100, shields: 0, infantry: 0, drones: 0, turrets: 0 };
+        if (baseDefense.integrity >= 100) return;
+
+        // Проверка ресурсов
+        if (s.resources.scrap < BASE_REPAIR_COST.scrap || s.resources.iron < BASE_REPAIR_COST.iron) {
+            const event: VisualEvent = { type: 'LOG', msg: '❌ НЕДОСТАТОЧНО МАТЕРИАЛОВ ДЛЯ РЕМОНТА!', color: 'text-red-500' };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        set(state => ({
+            resources: {
+                ...state.resources,
+                scrap: state.resources.scrap - BASE_REPAIR_COST.scrap,
+                iron: state.resources.iron - BASE_REPAIR_COST.iron
+            },
+            playerBases: state.playerBases.map(b => b.id === baseId ? {
+                ...b,
+                defense: { ...b.defense, integrity: 100 }
+            } : b),
+            actionLogQueue: pushLog(state, { type: 'LOG', msg: '🛠️ БАЗА ОТРЕМОНТИРОВАНА!', color: 'text-green-400' })
+        }));
     }
 });

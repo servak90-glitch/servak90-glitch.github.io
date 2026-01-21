@@ -1,12 +1,19 @@
 
 import React, { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
-import { Resources } from '../../types';
+import { Resources, ResourceType } from '../../types';
 import { getResourceLabel, formatCompactNumber } from '../../services/gameMath';
 import { t, TEXT_IDS } from '../../services/localization';
 
-const COMMON_RESOURCES: (keyof Resources)[] = ['clay', 'stone', 'copper', 'iron', 'silver', 'gold'];
-const RARE_RESOURCES: (keyof Resources)[] = ['titanium', 'uranium', 'nanoSwarm', 'ancientTech', 'rubies', 'emeralds', 'diamonds'];
+const COMMON_RESOURCES: ResourceType[] = [
+    ResourceType.CLAY, ResourceType.STONE, ResourceType.COPPER,
+    ResourceType.IRON, ResourceType.SILVER, ResourceType.GOLD
+];
+const RARE_RESOURCES: ResourceType[] = [
+    ResourceType.TITANIUM, ResourceType.URANIUM, ResourceType.NANO_SWARM,
+    ResourceType.ANCIENT_TECH, ResourceType.RUBIES, ResourceType.EMERALDS,
+    ResourceType.DIAMONDS
+];
 
 const ResourceItem: React.FC<{ name: string; amount: number; label: string; color?: string; compact?: boolean }> = ({ amount, label, color, compact }) => (
     <div
@@ -21,9 +28,10 @@ const ResourceItem: React.FC<{ name: string; amount: number; label: string; colo
 
 interface GameHeaderProps {
     onOpenMenu: () => void;
+    onOpenInventory?: () => void; // NEW: Phase 2.2
 }
 
-const GameHeader: React.FC<GameHeaderProps> = ({ onOpenMenu }) => {
+const GameHeader: React.FC<GameHeaderProps> = ({ onOpenMenu, onOpenInventory }) => {
     const resources = useGameStore(s => s.resources);
     const lang = useGameStore(s => s.settings.language);
     const [isRareMenuOpen, setIsRareMenuOpen] = useState(false);
@@ -46,6 +54,17 @@ const GameHeader: React.FC<GameHeaderProps> = ({ onOpenMenu }) => {
                 >
                     <span className="text-sm">💎</span>
                 </button>
+
+                {/* EQUIPMENT INVENTORY (NEW: Phase 2.2) */}
+                {onOpenInventory && (
+                    <button
+                        onClick={onOpenInventory}
+                        className="w-12 flex flex-col items-center justify-center border-r border-zinc-800 hover:bg-zinc-900 text-cyan-400 hover:text-cyan-300 transition-colors"
+                        title="Equipment Inventory (I)"
+                    >
+                        <span className="text-sm">⚙️</span>
+                    </button>
+                )}
 
                 {/* MENU TOGGLE (HAMBURGER) */}
                 <button

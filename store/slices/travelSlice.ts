@@ -9,11 +9,24 @@
 import { SliceCreator, pushLog } from './types';
 import { RegionId, ResourceType, VisualEvent } from '../../types';
 import { calculateDistance } from '../../services/regionMath';
-import { calculateFuelCost, hasSufficientFuel, getFuelLabel } from '../../services/travelMath';
+import { getFuelLabel } from '../../services/travelMath';  // Оставляем только labels
 import { recalculateCargoWeight, calculateStats } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 import { hasRequiredLicense, hasActivePermit, getRequiredLicense } from '../../services/licenseManager';
 import { getActivePerkIds } from '../../services/factionLogic';
+
+// ============================================
+// NEW: Mathematical Engine v0.3.6
+// ============================================
+import {
+    calculateTotalMass,
+    calculateFuelConsumption,
+    calculateTravelSpeed,
+    calculateTravelDuration,
+    calculateIncidentProbability,
+    canTravel
+} from '../../services/mathEngine';
+import { RegionId as MathRegionId, FuelType } from '../../services/mathEngineConfig';
 
 export interface TravelActions {
     /**
@@ -21,6 +34,11 @@ export interface TravelActions {
      * Проверяет: топливо, cargo overload, списывает топливо
      */
     travelToRegion: (targetRegion: RegionId, fuelType: ResourceType) => void;
+
+    /**
+     * Завершение путешествия (вызывается из tick)
+     */
+    completeTravel: () => void;
 
     /**
      * Предварительный расчёт стоимости поездки (для UI)
@@ -83,42 +101,98 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
             return;
         }
 
-        // Расчёт расстояния и топлива
+        // ============================================
+        // NEW: Расчёт топлива через Mathematical Engine v0.3.6
+        // ============================================
+
+        // Расстояние между регионами
         const distance = calculateDistance(s.currentRegion, targetRegion);
-        const cargoRatio = (s.isZeroWeight || maxCapacity <= 0) ? 0 : s.currentCargoWeight / maxCapacity;
+
+        // Рассчитываем ПОЛНУЮ массу (M_drill + M_cargo + M_fuel + M_equipment) - НОВОЕ!
+        const totalMass = calculateTotalMass(s.drill, s.resources, s.equipmentInventory);
+        // maxCapacity уже рассчитан выше
+
+        // Рассчитываем расход топлива через КВАДРАТИЧНУЮ формулу
+        const fuelCost = calculateFuelConsumption(
+            distance,
+            totalMass,
+            maxCapacity,
+            fuelType as FuelType,  // НОВЫЙ тип FuelType из mathEngineConfig
+            s.currentRegion as MathRegionId  // НОВЫЙ тип MathRegionId
+        );
+
+        // Применяем perks (Smuggler Routes -20%)
         const activePerks = getActivePerkIds(s.reputation);
-        const fuelCost = calculateFuelCost(distance, fuelType, cargoRatio, activePerks);
+        const finalFuelCost = activePerks.includes('SMUGGLER')
+            ? Math.ceil(fuelCost * 0.8)
+            : Math.ceil(fuelCost);
 
-        // Проверка 3: Достаточно топлива?
+        // Проверка: Достаточно топлива? (через новую систему canTravel)
         const availableFuel = s.resources[fuelType] || 0;
+        const validation = canTravel(totalMass, maxCapacity, availableFuel, finalFuelCost);
 
-        if (!s.isInfiniteFuel && !hasSufficientFuel(availableFuel, fuelCost)) {
+        if (!s.isInfiniteFuel && !validation.allowed) {
             const event: VisualEvent = {
                 type: 'LOG',
-                msg: `⛽ НЕДОСТАТОЧНО ТОПЛИВА! Требуется: ${fuelCost} ${getFuelLabel(fuelType)}, есть: ${availableFuel}`,
+                msg: `⛽ ${validation.reason}`,
                 color: 'text-red-500'
             };
             set({ actionLogQueue: pushLog(s, event) });
             return;
         }
 
-        // ✅ Все проверки пройдены — ПЕРЕМЕЩЕНИЕ
+        // NEW: Расчёт скорости и времени
+        const baseSpeed = stats.travelSpeed || 100;
+        const actualSpeed = calculateTravelSpeed(baseSpeed, totalMass, maxCapacity, 1.0);
+        const duration = calculateTravelDuration(distance, actualSpeed);
+
+        // ✅ Все проверки пройдены — НАЧАЛО ПУТЕШЕСТВИЯ
         audioEngine.playTravelStart();
         const newResources = s.isInfiniteFuel ? s.resources : {
             ...s.resources,
-            [fuelType]: s.resources[fuelType] - fuelCost
+            [fuelType]: s.resources[fuelType] - finalFuelCost
         };
+
+        const startEvent: VisualEvent = {
+            type: 'LOG',
+            msg: `🚀 ПЕРЕМЕЩЕНИЕ В ${targetRegion.toUpperCase()} НАЧАТО... (Прибытие через ${Math.round(duration / 1000)}с)`,
+            color: 'text-cyan-400'
+        };
+
+        set({
+            travel: {
+                targetRegion,
+                startTime: Date.now(),
+                duration,
+                fuelType,
+                fuelCost: finalFuelCost,
+                distance
+            },
+            resources: newResources,
+            currentCargoWeight: recalculateCargoWeight(newResources),
+            actionLogQueue: pushLog(s, startEvent)
+        });
+    },
+
+    /**
+     * Завершение путешествия
+     */
+    completeTravel: () => {
+        const s = get();
+        if (!s.travel) return;
+
+        const target = s.travel.targetRegion;
+        const totalMass = calculateTotalMass(s.drill, s.resources, s.equipmentInventory);
 
         const successEvent: VisualEvent = {
             type: 'LOG',
-            msg: `🚀 ПЕРЕМЕЩЕНИЕ В ${targetRegion.toUpperCase()} ЗАВЕРШЕНО! (-${fuelCost} ${getFuelLabel(fuelType)})`,
+            msg: `📍 ПЕРЕМЕЩЕНИЕ В ${target.toUpperCase()} ЗАВЕРШЕНО! [Масса: ${Math.round(totalMass)}кг]`,
             color: 'text-green-400 font-bold'
         };
 
         set({
-            currentRegion: targetRegion,
-            resources: newResources,
-            currentCargoWeight: recalculateCargoWeight(newResources),
+            currentRegion: target,
+            travel: null,
             actionLogQueue: pushLog(s, successEvent)
         });
 
@@ -127,6 +201,7 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
 
     /**
      * Предварительный расчёт стоимости (для UI индикатора)
+     * ОБНОВЛЕНО: Mathematical Engine v0.3.6
      */
     calculateTravelCost: (targetRegion, fuelType) => {
         const s = get();
@@ -136,9 +211,25 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         const distance = calculateDistance(s.currentRegion, targetRegion);
         const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
         const maxCapacity = stats.totalCargoCapacity || 1;
-        const cargoRatio = s.isZeroWeight ? 0 : s.currentCargoWeight / maxCapacity;
-        const activePerks = getActivePerkIds(s.reputation);
 
-        return calculateFuelCost(distance, fuelType, cargoRatio, activePerks);
+        // Рассчитываем ПОЛНУЮ массу (M_drill + M_cargo + M_fuel + M_equipment)
+        const totalMass = calculateTotalMass(s.drill, s.resources, s.equipmentInventory);
+
+        // Квадратичная формула расхода топлива
+        const fuelCost = calculateFuelConsumption(
+            distance,
+            totalMass,
+            maxCapacity,
+            fuelType as FuelType,
+            s.currentRegion as MathRegionId
+        );
+
+        // Применяем perks
+        const activePerks = getActivePerkIds(s.reputation);
+        const finalFuelCost = activePerks.includes('SMUGGLER')
+            ? Math.ceil(fuelCost * 0.8)
+            : Math.ceil(fuelCost);
+
+        return finalFuelCost;
     }
 });

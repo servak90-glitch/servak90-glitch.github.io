@@ -8,8 +8,9 @@ import { audioEngine } from '../../services/audioEngine';
 
 /**
  * Upgrade Card component for drill parts
+ * Phase 2.2: Changed from instant buyUpgrade to startCraft (crafting queue)
  */
-const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, resources, onBuy }) => {
+const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, resources, onStartCraft }) => {
     const lang = useGameStore(s => s.settings.language);
     const unlockedBlueprints = useGameStore(s => s.unlockedBlueprints);
     if (!next) return (
@@ -57,8 +58,8 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                 {/* Индикатор чертежа */}
                 {requiresBlueprint && (
                     <div className={`text-[9px] md:text-[10px] font-bold font-mono text-center py-1 px-2 mb-2 border ${hasBlueprint
-                            ? 'bg-purple-900/30 border-purple-500/50 text-purple-300'
-                            : 'bg-red-900/30 border-red-500/50 text-red-400 animate-pulse'
+                        ? 'bg-purple-900/30 border-purple-500/50 text-purple-300'
+                        : 'bg-red-900/30 border-red-500/50 text-red-400 animate-pulse'
                         }`}>
                         {hasBlueprint ? '📜 ЧЕРТЕЖ ПОЛУЧЕН' : '⚠️ ТРЕБУЕТСЯ ЧЕРТЕЖ'}
                     </div>
@@ -83,7 +84,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
             <button
                 disabled={!canAfford}
                 onClick={() => {
-                    onBuy(type);
+                    onStartCraft(next.id, type);
                     audioEngine.playBaseBuild(next.id as any);
                 }}
                 className={`w-full py-2 md:py-3 text-[10px] md:text-xs font-bold pixel-text transition-all border active:scale-95
@@ -94,7 +95,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                             : 'bg-zinc-950 border-zinc-800 text-zinc-600 cursor-not-allowed'}
          `}
             >
-                {isFusionLocked ? 'ТОЛЬКО СЛИЯНИЕ' : !hasBlueprint ? 'НУЖЕН ЧЕРТЕЖ' : canAfford ? 'УЛУЧШИТЬ' : 'НЕДОСТУПНО'}
+                {isFusionLocked ? 'ТОЛЬКО СЛИЯНИЕ' : !hasBlueprint ? 'НУЖЕН ЧЕРТЕЖ' : canAfford ? 'START CRAFT' : 'НЕДОСТУПНО'}
             </button>
         </div>
     );

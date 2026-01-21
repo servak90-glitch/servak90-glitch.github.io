@@ -16,3 +16,6 @@ export { createEventSlice, type EventActions } from './eventSlice';
 export { createTravelSlice, type TravelActions } from './travelSlice';
 export { createLicenseSlice, type LicenseActions } from './licenseSlice';
 export { createBaseSlice, type BaseActions } from './baseSlice';
+export { createMarketSlice, type MarketActions } from './marketSlice';
+export { createCraftSlice, type CraftActions } from './craftSlice';  // NEW: Phase 2.1
+

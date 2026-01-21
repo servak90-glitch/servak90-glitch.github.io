@@ -3,7 +3,7 @@
  * Содержит Изометрическую карту, вкладки и модальные окна
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { IsometricCanvas } from './GlobalMap/IsometricCanvas';
 import { REGIONS, REGION_IDS } from '../constants/regions';
@@ -17,8 +17,53 @@ import { BaseView } from './BaseView';
 import { audioEngine } from '../services/audioEngine';
 import { calculateStats } from '../services/gameMath';
 import { calculateDistance } from '../services/regionMath';
-import { FUEL_TYPES, calculateFuelCost, getFuelLabel } from '../services/travelMath';
+import { FUEL_TYPES, getFuelLabel } from '../services/travelMath';  // FUEL_TYPES нужен для UI
 import { TL, t } from '../services/localization';
+
+// Mathematical Engine v0.3.6
+import { calculateTotalMass, calculateFuelConsumption } from '../services/mathEngine';
+import { FuelType } from '../services/mathEngineConfig';
+
+const TravelProgress = ({ travel, lang }: { travel: any, lang: string }) => {
+    const [progress, setProgress] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const elapsed = Date.now() - travel.startTime;
+            const p = Math.min(100, (elapsed / travel.duration) * 100);
+            const remaining = Math.max(0, travel.duration - elapsed);
+            setProgress(p);
+            setTimeLeft(Math.ceil(remaining / 1000));
+        }, 100);
+        return () => clearInterval(interval);
+    }, [travel]);
+
+    return (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md">
+            <div className="w-80 p-6 bg-gray-900 border-2 border-cyan-500 rounded-lg shadow-[0_0_30px_rgba(6,182,212,0.5)]">
+                <h3 className="text-cyan-400 font-bold text-center mb-4 animate-pulse">
+                    {lang === 'RU' ? 'В ПУТИ...' : 'TRAVELING...'}
+                </h3>
+                <div className="flex justify-between text-[10px] text-gray-400 mb-2">
+                    <span>{travel.distance} km</span>
+                    <span>{timeLeft}s</span>
+                </div>
+                <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+                    <div
+                        className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,1)] transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                    />
+                </div>
+                <p className="text-center text-[10px] text-gray-400 mt-4 italic">
+                    {lang === 'RU'
+                        ? 'Масса влияет на расход топлива и скорость'
+                        : 'Mass affects fuel consumption and speed'}
+                </p>
+            </div>
+        </div>
+    );
+};
 
 export const GlobalMapView = () => {
     // State
@@ -39,12 +84,14 @@ export const GlobalMapView = () => {
     const level = useGameStore(s => s.level);
     const lang = useGameStore(s => s.settings.language);
     const unlockedLicenses = useGameStore(s => s.unlockedLicenses);
+    const travel = useGameStore(s => s.travel);
 
     // Drill data for stats
     const drill = useGameStore(s => s.drill);
     const skillLevels = useGameStore(s => s.skillLevels);
     const equippedArtifacts = useGameStore(s => s.equippedArtifacts);
     const inventory = useGameStore(s => s.inventory);
+    const equipmentInventory = useGameStore(s => s.equipmentInventory);
     const depth = useGameStore(s => s.depth);
 
     // Derived
@@ -62,7 +109,7 @@ export const GlobalMapView = () => {
     const handleTravel = () => {
         if (selectedRegion && selectedRegion !== currentRegion) {
             travelToRegion(selectedRegion, selectedFuel);
-            audioEngine.playTravelStart();
+            // audioEngine.playTravelStart(); // Удалено, т.к. вызывается внутри travelToRegion
         }
     };
 
@@ -112,6 +159,7 @@ export const GlobalMapView = () => {
 
     return (
         <div className="flex-1 flex flex-col bg-black text-white p-2 md:p-4 pb-20 md:pb-4 relative overflow-hidden h-full">
+            {travel && <TravelProgress travel={travel} lang={lang} />}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-50" />
                 <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-50" />
@@ -199,7 +247,16 @@ export const GlobalMapView = () => {
                                         <div className="grid grid-cols-2 gap-2">
                                             {FUEL_TYPES.map(fuel => {
                                                 const available = resources[fuel] || 0;
-                                                const cost = calculateFuelCost(calculateDistance(currentRegion, selectedRegion), fuel, cargoRatio);
+                                                // NEW: Используем mathEngine v0.3.6
+                                                const totalMass = calculateTotalMass(drill, resources, equipmentInventory);
+                                                const distance = calculateDistance(currentRegion, selectedRegion);
+                                                const cost = Math.ceil(calculateFuelConsumption(
+                                                    distance,
+                                                    totalMass,
+                                                    maxCapacity,
+                                                    fuel as FuelType,
+                                                    currentRegion as any  // RegionId совместим
+                                                ));
                                                 const canAfford = available >= cost;
                                                 return (
                                                     <button
