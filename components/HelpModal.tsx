@@ -122,9 +122,9 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                         <section>
                             <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">6. АРТЕФАКТЫ И КОДЕКС</h3>
                             <div className="space-y-2 text-[10px] md:text-xs">
-                                <p>Во время бурения вы находите <span className="text-cyan-300 italic">Strange Samples</span>. Исследуйте их в разделе Artifacts.</p>
-                                <p><span className="text-white font-bold">ЭФФЕКТЫ:</span> Артефакты дают пассивные бонусы (например, +10% к шансу крита), которые активируются при экипировке в слот.</p>
-                                <p><span className="text-amber-400 font-bold">CODEX:</span> Содержит лор и описание всех добытых материалов. Собирайте коллекции для получения глобальных наград.</p>
+                                <p><span className="text-cyan-300 font-bold">КАК ДОБЫТЬ:</span> Артефакты встречаются в <span className="text-white font-bold">дрифтовых событиях</span> при бурении и в <span className="text-purple-400 font-bold">Side Tunnels</span>. Шанс нахождения редких предметов растет с глубиной.</p>
+                                <p><span className="text-yellow-400 font-bold">LUCK (Удача):</span> Стат удачи (от деталей или навыков) напрямую увеличивает шанс выпадения Rare/Epic предметов вместо Common.</p>
+                                <p><span className="text-white font-bold">ЭФФЕКТЫ:</span> Экипируйте артефакты в слоты инвентаря для получения мощных пассивных бонусов.</p>
                             </div>
                         </section>
 
@@ -170,7 +170,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                         <section>
                             <h3 className="text-white font-bold border-b border-zinc-700 pb-1 mb-2 text-sm md:text-base pixel-text">9. АНОМАЛИИ В ТУННЕЛЯХ</h3>
                             <div className="space-y-2 text-[10px] md:text-xs">
-                                <p><span className="text-cyan-400">SIDE TUNNELS:</span> Случайные ответвления. Могут вести к сокровищам или смерти.</p>
+                                <p><span className="text-cyan-400">SIDE TUNNELS:</span> Случайные ответвления. Основной источник артефактов и редких ресурсов, таких как <span className="text-white">Ancient Tech</span> и <span className="text-blue-300">Ice</span>.</p>
+                                <p><span className="text-zinc-400">НОВЫЕ РЕСУРСЫ:</span> <span className="text-blue-300">Ice (Лёд)</span> нужен для крафта хладагента, а <span className="text-zinc-500">Scrap (Металлолом)</span> — для ремкомплектов. Добываются при бурении или разборке оборудования.</p>
                                 <p><span className="text-red-500 font-bold">HAZARDS:</span> Газовые карманы, магма и обвалы. Требуют определенных навыков или расходников для нейтрализации.</p>
                             </div>
                         </section>

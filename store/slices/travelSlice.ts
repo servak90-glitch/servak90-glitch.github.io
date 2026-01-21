@@ -108,17 +108,17 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         // Расстояние между регионами
         const distance = calculateDistance(s.currentRegion, targetRegion);
 
-        // Рассчитываем ПОЛНУЮ массу (M_drill + M_cargo + M_fuel + M_equipment) - НОВОЕ!
-        const totalMass = calculateTotalMass(s.drill, s.resources, s.equipmentInventory);
+        // Рассчитываем ПОЛНУЮ массу (M_drill + M_cargo + M_fuel + M_equipment) - ИСПРАВЛЕНО
+        const { grossWeight, payload } = calculateTotalMass(s.drill, s.resources, s.equipmentInventory);
         // maxCapacity уже рассчитан выше
 
-        // Рассчитываем расход топлива через КВАДРАТИЧНУЮ формулу
+        // Рассчитываем расход топлива через КВАДРАТИЧНУЮ формулу (зависит от PAYLOAD)
         const fuelCost = calculateFuelConsumption(
             distance,
-            totalMass,
+            payload,
             maxCapacity,
-            fuelType as FuelType,  // НОВЫЙ тип FuelType из mathEngineConfig
-            s.currentRegion as MathRegionId  // НОВЫЙ тип MathRegionId
+            fuelType as FuelType,
+            s.currentRegion as MathRegionId
         );
 
         // Применяем perks (Smuggler Routes -20%)
@@ -127,9 +127,9 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
             ? Math.ceil(fuelCost * 0.8)
             : Math.ceil(fuelCost);
 
-        // Проверка: Достаточно топлива? (через новую систему canTravel)
+        // Проверка: Достаточно топлива? (через новую систему canTravel — Payload vs Capacity)
         const availableFuel = s.resources[fuelType] || 0;
-        const validation = canTravel(totalMass, maxCapacity, availableFuel, finalFuelCost);
+        const validation = canTravel(payload, maxCapacity, availableFuel, finalFuelCost);
 
         if (!s.isInfiniteFuel && !validation.allowed) {
             const event: VisualEvent = {
@@ -141,9 +141,9 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
             return;
         }
 
-        // NEW: Расчёт скорости и времени
+        // NEW: Расчёт скорости и времени (зависит от PAYLOAD)
         const baseSpeed = stats.travelSpeed || 100;
-        const actualSpeed = calculateTravelSpeed(baseSpeed, totalMass, maxCapacity, 1.0);
+        const actualSpeed = calculateTravelSpeed(baseSpeed, payload, maxCapacity, 1.0);
         const duration = calculateTravelDuration(distance, actualSpeed);
 
         // ✅ Все проверки пройдены — НАЧАЛО ПУТЕШЕСТВИЯ
@@ -182,11 +182,11 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         if (!s.travel) return;
 
         const target = s.travel.targetRegion;
-        const totalMass = calculateTotalMass(s.drill, s.resources, s.equipmentInventory);
+        const { grossWeight } = calculateTotalMass(s.drill, s.resources, s.equipmentInventory);
 
         const successEvent: VisualEvent = {
             type: 'LOG',
-            msg: `📍 ПЕРЕМЕЩЕНИЕ В ${target.toUpperCase()} ЗАВЕРШЕНО! [Масса: ${Math.round(totalMass)}кг]`,
+            msg: `📍 ПЕРЕМЕЩЕНИЕ В ${target.toUpperCase()} ЗАВЕРШЕНО! [Вес: ${Math.round(grossWeight)}кг]`,
             color: 'text-green-400 font-bold'
         };
 
@@ -213,12 +213,12 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         const maxCapacity = stats.totalCargoCapacity || 1;
 
         // Рассчитываем ПОЛНУЮ массу (M_drill + M_cargo + M_fuel + M_equipment)
-        const totalMass = calculateTotalMass(s.drill, s.resources, s.equipmentInventory);
+        const { payload } = calculateTotalMass(s.drill, s.resources, s.equipmentInventory);
 
-        // Квадратичная формула расхода топлива
+        // Квадратичная формула расхода топлива (зависит от Payload)
         const fuelCost = calculateFuelConsumption(
             distance,
-            totalMass,
+            payload,
             maxCapacity,
             fuelType as FuelType,
             s.currentRegion as MathRegionId

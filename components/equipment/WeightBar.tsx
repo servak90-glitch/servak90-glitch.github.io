@@ -6,17 +6,23 @@
 
 import React from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { calculateStats } from '../../services/gameMath';
 import { calculateTotalMass } from '../../services/mathEngine';
 
 export const WeightBar: React.FC = () => {
     const drill = useGameStore(s => s.drill);
     const resources = useGameStore(s => s.resources);
     const inventory = useGameStore(s => s.equipmentInventory);
+    const skillLevels = useGameStore(s => s.skillLevels);
+    const equippedArtifacts = useGameStore(s => s.equippedArtifacts);
+    const depth = useGameStore(s => s.depth);
+
+    const stats = calculateStats(drill, skillLevels, equippedArtifacts, useGameStore(s => s.inventory), depth);
 
     // Используем mathEngine для расчёта M_total
-    const totalMass = calculateTotalMass(drill, resources, inventory);
-    const maxCapacity = drill.cargoBay.baseStats.cargoCapacity || 10000;
-    const percentage = (totalMass / maxCapacity) * 100;
+    const { grossWeight, payload } = calculateTotalMass(drill, resources, inventory);
+    const maxCapacity = stats.totalCargoCapacity || 10000;
+    const percentage = (payload / maxCapacity) * 100;
 
     // Цвет индикатора
     const barColor = percentage > 90
@@ -34,9 +40,9 @@ export const WeightBar: React.FC = () => {
     return (
         <div className="mb-2">
             <div className="flex justify-between text-xs font-mono mb-1">
-                <span className="text-gray-400">МАССА ГРУЗА (M_total)</span>
+                <span className="text-gray-400">ЗАГРУЗКА СКЛАДА (Payload)</span>
                 <span className={textColor}>
-                    {totalMass.toFixed(0)}kg / {maxCapacity}kg ({percentage.toFixed(1)}%)
+                    {Math.round(payload)}kg / {maxCapacity}kg ({percentage.toFixed(1)}%)
                 </span>
             </div>
             <div className="w-full h-2 bg-gray-800 rounded overflow-hidden">

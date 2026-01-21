@@ -1,7 +1,8 @@
 
-import { DrillState, Resources, GameState, ResourceType } from '../types';
+import { DrillState, Resources, GameState, ResourceType, EquipmentItem } from '../types';
 import { calculateSkillModifiers } from './skillRegistry';
 import { ARTIFACTS } from './artifactRegistry';
+import { calculateTotalMass, calculateDepthScale } from './mathEngine';
 
 // [DEV_CONTEXT: HARDCORE MATH]
 const BASE_CARGO_CAPACITY = 5000;
@@ -83,8 +84,12 @@ export const RESOURCE_WEIGHTS: Record<keyof Resources, number> = {
     coal: 3,
     oil: 2,
     gas: 1,
+    ice: 2,
     scrap: 2,
     credits: 0,
+    repairKit: 5,
+    coolantPaste: 3,
+    advancedCoolant: 4,
 };
 
 /**
@@ -204,9 +209,6 @@ export const calculateStats = (
     return result;
 };
 
-/**
- * Внутренняя функция вычисления статов (без кэширования)
- */
 const calculateStatsInternal = (
     drill: DrillState,
     skillLevels: GameState['skillLevels'],
@@ -246,9 +248,13 @@ const calculateStatsInternal = (
     }
 
     const energyProd = drill.power.baseStats.energyOutput;
-    const energyCons = drill.bit.baseStats.energyCost + drill.engine.baseStats.energyCost + drill.cooling.baseStats.energyCost +
+    const baseEnergyCons = drill.bit.baseStats.energyCost + drill.engine.baseStats.energyCost + drill.cooling.baseStats.energyCost +
         drill.logic.baseStats.energyCost + drill.control.baseStats.energyCost + drill.gearbox.baseStats.energyCost +
         drill.armor.baseStats.energyCost + (drill.cargoBay?.baseStats?.energyCost || 0);
+
+    // [NEW v4.0.1] Глубинный коэффициент сложности
+    const depthScale = calculateDepthScale(currentDepth);
+    const energyCons = baseEnergyCons * depthScale;
 
     // [DEV_CONTEXT: CHEAT] Infinite Energy
     const storeState = (globalThis as any).gameStore?.getState?.();
@@ -334,7 +340,8 @@ const calculateStatsInternal = (
         // Exposed for UI/Logic
         drillingEfficiency,
         ambientHeat,
-        requiredTier
+        requiredTier,
+        depthScale // [NEW] Коэффициент сложности на текущей глубине
     };
 };
 

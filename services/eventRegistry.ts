@@ -221,11 +221,11 @@ export function rollRandomEvent(
     recentEventIds: string[],
     depth: number,
     heat: number,
-    hasScanner: boolean = false
+    hasScanner: boolean = false,
+    biomeId: string = 'rust_valley'  // Добавлен параметр с дефолтным значением
 ): GameEvent | null {
     // 1. Шанс на Side Tunnel (повышается с глубиной)
     if (Math.random() < 0.25) { // 25% шанс вместо обычного события
-        const biomeId = 'rust_valley'; // TODO: get from context
         const event = sideTunnelSystem.generateEvent(depth, biomeId, hasScanner);
         if (event) return event;
     }

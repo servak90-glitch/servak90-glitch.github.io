@@ -2,6 +2,7 @@
 import React from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { calculateStats } from '../../services/gameMath';
+import { calculateTotalMass } from '../../services/mathEngine';
 
 const StatusStrip: React.FC = () => {
     const heat = useGameStore(s => s.heat);
@@ -23,16 +24,18 @@ const StatusStrip: React.FC = () => {
     const energyLoad = Math.min(100, energyLoadRaw);
     const isOverloaded = energyLoadRaw > 100;
 
-    const totalFuel = (resources.coal || 0) + (resources.oil || 0) * 1.5 + (resources.gas || 0) * 2;
-    const maxFuel = 10000;  // Увеличил лимит для отображения
-    const fuelPercent = Math.min(100, (totalFuel / maxFuel) * 100);
-    const isLowFuel = totalFuel < 500;
+    // Fuel weight calculation (for tooltip)
+    const fuelWeightVal = (resources.coal || 0) * 3 + (resources.oil || 0) * 2 + (resources.gas || 0) * 1;
+    const totalFuelUnits = (resources.coal || 0) + (resources.oil || 0) * 1.5 + (resources.gas || 0) * 2;
+    const maxFuelUnits = 10000;
+    const fuelPercent = Math.min(100, (totalFuelUnits / maxFuelUnits) * 100);
+    const isLowFuel = totalFuelUnits < 500;
 
-    // Cargo Calculation
-    const currentCargoWeight = useGameStore(s => s.currentCargoWeight);
-    const cargoCapacity = stats.totalCargoCapacity || 1;
-    const isCargoOverloaded = currentCargoWeight > cargoCapacity;
-    const cargoPercent = Math.min(100, (currentCargoWeight / cargoCapacity) * 100);
+    // Cargo Calculation (Payload vs Total Capacity)
+    const cargoCapacity = stats.totalCargoCapacity || 5000; // Use stats for correct sync
+    const { payload } = calculateTotalMass(drill, resources, useGameStore(s => s.equipmentInventory));
+    const isCargoOverloaded = payload > cargoCapacity;
+    const cargoPercent = Math.min(100, (payload / cargoCapacity) * 100);
 
     return (
         <div className="w-full h-6 bg-black/80 border-b border-zinc-800 flex items-stretch z-40 relative pointer-events-none">
@@ -83,8 +86,8 @@ const StatusStrip: React.FC = () => {
                 </div>
             </div>
 
-            {/* 4. CARGO (NEW) */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden">
+            {/* 4. CARGO */}
+            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden" title={`Груз (Payload): ${Math.round(payload)}кг / ${cargoCapacity}кг`}>
                 <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
                     <span className={`text-[10px] font-bold ${isCargoOverloaded ? 'text-red-500 animate-pulse' : 'text-blue-400'}`}>📦</span>
                 </div>
@@ -97,7 +100,7 @@ const StatusStrip: React.FC = () => {
             </div>
 
             {/* 5. FUEL */}
-            <div className="flex-1 flex items-center bg-zinc-950/50 relative overflow-hidden">
+            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden" title={`Топливо: ${Math.round(fuelWeightVal)}кг (Уг:${resources.coal}, Неф:${resources.oil}, Газ:${resources.gas})`}>
                 <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
                     <span className={`text-[10px] font-bold ${isLowFuel ? 'text-red-500 animate-pulse' : 'text-amber-400'}`}>⛽</span>
                 </div>
@@ -109,7 +112,19 @@ const StatusStrip: React.FC = () => {
                 </div>
             </div>
 
-            {/* 6. LICENSES (NEW) */}
+            {/* 6. SUPPLIES (Ice, Scrap, Kits) */}
+            <div className="flex-[0.5] flex items-center bg-zinc-950/50 px-2 gap-2 border-r border-zinc-900" title={`Расходники: Лёд:${resources.ice}, Лом:${resources.scrap}, Рем:${resources.repairKit}`}>
+                <div className="flex items-center gap-1">
+                    <span className="text-[10px] opacity-70">❄️</span>
+                    <span className="text-[10px] font-mono text-cyan-200">{resources.ice || 0}</span>
+                </div>
+                <div className="flex items-center gap-1 text-[10px]">
+                    <span className="text-[10px] opacity-70">♻️</span>
+                    <span className="text-[10px] font-mono text-zinc-400">{resources.scrap || 0}</span>
+                </div>
+            </div>
+
+            {/* 7. LICENSES */}
             <LicenseDisplay />
 
         </div>

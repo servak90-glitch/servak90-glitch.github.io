@@ -92,7 +92,7 @@ const INITIAL_STATE: GameState = {
         titanium: 0, uranium: 0, nanoSwarm: 0, ancientTech: 0,
         rubies: 0, emeralds: 0, diamonds: 0,
         // Fuel (MVP)
-        coal: 500, oil: 0, gas: 0, ice: 0,  // Начальный запас топлива + лед
+        coal: 200, oil: 0, gas: 0, ice: 0,  // [REBALANCE] Уменьшено с 500 до 200
         scrap: 0,  // NEW: Phase 2.2 - для разборки equipment
         credits: 0,  // NEW: Phase 2.3 - основная валюта
         repairKit: 0,

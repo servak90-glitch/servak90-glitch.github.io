@@ -67,7 +67,13 @@ export const TL = {
     rubies: { RU: "Рубины", EN: "Rubies" },
     emeralds: { RU: "Изумруды", EN: "Emeralds" },
     silver: { RU: "Серебро", EN: "Silver" },
-    titanium: { RU: "Титан", EN: "Titanium" }
+    titanium: { RU: "Титан", EN: "Titanium" },
+    ice: { RU: "Лёд", EN: "Ice" },
+    scrap: { RU: "Металлолом", EN: "Scrap" },
+    repairKit: { RU: "Ремкомплект", EN: "Repair Kit" },
+    coolantPaste: { RU: "Охлаждающая паста", EN: "Coolant Paste" },
+    advancedCoolant: { RU: "Активный хладагент", EN: "Active Coolant" },
+    credits: { RU: "Кредиты", EN: "Credits" }
   },
   caravan: {
     title: { RU: "КАРАВАННАЯ ЛОГИСТИКА", EN: "CARAVAN LOGISTICS" },

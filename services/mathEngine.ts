@@ -110,19 +110,24 @@ function getEquipmentMassById(partId: string): number {
 export function calculateDrillMass(drill: DrillState): number {
     let totalMass = 0;
 
-    totalMass += getEquipmentMassById(drill.bit.id);
-    totalMass += getEquipmentMassById(drill.engine.id);
-    totalMass += getEquipmentMassById(drill.cooling.id);
-    totalMass += getEquipmentMassById(drill.hull.id);
-    totalMass += getEquipmentMassById(drill.logic.id);
-    totalMass += getEquipmentMassById(drill.control.id);
-    totalMass += getEquipmentMassById(drill.gearbox.id);
-    totalMass += getEquipmentMassById(drill.power.id);
-    totalMass += getEquipmentMassById(drill.armor.id);
+    const parts = [
+        drill.bit,
+        drill.engine,
+        drill.cooling,
+        drill.hull,
+        drill.logic,
+        drill.control,
+        drill.gearbox,
+        drill.power,
+        drill.armor,
+        drill.cargoBay
+    ];
 
-    // Cargo Bay опционален
-    if (drill.cargoBay) {
-        totalMass += getEquipmentMassById(drill.cargoBay.id);
+    for (const part of parts) {
+        if (part) {
+            // Используем поле mass если оно есть, иначе падаем на формулу
+            totalMass += (part as any).mass ?? getEquipmentMassById(part.id);
+        }
     }
 
     return totalMass;
@@ -130,38 +135,38 @@ export function calculateDrillMass(drill: DrillState): number {
 
 /**
  * Рассчитывает полную массу для Global Map путешествий
- * ИСПРАВЛЕННАЯ ФОРМУЛА: M_total = M_drill + M_cargo + M_fuel
+ * ИСПРАВЛЕННАЯ ФОРМУЛА: M_total = M_drill + M_payload
+ * M_payload = M_cargo (включая топливо) + M_inventory_equipment
  * 
  * @param drill - Текущее состояние бура
  * @param resources - Ресурсы игрока
- * @returns Полная масса в кг
- * 
- * @example
- * // Tier 5 бур (~4500кг) + 1000 iron (5000кг) + 50 coal (150кг) = 9650кг
+ * @param equipmentInventory - Оборудование в инвентаре
+ * @returns Объект с Gross Weight (полная масса) и Payload (полезная нагрузка)
  */
 export function calculateTotalMass(
     drill: DrillState,
     resources: Partial<Resources>,
     equipmentInventory: EquipmentItem[] = []
-): number {
-    // Масса установленного оборудования
+): { grossWeight: number; payload: number } {
+    // Масса установленного оборудования (структура бура)
     const drillMass = calculateDrillMass(drill);
 
-    // Масса ресурсов в инвентаре (используем СУЩЕСТВУЮЩУЮ систему!)
+    // Масса ресурсов в инвентаре (УЖЕ включает топливо через RESOURCE_WEIGHTS!)
     const cargoMass = calculateCargoWeight(resources);
 
-    // Масса топлива (если хранится в resources)
-    const fuelMass =
-        ((resources.coal || 0) * 3) +
-        ((resources.oil || 0) * 2) +
-        ((resources.gas || 0) * 1);
-
-    // НОВОЕ: Масса оборудования в инвентаре (Phase 2.3)
+    // Масса оборудования в инвентаре (Phase 2.3)
     const inventoryMass = equipmentInventory.reduce((acc, item) => {
+        // У InventoryItem может не быть поля mass, если это сокращенный тип, 
+        // поэтому берем через ID, но там в mathEngine.ts уже есть кэширование/формулы
         return acc + getEquipmentMassById(item.partId);
     }, 0);
 
-    return drillMass + cargoMass + fuelMass + inventoryMass;
+    const payload = cargoMass + inventoryMass;
+
+    return {
+        grossWeight: drillMass + payload,
+        payload
+    };
 }
 
 // ============================================
@@ -170,34 +175,29 @@ export function calculateTotalMass(
 
 /**
  * Рассчитывает расход топлива на путешествие
- * КВАДРАТИЧНАЯ зависимость от массы (физически обоснованная)
+ * КВАДРАТИЧНАЯ зависимость от полезной нагрузки (Payload)
  * 
- * Формула: F = (D / L_type) × (1 + (M/M_max)² × K_drag)
+ * Формула: F = (D / L_type) × (1 + (Payload / Capacity)² × K_drag)
  * 
  * @param distance - Расстояние (км)
- * @param mass - Текущая масса (кг)
- * @param maxMass - Максимальная грузоподъёмность (кг)
+ * @param payload - Текущая полезная нагрузка (кг)
+ * @param maxCapacity - Максимальная грузоподъёмность (кг)
  * @param fuelType - Тип топлива ('coal' | 'oil' | 'gas')
  * @param regionId - ID региона для регионального модификатора
  * @returns Количество единиц топлива
- * 
- * @example
- * // 1000км, 50% загрузки, газ, Rust Valley
- * calculateFuelConsumption(1000, 5000, 10000, 'gas', 'rust_valley')
- * // = (1000/500) × (1 + 0.25 × 1.0) = 2.5 газа
  */
 export function calculateFuelConsumption(
     distance: number,
-    mass: number,
-    maxMass: number,
+    payload: number,
+    maxCapacity: number,
     fuelType: FuelType,
     regionId: RegionId
 ): number {
     const L_type = GLOBAL_BALANCE_CONFIG.FUEL_EFFICIENCY[fuelType];
     const K_drag = GLOBAL_BALANCE_CONFIG.REGION_DRAG[regionId];
 
-    // Квадратичная зависимость от загрузки
-    const loadFactor = Math.pow(mass / maxMass, GLOBAL_BALANCE_CONFIG.MASS_PENALTY);
+    // Квадратичная зависимость от ЗАГРУЗКИ (payload / capacity)
+    const loadFactor = Math.pow(payload / maxCapacity, GLOBAL_BALANCE_CONFIG.MASS_PENALTY);
     const baseConsumption = distance / L_type;
 
     return baseConsumption * (1 + loadFactor * K_drag);
@@ -205,28 +205,23 @@ export function calculateFuelConsumption(
 
 /**
  * Рассчитывает фактическую скорость движения
- * Учитывает перегруз и эффективность двигателя
+ * Учитывает полезную нагрузку и эффективность двигателя
  * 
- * Формула: V_act = V_base × (1 - SPEED_PENALTY_FACTOR × M/M_max) × η_engine
+ * Формула: V_act = V_base × (1 - SPEED_PENALTY_FACTOR × Payload/Capacity) × η_engine
  * 
  * @param baseSpeed - Базовая скорость (км/ч)
- * @param mass - Текущая масса (кг)
- * @param maxMass - Максимальная грузоподъёмность (кг)
+ * @param payload - Текущая полезная нагрузка (кг)
+ * @param maxCapacity - Максимальная грузоподъёмность (кг)
  * @param engineEfficiency - Эффективность двигателя (1.0 = 100%)
  * @returns Фактическая скорость (км/ч)
- * 
- * @example
- * // 100 км/ч, 50% загрузки, эффективность 1.0
- * calculateTravelSpeed(100, 5000, 10000, 1.0)
- * // = 100 × (1 - 0.5 × 0.5) × 1.0 = 75 км/ч
  */
 export function calculateTravelSpeed(
     baseSpeed: number,
-    mass: number,
-    maxMass: number,
+    payload: number,
+    maxCapacity: number,
     engineEfficiency: number
 ): number {
-    const loadRatio = mass / maxMass;
+    const loadRatio = payload / maxCapacity;
     const speedPenalty = GLOBAL_BALANCE_CONFIG.SPEED_PENALTY_FACTOR * loadRatio;
 
     let actualSpeed = baseSpeed * (1 - speedPenalty) * engineEfficiency;
@@ -252,32 +247,22 @@ export function calculateTravelDuration(distance: number, speed: number): number
 
 /**
  * Рассчитывает вероятность инцидента во время путешествия
- * Использует Poisson распределение: P(X≥1) = 1 - e^(-λ)
- * 
- * Формула: λ = (D/1000) × (P_base + K_weight × M/M_max)
- *          P = min(1 - e^(-λ), MAX_INCIDENT_CHANCE)
  * 
  * @param distance - Расстояние (км)
- * @param mass - Текущая масса (кг)
- * @param maxMass - Максимальная грузоподъёмность (кг)
+ * @param payload - Текущая загрузка (кг)
+ * @param maxCapacity - Максимальная грузоподъёмность (кг)
  * @param regionId - ID региона
  * @returns Вероятность инцидента (0-1)
- * 
- * @example
- * // 1000км, 50% загрузки, Rust Valley
- * calculateIncidentProbability(1000, 5000, 10000, 'rust_valley')
- * // λ = 1 × (0.05 + 0.3 × 0.5) = 0.2
- * // P = 1 - e^(-0.2) ≈ 18.1%
  */
 export function calculateIncidentProbability(
     distance: number,
-    mass: number,
-    maxMass: number,
+    payload: number,
+    maxCapacity: number,
     regionId: RegionId
 ): number {
     const P_base = GLOBAL_BALANCE_CONFIG.REGION_BASE_INCIDENT[regionId];
     const K_weight = GLOBAL_BALANCE_CONFIG.K_WEIGHT_INCIDENT;
-    const loadRatio = mass / maxMass;
+    const loadRatio = payload / maxCapacity;
 
     // Lambda для Poisson распределения
     const lambda = (distance / 1000) * (P_base + K_weight * loadRatio);
@@ -326,24 +311,24 @@ export function calculateTravelCooling(
  * Проверяет возможность путешествия
  * Валидация перед стартом
  * 
- * @param mass - Текущая масса (кг)
- * @param maxMass - Максимальная грузоподъёмность (кг)
+ * @param payload - Текущая полезная нагрузка (кг)
+ * @param maxCapacity - Максимальная грузоподъёмность (кг)
  * @param fuelAvailable - Доступное топливо
  * @param fuelNeeded - Требуемое топливо
  * @returns Объект с флагом allowed и причиной отказа (если есть)
  */
 export function canTravel(
-    mass: number,
-    maxMass: number,
+    payload: number,
+    maxCapacity: number,
     fuelAvailable: number,
     fuelNeeded: number
 ): { allowed: boolean; reason?: string } {
-    // Проверка перегруза
-    if (mass > maxMass) {
-        const overloadPercent = ((mass / maxMass - 1) * 100).toFixed(0);
+    // Проверка перегруза (ТОЛЬКО полезная нагрузка vs вместимость)
+    if (payload > maxCapacity) {
+        const overloadPercent = ((payload / maxCapacity - 1) * 100).toFixed(0);
         return {
             allowed: false,
-            reason: `Перегруз! ${mass}кг / ${maxMass}кг (${overloadPercent}% лишнего)`
+            reason: `Перегруз склада! ${Math.round(payload)}кг / ${maxCapacity}кг (+${overloadPercent}%)`
         };
     }
 

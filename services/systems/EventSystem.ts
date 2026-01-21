@@ -152,7 +152,13 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
                 state.unlockedBlueprints.includes('anomaly_scanner') ||
                 activePerks.includes('ANOMALY_SCANNER');
 
-            const candidateEvent = rollRandomEvent(recentEventIds, state.depth, state.heat, hasScanner);
+            const candidateEvent = rollRandomEvent(
+                recentEventIds,
+                state.depth,
+                state.heat,
+                hasScanner,
+                state.selectedBiome || 'rust_valley'  // Передаем текущий биом
+            );
 
             if (candidateEvent) {
                 // Проверяем триггер

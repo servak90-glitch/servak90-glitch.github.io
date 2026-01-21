@@ -381,6 +381,7 @@ export interface BaseDrillPart {
   description: LocalizedString;
   cost: Partial<Resources>;
   blueprintId?: string; // Required blueprint to unlock this part
+  mass?: number; // [NEW v4.0.1] Масса детали (кг)
 }
 
 
