@@ -100,7 +100,7 @@ const StatusStrip: React.FC = () => {
             </div>
 
             {/* 5. FUEL */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden pointer-events-auto" title={`Запас топлива: ${Math.round(fuelPercent)}%. Влияет на длительность бурения без дозаправки.`}>
+            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden pointer-events-auto" title={`Запас топлива: ${Math.round(fuelPercent)}%\nУголь: ${resources.coal || 0} (${Math.round((resources.coal || 0) * 3)}кг)\nНефть: ${resources.oil || 0} (${Math.round((resources.oil || 0) * 2)}кг)\nГаз: ${resources.gas || 0} (${Math.round((resources.gas || 0) * 1)}кг)\nВсего: ~${Math.round(totalFuelUnits)} единиц`}>
                 <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
                     <span className={`text-[10px] font-bold ${isLowFuel ? 'text-red-500 animate-pulse' : 'text-amber-400'}`}>⛽</span>
                 </div>

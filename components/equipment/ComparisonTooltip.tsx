@@ -21,13 +21,22 @@ export const ComparisonTooltip: React.FC<ComparisonTooltipProps> = ({ item }) =>
 
     const equippedPart = drill[item.slotType as DrillSlot];
 
-    if (!equippedPart) return null;
+    // Защита от undefined equipment
+    if (!equippedPart || !item || !item.slotType) return null;
+
+    // Защита от невалидной конфигурации drill
+    if (!drill.bit || !drill.engine || !drill.cooling || !drill.hull ||
+        !drill.logic || !drill.control || !drill.gearbox || !drill.power || !drill.armor) {
+        return null;
+    }
 
     // Расчет статов для текущей конфигурации
     const currentStats = calculateStats(drill, skillLevels, equippedArtifacts.filter(Boolean) as string[], inventory, depth);
 
     // Расчет статов с новой деталью
-    const ghostDrill = { ...drill, [item.slotType]: item };
+    // Для ghostDrill нужно использовать equippedPart как шаблон и обновить tier
+    // item из EquipmentItem не содержит baseStats напрямую, используем equippedPart с обновленными данными
+    const ghostDrill = { ...drill, [item.slotType]: { ...equippedPart, tier: item.tier } };
     const nextStats = calculateStats(ghostDrill, skillLevels, equippedArtifacts.filter(Boolean) as string[], inventory, depth);
 
     // Характеристики для сравнения

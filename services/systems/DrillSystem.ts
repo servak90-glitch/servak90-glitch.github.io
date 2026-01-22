@@ -20,7 +20,7 @@ import { processSideTunnel } from './SideTunnelSystem';
  * Скорость потребления топлива (% от drillPower)
  * 0.01 = 1% drillPower расходуется как топливо каждый тик
  */
-const FUEL_CONSUMPTION_RATE = 0.01;
+const FUEL_CONSUMPTION_RATE = 0.1;
 
 /**
  * Эффективность топлива (как долго 1 единица топлива работает)
@@ -110,7 +110,7 @@ export function processDrilling(
                 storageLevel,
                 sideTunnel: result.update.sideTunnel
             } as any,
-            resourceChanges: (result.update as any).resourceChanges || {},
+            resourceChanges: result.resourceChanges,
             events
         };
     }
@@ -236,8 +236,8 @@ export function processDrilling(
         }
 
         // [BALANCE v0.4] Secondary Loot (Ice, Scrap)
-        // Шанс найти вторичные ресурсы: ~1.5% в секунду
-        if (Math.random() < 0.015 * dt) {
+        // Шанс найти вторичные ресурсы: ~4% в секунду
+        if (Math.random() < 0.04 * dt) {
             const secondaryRoll = Math.random();
 
             // Ice: 60% of secondary loot (common)

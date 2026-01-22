@@ -404,6 +404,9 @@ export class GameEngine {
                 skillsUnlocked: drillResult.update.skillsUnlocked,
                 storageLevel: drillResult.update.storageLevel as 0 | 1 | 2,
 
+                // Side Tunnel Progress (Phase 3.2)
+                ...(drillResult.update.sideTunnel !== undefined ? { sideTunnel: drillResult.update.sideTunnel } : {}),
+
                 // Ресурсы и HP
                 resources: newResources,
                 currentCargoWeight: recalculateCargoWeight(newResources),  // [CARGO SYSTEM] Автообновление веса

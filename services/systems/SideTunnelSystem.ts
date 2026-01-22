@@ -38,7 +38,8 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' |
             resources: [
                 { type: 'copper', min: 20, max: 50 },
                 { type: 'iron', min: 10, max: 30 },
-                { type: 'ice', min: 5, max: 20 }
+                { type: 'ice', min: 5, max: 20 },
+                { type: 'scrap', min: 3, max: 15 }
             ],
             artifactChance: 0.05,
             techChance: 0.1,
@@ -55,7 +56,8 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' |
         baseRisk: 0.4,
         rewards: {
             resources: [
-                { type: 'ice', min: 20, max: 50 }
+                { type: 'ice', min: 20, max: 50 },
+                { type: 'scrap', min: 10, max: 30 }
             ],
             artifactChance: 0.3,
             techChance: 0.5,
@@ -235,12 +237,12 @@ export function processSideTunnel(
     drillPower: number,
     dt: number,
     lang: 'RU' | 'EN'
-): { update: Partial<GameState>; events: VisualEvent[] } {
+): { update: Partial<GameState>; resourceChanges: Record<string, number>; events: VisualEvent[] } {
     const events: VisualEvent[] = [];
     const resourceChanges: Record<string, number> = {};
 
     if (!state.sideTunnel) {
-        return { update: {}, events };
+        return { update: {}, resourceChanges: {}, events };
     }
 
     const tunnel = { ...state.sideTunnel };
@@ -303,12 +305,9 @@ export function processSideTunnel(
                 return {
                     update: {
                         sideTunnel: null,
-                        unlockedBlueprints: [...state.unlockedBlueprints, newBp],
-                        resources: Object.keys(resourceChanges).reduce((acc, key) => {
-                            acc[key as keyof typeof acc] = (state.resources[key as keyof typeof acc] || 0) + resourceChanges[key];
-                            return acc;
-                        }, { ...state.resources })
+                        unlockedBlueprints: [...state.unlockedBlueprints, newBp]
                     },
+                    resourceChanges,
                     events
                 };
             }
@@ -316,24 +315,18 @@ export function processSideTunnel(
 
         return {
             update: {
-                sideTunnel: null,
-                resources: Object.keys(resourceChanges).reduce((acc, key) => {
-                    acc[key as keyof typeof acc] = (state.resources[key as keyof typeof acc] || 0) + resourceChanges[key];
-                    return acc;
-                }, { ...state.resources })
+                sideTunnel: null
             },
+            resourceChanges,
             events
         };
     }
 
     return {
         update: {
-            sideTunnel: tunnel,
-            resources: Object.keys(resourceChanges).reduce((acc, key) => {
-                acc[key as keyof typeof acc] = (state.resources[key as keyof typeof acc] || 0) + resourceChanges[key];
-                return acc;
-            }, { ...state.resources })
+            sideTunnel: tunnel
         },
+        resourceChanges,
         events
     };
 }

@@ -190,5 +190,50 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
                 actionLogQueue: [...state.actionLogQueue, ...visuals]
             }
         });
+    },
+
+    exchangeResourceForFuel: (resource, amount) => {
+        const state = get();
+
+        // Исключаем топливо и кредиты из обмена
+        const excludedResources: string[] = ['coal', 'oil', 'gas', 'rubies', 'emeralds', 'diamonds', 'credits'];
+        if (excludedResources.includes(resource as string)) {
+            audioEngine.playUIError();
+            console.warn(`❌ ${resource} нельзя обменять на топливо`);
+            return;
+        }
+
+        // Проверка наличия ресурсов
+        if ((state.resources[resource] || 0) < amount) {
+            audioEngine.playUIError();
+            console.warn(`❌ Недостаточно ${resource} (нужно ${amount}, есть ${state.resources[resource] || 0})`);
+            return;
+        }
+
+        // Курс обмена: 10 ресурсов = 5 угля
+        const coalReceived = Math.floor((amount / 10) * 5);
+
+        if (coalReceived === 0) {
+            audioEngine.playUIError();
+            console.warn(`❌ Минимум 10 единиц для обмена`);
+            return;
+        }
+
+        // Транзакция
+        audioEngine.playMarketTrade();
+        set((state) => {
+            const newResources = {
+                ...state.resources,
+                [resource]: (state.resources[resource] || 0) - amount,
+                coal: (state.resources.coal || 0) + coalReceived,
+            };
+
+            return {
+                resources: newResources,
+                currentCargoWeight: recalculateCargoWeight(newResources),
+            };
+        });
+
+        console.log(`✅ Обменяно ${amount} ${resource} на ${coalReceived} угля`);
     }
 });

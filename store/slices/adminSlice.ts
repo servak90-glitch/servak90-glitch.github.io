@@ -1,10 +1,13 @@
 
 import { SliceCreator } from './types';
-import { ResourceType, View, Resources } from '../../types';
+import { ResourceType, View, Resources, DroneType } from '../../types';
 import { EVENTS } from '../../services/eventRegistry';
 import { generateBoss } from '../../services/bossRegistry';
 import { audioEngine } from '../../services/audioEngine';
 import { REGION_IDS } from '../../constants/regions';
+import { sideTunnelSystem } from '../../services/systems/SideTunnelSystem';
+import { SKILLS } from '../../services/skillRegistry';
+import { raidSystem } from '../../services/systems/RaidSystem';
 
 export interface AdminActions {
     adminAddResources: (common: number, rare: number) => void;
@@ -196,6 +199,26 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
 
     adminTriggerEvent: (id) => {
         const s = get();
+
+        // Специальная обработка для динамических событий
+        if (id === 'SIDE_TUNNEL_DISCOVERY') {
+            const event = sideTunnelSystem.generateEvent(
+                s.depth,
+                s.selectedBiome || 'rust_valley',
+                true, // hasScanner = true для полной информации
+                s.settings.language
+            );
+            if (event) {
+                set(state => ({
+                    eventQueue: [event, ...state.eventQueue],
+                    activeView: state.activeView
+                }));
+                audioEngine.playAlarm();
+            }
+            return;
+        }
+
+        // Обычные статические события
         const event = EVENTS.find(e => e.id === id);
         if (event) {
             set(s => ({
@@ -208,7 +231,6 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
     adminClearEvents: () => set({ eventQueue: [] }),
 
     adminMaxSkills: () => {
-        const { SKILLS } = require('../../services/skillRegistry');
         const maxSkills: Record<string, number> = {};
         SKILLS.forEach((s: any) => {
             maxSkills[s.id] = s.maxLevel === 999 ? 100 : s.maxLevel;
@@ -248,7 +270,6 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
     }),
 
     adminMaxDrones: () => {
-        const { DroneType } = require('../../types');
         const maxDrones: any = {};
         Object.values(DroneType).forEach(type => {
             maxDrones[type as any] = 10; // Предположим макс 10
@@ -265,8 +286,6 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
         const activeBases = s.playerBases.filter(b => b.status === 'active');
         if (activeBases.length === 0) return;
         const target = activeBases[Math.floor(Math.random() * activeBases.length)];
-
-        const { raidSystem } = require('../../services/systems/RaidSystem');
         const threat = raidSystem.calculateThreatLevel(target, s.globalReputation);
         const result = raidSystem.resolveRaid(target);
 

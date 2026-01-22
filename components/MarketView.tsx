@@ -19,12 +19,14 @@ export const MarketView = () => {
     const buyFromMarket = useGameStore(s => s.buyFromMarket);
     const sellToMarket = useGameStore(s => s.sellToMarket);
     const buyBlackMarketItem = useGameStore(s => s.buyBlackMarketItem);
+    const exchangeResourceForFuel = useGameStore(s => (s as any).exchangeResourceForFuel);
+    const unlockedBlueprints = useGameStore(s => s.unlockedBlueprints);
     const reputation = useGameStore(s => s.reputation);
     const lang = useGameStore(s => s.settings.language);
 
     const [selectedResource, setSelectedResource] = useState<keyof Resources | null>(null);
     const [amount, setAmount] = useState<number>(1);
-    const [activeTab, setActiveTab] = useState<'regular' | 'black_market'>('regular');
+    const [activeTab, setActiveTab] = useState<'regular' | 'black_market' | 'exchange'>('regular');
 
     useEffect(() => {
         audioEngine.playUIPanelOpen();
@@ -116,6 +118,12 @@ export const MarketView = () => {
                             >
                                 👁️ SHADOW NETWORK
                             </button>
+                            <button
+                                onClick={() => setActiveTab('exchange')}
+                                className={`px-4 py-2 rounded font-bold transition-all ${activeTab === 'exchange' ? 'bg-amber-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-amber-400'}`}
+                            >
+                                ♻️ ОБМЕН
+                            </button>
                         </div>
                     )}
 
@@ -182,14 +190,14 @@ export const MarketView = () => {
                                 })}
                             </div>
                         </>
-                    ) : (
+                    ) : activeTab === 'black_market' ? (
                         <div className="space-y-4">
                             <h2 className="text-2xl font-bold text-purple-400 mb-4 tracking-widest glitch-text">👁️ SHADOW NETWORK</h2>
 
                             <div className="grid gap-4">
                                 {BLACK_MARKET_ITEMS.map(item => {
                                     const isBlueprint = item.type === 'BLUEPRINT';
-                                    const isUnlocked = isBlueprint && item.targetId && useGameStore.getState().unlockedBlueprints.includes(item.targetId);
+                                    const isUnlocked = isBlueprint && item.targetId && unlockedBlueprints.includes(item.targetId);
 
                                     const canAfford = item.cost.every(c => (resources[c.resource] || 0) >= c.amount);
 
@@ -245,6 +253,75 @@ export const MarketView = () => {
                                 WARNING: TRANSACTIONS ARE UNTRACEABLE. NO REFUNDS.
                             </p>
                         </div>
+                    ) : activeTab === 'exchange' ? (
+                        <div className="space-y-4">
+                            <h2 className="text-2xl font-bold text-amber-400 mb-4">♻️ ОБМЕН РЕСУРСОВ НА ТОПЛИВО</h2>
+                            <p className="text-gray-400 text-sm mb-4">
+                                Курс обмена: <span className="text-amber-400 font-bold">10 единиц ресурса = 5 угля</span>
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-3">
+                                {Object.keys(resources)
+                                    .filter(res => {
+                                        const excluded = ['coal', 'oil', 'gas', 'rubies', 'emeralds', 'diamonds', 'credits', 'repairKit', 'coolantPaste', 'advancedCoolant'];
+                                        return !excluded.includes(res) && (resources[res as keyof Resources] || 0) > 0;
+                                    })
+                                    .map(res => {
+                                        const resource = res as keyof Resources;
+                                        const available = resources[resource] || 0;
+                                        const coalGain = Math.floor((available / 10) * 5);
+
+                                        return (
+                                            <div
+                                                key={resource}
+                                                className="bg-gray-800/70 border-2 border-gray-700 hover:border-amber-500/50 rounded-lg p-4 transition-all"
+                                            >
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <h3 className="font-bold text-white capitalize">{t(TL.resources[resource], lang) || resource}</h3>
+                                                    <span className="text-sm text-gray-400">У вас: {available}</span>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-gray-400">Максимум угля:</span>
+                                                        <span className="text-amber-400 font-bold">{coalGain} ⛽</span>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            const exchangeAmount = Math.floor(available / 10) * 10;
+                                                            if (exchangeAmount >= 10) {
+                                                                exchangeResourceForFuel(resource, exchangeAmount);
+                                                            }
+                                                        }}
+                                                        disabled={available < 10}
+                                                        className={`
+                                                            w-full py-2 rounded font-bold transition-all text-sm
+                                                            ${available >= 10
+                                                                ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white'
+                                                                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                                            }
+                                                        `}
+                                                    >
+                                                        {available >= 10 ? `♻️ ОБМЕНЯТЬ ВСЁ` : '❌ МИНИМУМ 10'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                            </div>
+
+                            {Object.keys(resources).filter(res => {
+                                const excluded = ['coal', 'oil', 'gas', 'rubies', 'emeralds', 'diamonds', 'credits', 'repairKit', 'coolantPaste', 'advancedCoolant'];
+                                return !excluded.includes(res) && (resources[res as keyof Resources] || 0) > 0;
+                            }).length === 0 && (
+                                    <div className="bg-gray-800/50 border-2 border-gray-700 rounded-lg p-8 text-center">
+                                        <p className="text-gray-500">Нет доступных ресурсов для обмена</p>
+                                    </div>
+                                )}
+                        </div>
+                    ) : (
+                        <></>
                     )}
                 </div>
 

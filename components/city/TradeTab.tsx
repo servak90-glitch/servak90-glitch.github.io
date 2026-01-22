@@ -4,6 +4,7 @@ import { getResourceLabel } from '../../services/gameMath';
 import { REVERSE_TRADES, CITY_TRADES } from '../../constants/balance';
 import { useGameStore } from '../../store/gameStore';
 import { t } from '../../services/localization';
+import { ResourceType } from '../../types';
 
 const TradeTab: React.FC<TradeTabProps> = ({ resources, onTrade }) => {
     const lang = useGameStore(s => s.settings.language);
@@ -34,6 +35,50 @@ const TradeTab: React.FC<TradeTabProps> = ({ resources, onTrade }) => {
                 >
                     {canAffordTrade ? 'ОБМЕНЯТЬ' : 'НЕДОСТАТОЧНО РЕСУРСОВ'}
                 </button>
+            </div>
+
+            {/* Fuel Exchange — По просьбе пользователя: 10 любого ресурса на 5 угля */}
+            <div className="bg-zinc-900 border border-zinc-700 p-4 md:p-6 shadow-2xl">
+                <h3 className="text-base md:text-lg font-bold text-amber-500 mb-2 md:mb-4 pixel-text">ЗАПРАВКА ТОПЛИВОМ</h3>
+                <p className="text-zinc-500 text-[10px] md:text-xs mb-4 uppercase tracking-tighter">Скупщик принимает любые ресурсы: <span className="text-zinc-300">10 шт → 5 угля</span></p>
+
+                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                    {([
+                        ResourceType.CLAY, ResourceType.STONE, ResourceType.COPPER,
+                        ResourceType.IRON, ResourceType.SILVER, ResourceType.GOLD,
+                        ResourceType.TITANIUM, ResourceType.URANIUM, ResourceType.ICE, ResourceType.SCRAP
+                    ] as ResourceType[]).filter(res => resources[res] > 0).map(res => {
+                        const canAfford = resources[res] >= 10;
+                        return (
+                            <div key={res} className="flex items-center justify-between bg-black/50 border border-zinc-800/50 p-2 hover:bg-zinc-800/30 transition-colors">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] md:text-xs text-zinc-200 font-bold uppercase">{t(getResourceLabel(res), lang)}</span>
+                                    <span className="text-[9px] text-zinc-500 font-mono">В НАЛИЧИИ: {resources[res]}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="text-[10px] font-mono text-zinc-600 mr-2">10 ➔ 5 ⛽</div>
+                                    <button
+                                        disabled={!canAfford}
+                                        onClick={() => onTrade({ [res]: 10 }, { coal: 5 })}
+                                        className={`px-3 py-1.5 text-[9px] font-bold border transition-all ${canAfford ? 'border-amber-600 text-amber-500 hover:bg-amber-600 hover:text-white' : 'border-zinc-800 text-zinc-700 cursor-not-allowed'}`}
+                                    >
+                                        ОБМЕН
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {Object.keys(resources).filter(res => {
+                        const baseRes = [
+                            ResourceType.CLAY, ResourceType.STONE, ResourceType.COPPER,
+                            ResourceType.IRON, ResourceType.SILVER, ResourceType.GOLD,
+                            ResourceType.TITANIUM, ResourceType.URANIUM, ResourceType.ICE, ResourceType.SCRAP
+                        ];
+                        return baseRes.includes(res as ResourceType) && resources[res as ResourceType] > 0;
+                    }).length === 0 && (
+                            <div className="text-center py-4 text-zinc-600 text-xs italic">НЕТ РЕСУРСОВ ДЛЯ ОБМЕНА</div>
+                        )}
+                </div>
             </div>
 
             {/* Reverse Trades */}
