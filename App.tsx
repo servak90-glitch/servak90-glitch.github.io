@@ -108,7 +108,7 @@ const SideTunnelProgressMini = ({ tunnel, lang }: { tunnel: any, lang: string })
     return (
         <div className="w-48 p-2 bg-zinc-900/90 border border-yellow-500 rounded shadow-[0_0_10px_rgba(234,179,8,0.3)] backdrop-blur-sm">
             <div className="flex justify-between text-[8px] text-yellow-500 font-bold mb-1 uppercase tracking-wider">
-                <span>{tunnel.name}</span>
+                <span>{t(tunnel.name, lang)}</span>
                 <span>{Math.floor(progress)}%</span>
             </div>
             <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">

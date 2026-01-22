@@ -128,8 +128,21 @@ export class RaidSystem {
         const events: VisualEvent[] = [];
         let basesChanged = false;
 
-        const updatedBases = bases.map(base => {
-            if (base.status !== 'active' && base.status !== 'building') return base;
+        // Ограничиваем количество одновременных рейдов до 2
+        let raidsTriggered = 0;
+        const MAX_SIMULTANEOUS_RAIDS = 2;
+
+        // Shuffle bases to ensure fairness
+        const shuffledIndices = bases.map((_, i) => i).sort(() => Math.random() - 0.5);
+        const updatedBases = [...bases];
+
+        for (const i of shuffledIndices) {
+            const base = updatedBases[i];
+
+            if (base.status !== 'active' && base.status !== 'building') continue;
+
+            // Если лимит рейдов достигнут, пропускаем оставшиеся проверки
+            if (raidsTriggered >= MAX_SIMULTANEOUS_RAIDS) continue;
 
             // Only check raids if "GLOBAL_MAP_ACTIVE" or periodically if we want background raids
             // For MVP, let's say Raids happen when Travel or Global Map is active, 
@@ -143,7 +156,9 @@ export class RaidSystem {
             if (this.checkRaidInfo(base, threat)) {
                 // RAID!
                 const result = this.resolveRaid(base);
+                updatedBases[i] = { ...updatedBases[i] }; // Clone for update
                 basesChanged = true;
+                raidsTriggered++;
 
                 // Create Visual Notification
                 if (result.success) {
@@ -166,18 +181,18 @@ export class RaidSystem {
 
                 // Apply resources loss
                 if (!result.success && Object.keys(result.stolenResources).length > 0) {
-                    const newStored = { ...base.storedResources };
+                    const newStored = { ...updatedBases[i].storedResources };
                     Object.entries(result.stolenResources).forEach(([res, amount]) => {
                         const r = res as keyof Resources;
                         if (newStored[r]) {
                             newStored[r] = Math.max(0, (newStored[r] as number) - (amount as number));
                         }
                     });
-                    return { ...base, storedResources: newStored, lastVisitedAt: Date.now() };
+                    updatedBases[i].storedResources = newStored;
+                    updatedBases[i].lastVisitedAt = Date.now();
                 }
             }
-            return base;
-        });
+        }
 
         return {
             updatedBases: basesChanged ? updatedBases : bases,

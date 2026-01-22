@@ -119,16 +119,18 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
                         [EventActionId.TUNNEL_MINE]: 'MINE',
                         [EventActionId.TUNNEL_NEST]: 'NEST'
                     };
-                    const type = typeMap[optionId];
+                    const type = typeMap[optionId as string];
                     if (type) {
                         const tunnelState = sideTunnelSystem.startTunnel(type, s.depth);
                         updates.sideTunnel = tunnelState;
                         logs.push({
                             type: 'LOG',
-                            msg: `🔍 ${s.settings.language === 'RU' ? 'ВХОД В ТУННЕЛЬ' : 'ENTERING TUNNEL'}: ${t(tunnelState.name, s.settings.language).toUpperCase()}`,
+                            msg: `🔍 ${s.settings.language === 'RU' ? 'ВХОД В ТУННЕЛЬ' : 'ENTERING TUNNEL'}: ${t(tunnelState.name as any, s.settings.language).toUpperCase()}`,
                             color: 'text-cyan-400 font-bold'
                         });
                         logs.push({ type: 'SOUND', sfx: 'LOG' });
+                    } else {
+                        logs.push({ type: 'LOG', msg: `ERROR: Accessing unknown tunnel type for action ${optionId}`, color: 'text-red-500' });
                     }
                     break;
                 }
@@ -191,6 +193,14 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
                     logs.push({ type: 'LOG', msg: '🏳️ База сдалась. Половина ресурсов со складов передана грабителям.', color: 'text-yellow-500' });
                     break;
                 }
+
+                default:
+                    // Если действие не перехвачено в switch, проверим, не является ли оно одним из "пропущенных"
+                    if (![EventActionId.BLACK_MARKET_REFUSE, EventActionId.RESCUE_REFUSE, EventActionId.PIRATE_BRIBE, EventActionId.WRECK_IGNORE, EventActionId.ENCOUNTER_IGNORE, EventActionId.BASE_SURRENDER].includes(optionId as EventActionId)) {
+                        // Для обычных "закрыть" действий не пишем ошибку, но для отладки полезно
+                        // logs.push({ type: 'LOG', msg: `DEBUG: Action ${optionId}`, color: 'text-zinc-500' });
+                    }
+                    break;
             }
         }
         else {

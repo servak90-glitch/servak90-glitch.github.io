@@ -225,7 +225,7 @@ export class GameEngine {
             return baseUpdated ? updatedBase : base;
         });
 
-        if (state.eventCheckTick % 600 === 0 && playerBases.length > 0) {
+        if (state.eventCheckTick % 1200 === 0 && playerBases.length > 0) {
             const raidResult = raidSystem.processBaseRaids(
                 playerBases,
                 // Calculate aggregated reputation for raids (using REBELS mostly)

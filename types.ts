@@ -1094,7 +1094,7 @@ export interface GameState {
 
 export type VisualEvent =
   | { type: 'LOG'; msg: string; color?: string; icon?: string; timestamp?: boolean; detail?: string }
-  | { type: 'TEXT'; x?: number; y?: number; position?: 'CENTER' | 'TOP_CENTER'; text: string; style?: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE' | 'BLOCKED' }
+  | { type: 'TEXT'; x?: number; y?: number; position?: 'CENTER' | 'TOP_CENTER'; text: string; style?: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE' | 'BLOCKED'; color?: string }
   | { type: 'PARTICLE'; x?: number; y?: number; position?: 'CENTER' | 'DRILL_TIP'; color: string; kind: 'DEBRIS' | 'SPARK' | 'SMOKE'; count: number }
   | { type: 'BOSS_HIT' }
   | { type: 'SOUND'; sfx: 'LOG' | 'GLITCH' | 'ACHIEVEMENT' | 'RAID_ALARM' | 'RAID_SUCCESS' | 'RAID_FAILURE' | 'MARKET_TRADE' }

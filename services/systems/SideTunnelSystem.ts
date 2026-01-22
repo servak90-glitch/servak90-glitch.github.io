@@ -37,7 +37,8 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' |
         rewards: {
             resources: [
                 { type: 'copper', min: 20, max: 50 },
-                { type: 'iron', min: 10, max: 30 }
+                { type: 'iron', min: 10, max: 30 },
+                { type: 'ice', min: 5, max: 20 }
             ],
             artifactChance: 0.05,
             techChance: 0.1,
@@ -53,6 +54,9 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' |
         minDepth: 0,
         baseRisk: 0.4,
         rewards: {
+            resources: [
+                { type: 'ice', min: 20, max: 50 }
+            ],
             artifactChance: 0.3,
             techChance: 0.5,
             techAmount: 15
@@ -89,7 +93,8 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' |
             resources: [
                 { type: 'coal', min: 100, max: 300 },
                 { type: 'iron', min: 50, max: 150 },
-                { type: 'gold', min: 10, max: 30 }
+                { type: 'gold', min: 10, max: 30 },
+                { type: 'scrap', min: 20, max: 60 }
             ],
             artifactChance: 0.2,
             techChance: 0.8,
@@ -265,7 +270,7 @@ export function processSideTunnel(
     if (tunnel.progress >= tunnel.maxProgress) {
         events.push({
             type: 'LOG',
-            msg: lang === 'RU' ? `🎉 ТУННЕЛЬ "${t(tunnel.name, lang).toUpperCase()}" ПОЛНОСТЬЮ ИССЛЕДОВАН!` : `🎉 TUNNEL "${t(tunnel.name, lang).toUpperCase()}" FULLY EXPLORED!`,
+            msg: lang === 'RU' ? `🎉 ТУННЕЛЬ "${t(tunnel.name as any, lang).toUpperCase()}" ПОЛНОСТЬЮ ИССЛЕДОВАН!` : `🎉 TUNNEL "${t(tunnel.name as any, lang).toUpperCase()}" FULLY EXPLORED!`,
             color: 'text-yellow-400 font-bold'
         });
 

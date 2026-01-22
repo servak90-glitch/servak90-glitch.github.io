@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 
 interface EventModalProps {
   event: GameEvent;
-  onOptionSelect: (optionId?: string) => void;
+  onOptionSelect: (optionId?: any) => void;
 }
 
 const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect }) => {

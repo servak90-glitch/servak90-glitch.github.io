@@ -234,6 +234,45 @@ export function processDrilling(
                 style: 'RESOURCE'
             });
         }
+
+        // [BALANCE v0.4] Secondary Loot (Ice, Scrap)
+        // Шанс найти вторичные ресурсы: ~1.5% в секунду
+        if (Math.random() < 0.015 * dt) {
+            const secondaryRoll = Math.random();
+
+            // Ice: 60% of secondary loot (common)
+            if (secondaryRoll < 0.6) {
+                const iceAmount = Math.max(1, Math.floor(drillPower * 0.1 * dt));
+                if (iceAmount > 0) {
+                    resourceChanges[ResourceType.ICE] = (resourceChanges[ResourceType.ICE] || 0) + iceAmount;
+                    if (Math.random() < 0.3) { // Не спамить текстом
+                        events.push({
+                            type: 'TEXT',
+                            position: 'CENTER',
+                            text: `+${iceAmount} ICE`,
+                            style: 'RESOURCE',
+                            color: '#A5F2F3'
+                        });
+                    }
+                }
+            }
+            // Scrap: 40% of secondary loot
+            else {
+                const scrapAmount = Math.max(1, Math.floor(drillPower * 0.05 * dt));
+                if (scrapAmount > 0) {
+                    resourceChanges[ResourceType.SCRAP] = (resourceChanges[ResourceType.SCRAP] || 0) + scrapAmount;
+                    if (Math.random() < 0.3) {
+                        events.push({
+                            type: 'TEXT',
+                            position: 'CENTER',
+                            text: `+${scrapAmount} SCRAP`,
+                            style: 'RESOURCE',
+                            color: '#777777'
+                        });
+                    }
+                }
+            }
+        }
     }
 
     return {
