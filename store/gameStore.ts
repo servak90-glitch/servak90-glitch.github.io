@@ -214,7 +214,10 @@ const INITIAL_STATE: GameState = {
     equipmentInventory: [],  // Пустой инвентарь equipment
 
     // === PHASE 4: FREE COOLING COOLDOWN ===
-    freeCoolingLastUsed: 0  // Изначально доступно
+    freeCoolingLastUsed: 0,  // Изначально доступно
+
+    // === PHASE 4.1: RAID TIMER ===
+    lastRaidCheck: 0  // Изначально рейды доступны
 };
 
 // === ПЕРСИСТЕНТНОСТЬ ===

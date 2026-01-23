@@ -1093,6 +1093,9 @@ export interface GameState {
 
   // === PHASE 4: FREE COOLING COOLDOWN ===
   freeCoolingLastUsed: number;          // Timestamp последнего использования бесплатного охлаждения (0 = доступно)
+
+  // === PHASE 4.1: RAID TIMER ===
+  lastRaidCheck: number;                // Timestamp последней проверки рейдов (для предотвращения спама)
 }
 
 export type VisualEvent =

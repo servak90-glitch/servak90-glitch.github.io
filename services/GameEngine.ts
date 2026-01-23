@@ -225,10 +225,16 @@ export class GameEngine {
             return baseUpdated ? updatedBase : base;
         });
 
-        if (state.eventCheckTick % 3600 === 0 && playerBases.length > 0) {
+        // [RAID SYSTEM] ВРЕМЕННО ОТКЛЮЧЕНО v4.1.3
+        // ПРИЧИНА: Рейды происходят 2-3 раза в секунду несмотря на все исправления
+        // TODO: Полностью пересмотреть архитектуру системы рейдов
+        /*
+        const RAID_INTERVAL_MS = 6 * 60 * 1000; // 6 минут в миллисекундах
+        const timeSinceLastRaid = nowMs - (state.lastRaidCheck || 0);
+
+        if (timeSinceLastRaid >= RAID_INTERVAL_MS && playerBases.length > 0) {
             const raidResult = raidSystem.processBaseRaids(
                 playerBases,
-                // Calculate aggregated reputation for raids (using REBELS mostly)
                 state.reputation['REBELS'] || 0,
                 state.isDrilling ? EventTrigger.DRILLING : EventTrigger.GLOBAL_MAP_ACTIVE
             );
@@ -237,7 +243,11 @@ export class GameEngine {
                 playerBases = raidResult.updatedBases;
                 visualEvents.push(...raidResult.events);
             }
+
+            inventoryUpdates['lastRaidCheck'] = nowMs;
         }
+        */
+
 
         let integrity = eventsResult.update.integrity ?? heatResult.update.integrity ?? combatResult.update.integrity ?? state.integrity;
         let heat = eventsResult.update.heat ?? heatResult.update.heat;

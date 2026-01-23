@@ -53,35 +53,60 @@ const ForgeView: React.FC = () => {
     const startCraft = useGameStore(s => s.startCraft);
     const collectCraftedItem = useGameStore(s => s.collectCraftedItem);
     const cancelCraft = useGameStore(s => s.cancelCraft);
+    const equipmentInventory = useGameStore(s => s.equipmentInventory);
 
     const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth);
     const forgeStats = { prod: drill.power.baseStats.energyOutput, cons: stats.energyCons };
+
+    /**
+     * Helper: Определить следующий доступный тир для крафта
+     * Логика: следующий тир = max(текущий на буре, максимальный в инвентаре) + 1
+     */
+    const getNextAvailablePart = (
+        partType: DrillSlot,
+        currentPart: any,
+        allParts: any[]
+    ) => {
+        // Найти максимальный тир в инвентаре для этого типа
+        const maxTierInInventory = Math.max(
+            currentPart.tier, // Текущий на буре
+            ...equipmentInventory
+                .filter(item => item.slotType === partType)
+                .map(item => item.tier)
+        );
+
+        // Следующий тир = maxTier + 1
+        const nextTier = maxTierInInventory + 1;
+
+        // Найти деталь с этим тиром
+        return allParts.find(p => p.tier === nextTier);
+    };
 
     const renderActiveTab = () => {
         switch (forgeTab) {
             case 'DRILL':
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 space-y-2 md:space-y-0">
-                        <UpgradeCard title="НАКОНЕЧНИК" current={drill.bit} next={BITS[BITS.findIndex(p => p.id === drill.bit.id) + 1]} type={DrillSlot.BIT} resources={resources} onStartCraft={startCraft} />
-                        <UpgradeCard title="ДВИГАТЕЛЬ" current={drill.engine} next={ENGINES[ENGINES.findIndex(p => p.id === drill.engine.id) + 1]} type={DrillSlot.ENGINE} resources={resources} onStartCraft={startCraft} />
-                        <UpgradeCard title="ОХЛАЖДЕНИЕ" current={drill.cooling} next={COOLERS[COOLERS.findIndex(p => p.id === drill.cooling.id) + 1]} type={DrillSlot.COOLING} resources={resources} onStartCraft={startCraft} />
+                        <UpgradeCard title="НАКОНЕЧНИК" current={drill.bit} next={getNextAvailablePart(DrillSlot.BIT, drill.bit, BITS)} type={DrillSlot.BIT} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title="ДВИГАТЕЛЬ" current={drill.engine} next={getNextAvailablePart(DrillSlot.ENGINE, drill.engine, ENGINES)} type={DrillSlot.ENGINE} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title="ОХЛАЖДЕНИЕ" current={drill.cooling} next={getNextAvailablePart(DrillSlot.COOLING, drill.cooling, COOLERS)} type={DrillSlot.COOLING} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
                     </div>
                 );
             case 'SYSTEMS':
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-                        <UpgradeCard title="ЛОГИКА" current={drill.logic} next={LOGIC_CORES[LOGIC_CORES.findIndex(p => p.id === drill.logic.id) + 1]} type={DrillSlot.LOGIC} resources={resources} onStartCraft={startCraft} />
-                        <UpgradeCard title="УПРАВЛЕНИЕ" current={drill.control} next={CONTROL_UNITS[CONTROL_UNITS.findIndex(p => p.id === drill.control.id) + 1]} type={DrillSlot.CONTROL} resources={resources} onStartCraft={startCraft} />
-                        <UpgradeCard title="ГРУЗОВОЙ ОТСЕК" current={drill.cargoBay} next={CARGO_BAYS[CARGO_BAYS.findIndex(p => p.id === drill.cargoBay.id) + 1]} type={DrillSlot.CARGO_BAY} resources={resources} onStartCraft={startCraft} />
-                        <UpgradeCard title="РЕДУКТОР" current={drill.gearbox} next={GEARBOXES[GEARBOXES.findIndex(p => p.id === drill.gearbox.id) + 1]} type={DrillSlot.GEARBOX} resources={resources} onStartCraft={startCraft} />
+                        <UpgradeCard title="ЛОГИКА" current={drill.logic} next={getNextAvailablePart(DrillSlot.LOGIC, drill.logic, LOGIC_CORES)} type={DrillSlot.LOGIC} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title="УПРАВЛЕНИЕ" current={drill.control} next={getNextAvailablePart(DrillSlot.CONTROL, drill.control, CONTROL_UNITS)} type={DrillSlot.CONTROL} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title="ГРУЗОВОЙ ОТСЕК" current={drill.cargoBay} next={getNextAvailablePart(DrillSlot.CARGO_BAY, drill.cargoBay, CARGO_BAYS)} type={DrillSlot.CARGO_BAY} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title="РЕДУКТОР" current={drill.gearbox} next={getNextAvailablePart(DrillSlot.GEARBOX, drill.gearbox, GEARBOXES)} type={DrillSlot.GEARBOX} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
                     </div>
                 );
             case 'HULL':
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-                        <UpgradeCard title="КАРКАС" current={drill.hull} next={HULLS[HULLS.findIndex(p => p.id === drill.hull.id) + 1]} type={DrillSlot.HULL} resources={resources} onStartCraft={startCraft} />
-                        <UpgradeCard title="ПИТАНИЕ" current={drill.power} next={POWER_CORES[POWER_CORES.findIndex(p => p.id === drill.power.id) + 1]} type={DrillSlot.POWER} resources={resources} onStartCraft={startCraft} />
-                        <UpgradeCard title="БРОНЯ" current={drill.armor} next={ARMORS[ARMORS.findIndex(p => p.id === drill.armor.id) + 1]} type={DrillSlot.ARMOR} resources={resources} onStartCraft={startCraft} />
+                        <UpgradeCard title="КАРКАС" current={drill.hull} next={getNextAvailablePart(DrillSlot.HULL, drill.hull, HULLS)} type={DrillSlot.HULL} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title="ПИТАНИЕ" current={drill.power} next={getNextAvailablePart(DrillSlot.POWER, drill.power, POWER_CORES)} type={DrillSlot.POWER} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title="БРОНЯ" current={drill.armor} next={getNextAvailablePart(DrillSlot.ARMOR, drill.armor, ARMORS)} type={DrillSlot.ARMOR} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
                     </div>
                 );
             case 'SUPPLY':

@@ -118,7 +118,8 @@ export class RaidSystem {
 
     /**
      * Process potential raids for all bases (Tick logic)
-     * To be called from GameEngine periodically (e.g. every 10s)
+     * ИЗМЕНЕНО v4.1.3: Теперь происходит ОДИН рейд на случайную базу,
+     * а не проверка каждой базы независимо (что создавало слишком много рейдов)
      */
     public processBaseRaids(
         bases: PlayerBase[],
@@ -126,76 +127,69 @@ export class RaidSystem {
         currentTrigger: EventTrigger
     ): { updatedBases: PlayerBase[], events: VisualEvent[] } {
         const events: VisualEvent[] = [];
-        let basesChanged = false;
 
-        // Ограничиваем количество одновременных рейдов до 2
-        let raidsTriggered = 0;
-        const MAX_SIMULTANEOUS_RAIDS = 2;
+        // Фильтруем только активные базы
+        const activeBases = bases.filter(b => b.status === 'active' || b.status === 'building');
 
-        // Shuffle bases to ensure fairness
-        const shuffledIndices = bases.map((_, i) => i).sort(() => Math.random() - 0.5);
+        if (activeBases.length === 0) {
+            return { updatedBases: bases, events: [] };
+        }
+
+        // Выбираем ОДНУ случайную базу для потенциального рейда
+        const targetBase = activeBases[Math.floor(Math.random() * activeBases.length)];
+        const targetIndex = bases.findIndex(b => b.id === targetBase.id);
+
+        if (targetIndex === -1) {
+            return { updatedBases: bases, events: [] };
+        }
+
+        // Рассчитываем угрозу для этой базы
+        const threat = this.calculateThreatLevel(targetBase, reputation);
+
+        // Проверяем, произойдёт ли рейд (ОДИН шанс вместо N проверок)
+        if (!this.checkRaidInfo(targetBase, threat)) {
+            return { updatedBases: bases, events: [] };
+        }
+
+        // РЕЙД ПРОИЗОШЁЛ!
+        const result = this.resolveRaid(targetBase);
         const updatedBases = [...bases];
+        updatedBases[targetIndex] = { ...updatedBases[targetIndex] };
 
-        for (const i of shuffledIndices) {
-            const base = updatedBases[i];
+        // Создаём визуальное уведомление
+        if (result.success) {
+            events.push({
+                type: 'LOG',
+                msg: `🛡️ [${targetBase.regionId}] ${result.logMessage}`,
+                color: 'text-green-400'
+            });
+            events.push({ type: 'SOUND', sfx: 'RAID_SUCCESS' as any });
+        } else {
+            events.push({
+                type: 'LOG',
+                msg: `⚠️ [${targetBase.regionId}] ${result.logMessage}`,
+                color: 'text-red-500 font-bold'
+            });
+            events.push({ type: 'SCREEN_SHAKE', intensity: 10, duration: 500 });
+            events.push({ type: 'SOUND', sfx: 'RAID_ALARM' as any });
+            events.push({ type: 'SOUND', sfx: 'RAID_FAILURE' as any });
+        }
 
-            if (base.status !== 'active' && base.status !== 'building') continue;
-
-            // Если лимит рейдов достигнут, пропускаем оставшиеся проверки
-            if (raidsTriggered >= MAX_SIMULTANEOUS_RAIDS) continue;
-
-            // Only check raids if "GLOBAL_MAP_ACTIVE" or periodically if we want background raids
-            // For MVP, let's say Raids happen when Travel or Global Map is active, 
-            // OR extremely rarely during drilling (background simulation)
-            // Let's stick to Global Map context or a low background chance.
-
-            // Check Threat
-            const threat = this.calculateThreatLevel(base, reputation);
-
-            // Roll for Raid
-            if (this.checkRaidInfo(base, threat)) {
-                // RAID!
-                const result = this.resolveRaid(base);
-                updatedBases[i] = { ...updatedBases[i] }; // Clone for update
-                basesChanged = true;
-                raidsTriggered++;
-
-                // Create Visual Notification
-                if (result.success) {
-                    events.push({
-                        type: 'LOG',
-                        msg: `🛡️ [${base.regionId}] ${result.logMessage}`,
-                        color: 'text-green-400'
-                    });
-                    events.push({ type: 'SOUND', sfx: 'RAID_SUCCESS' as any });
-                } else {
-                    events.push({
-                        type: 'LOG',
-                        msg: `⚠️ [${base.regionId}] ${result.logMessage}`,
-                        color: 'text-red-500 font-bold'
-                    });
-                    events.push({ type: 'SCREEN_SHAKE', intensity: 10, duration: 500 });
-                    events.push({ type: 'SOUND', sfx: 'RAID_ALARM' as any });
-                    events.push({ type: 'SOUND', sfx: 'RAID_FAILURE' as any });
+        // Применяем потерю ресурсов
+        if (!result.success && Object.keys(result.stolenResources).length > 0) {
+            const newStored = { ...updatedBases[targetIndex].storedResources };
+            Object.entries(result.stolenResources).forEach(([res, amount]) => {
+                const r = res as keyof Resources;
+                if (newStored[r]) {
+                    newStored[r] = Math.max(0, (newStored[r] as number) - (amount as number));
                 }
-
-                // Apply resources loss
-                if (!result.success && Object.keys(result.stolenResources).length > 0) {
-                    const newStored = { ...updatedBases[i].storedResources };
-                    Object.entries(result.stolenResources).forEach(([res, amount]) => {
-                        const r = res as keyof Resources;
-                        if (newStored[r]) {
-                            newStored[r] = Math.max(0, (newStored[r] as number) - (amount as number));
-                        }
-                    });
-                    updatedBases[i].storedResources = newStored;
-                    updatedBases[i].lastVisitedAt = Date.now();
-                }
-            }
+            });
+            updatedBases[targetIndex].storedResources = newStored;
+            updatedBases[targetIndex].lastVisitedAt = Date.now();
         }
 
         return {
-            updatedBases: basesChanged ? updatedBases : bases,
+            updatedBases,
             events
         };
     }

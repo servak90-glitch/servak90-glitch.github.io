@@ -9,6 +9,8 @@ import React, { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import type { EquipmentItem } from '../../types';
 import { ComparisonTooltip } from './ComparisonTooltip';
+import { getPartDefinition } from '../../store/slices/craftSlice';
+import { t } from '../../services/localization';
 
 interface EquipmentCardProps {
     item: EquipmentItem;
@@ -20,6 +22,11 @@ export const EquipmentCard: React.FC<EquipmentCardProps> = ({ item }) => {
     const equipEquipment = useGameStore(s => s.equipEquipment);
     const scrapEquipment = useGameStore(s => s.scrapEquipment);
     const sellEquipment = useGameStore(s => s.sellEquipment);
+    const lang = useGameStore(s => s.settings.language);
+
+    // Получить название детали
+    const partDef = getPartDefinition(item.partId);
+    const displayName = partDef ? t(partDef.name, lang) : item.partId;
 
     return (
         <div
@@ -28,7 +35,7 @@ export const EquipmentCard: React.FC<EquipmentCardProps> = ({ item }) => {
             onMouseLeave={() => setShowTooltip(false)}
         >
             {/* Карточка */}
-            <div className="text-sm font-bold text-white mb-1">{item.partId}</div>
+            <div className="text-sm font-bold text-white mb-1">{displayName}</div>
             <div className="text-xs text-yellow-400 mb-1">Tier {item.tier}</div>
 
             {item.isEquipped && (

@@ -21,6 +21,7 @@ export interface UpgradeCardProps {
     type: DrillSlot;
     resources: Resources;
     onStartCraft: (partId: string, type: DrillSlot | 'CONSUMABLE') => void;
+    craftingQueue: Array<{ id: string; partId: string; slotType: string; startTime: number; completionTime: number; status: string }>;
 }
 
 export interface DrillTabProps {

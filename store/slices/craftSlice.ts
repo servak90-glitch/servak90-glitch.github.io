@@ -59,8 +59,9 @@ export interface CraftActions {
 
 /**
  * Получить definition детали по ID
+ * Экспортируется для использования в UI компонентах (CraftingJobCard и др.)
  */
-function getPartDefinition(partId: string) {
+export function getPartDefinition(partId: string) {
     const allParts = [
         ...BITS, ...ENGINES, ...COOLERS, ...HULLS,
         ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES,
@@ -180,7 +181,7 @@ export const createCraftSlice: SliceCreator<CraftActions> = (set, get) => ({
         const craftMinutes = Math.ceil(craftTimeSeconds / 60);
         const successEvent: VisualEvent = {
             type: 'LOG',
-            msg: `🛠️ НАЧАТ КРАФТ: ${partId} (~${craftMinutes}мин)`,
+            msg: `🛠️ НАЧАТ КРАФТ: ${(partDef as any).name?.RU || partId} (~${craftMinutes}мин)`,
             color: 'text-cyan-400 font-bold'
         };
 
@@ -214,9 +215,12 @@ export const createCraftSlice: SliceCreator<CraftActions> = (set, get) => ({
                     [job.partId]: (state.consumables[job.partId as keyof typeof state.consumables] || 0) + 1
                 }
             }));
+            const partDef = getPartDefinition(job.partId);
+            const displayName = (partDef as any)?.name?.RU || job.partId;
+
             const event: VisualEvent = {
                 type: 'LOG',
-                msg: `✅ ПОЛУЧЕНО: ${job.partId}`,
+                msg: `✅ ПОЛУЧЕНО: ${displayName}`,
                 color: 'text-green-400'
             };
             set((state: any) => ({ actionLogQueue: pushLog(state, event) }));
@@ -250,9 +254,10 @@ export const createCraftSlice: SliceCreator<CraftActions> = (set, get) => ({
         const newResources = refundResources(partDef.cost, s.resources as any, 0.5);
         const newQueue = s.craftingQueue.filter(j => j.id !== jobId);
 
+        const displayName = (partDef as any)?.name?.RU || job.partId;
         const cancelEvent: VisualEvent = {
             type: 'LOG',
-            msg: `❌ ОТМЕНЁН КРАФТ: ${job.partId} (возврат 50% ресурсов)`,
+            msg: `❌ ОТМЕНЁН КРАФТ: ${displayName} (возврат 50% ресурсов)`,
             color: 'text-yellow-400'
         };
 

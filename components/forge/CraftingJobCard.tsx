@@ -5,6 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { CraftingJob } from '../../types';
+import { getPartDefinition } from '../../store/slices/craftSlice';
+import { t } from '../../services/localization';
+import { useGameStore } from '../../store/gameStore';
 
 interface CraftingJobCardProps {
     job: CraftingJob;
@@ -14,6 +17,7 @@ interface CraftingJobCardProps {
 
 export const CraftingJobCard: React.FC<CraftingJobCardProps> = ({ job, onCollect, onCancel }) => {
     const [now, setNow] = useState(Date.now());
+    const lang = useGameStore(s => s.settings.language);
 
     // Обновляем время каждую секунду для live прогресса
     useEffect(() => {
@@ -33,11 +37,15 @@ export const CraftingJobCard: React.FC<CraftingJobCardProps> = ({ job, onCollect
     const remainingSec = Math.floor((remaining % 60000) / 1000);
     const timeStr = `${remainingMin}:${remainingSec.toString().padStart(2, '0')}`;
 
+    // Получить название детали
+    const partDef = getPartDefinition(job.partId);
+    const displayName = partDef ? t(partDef.name, lang) : job.partId;
+
     return (
         <div className="bg-gray-900 border border-gray-700 rounded p-3 hover:border-cyan-500/50 transition-all">
             <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
-                    <span className="text-white font-bold text-sm">{job.partId}</span>
+                    <span className="text-white font-bold text-sm">{displayName}</span>
                     <span className="text-[10px] text-gray-500 uppercase">{job.slotType}</span>
                 </div>
                 {job.status === 'in_progress' && (
@@ -52,8 +60,8 @@ export const CraftingJobCard: React.FC<CraftingJobCardProps> = ({ job, onCollect
             <div className="w-full h-2 bg-gray-800 rounded mb-3 overflow-hidden">
                 <div
                     className={`h-full rounded transition-all duration-1000 ${job.status === 'ready_to_collect'
-                            ? 'bg-green-500'
-                            : 'bg-cyan-500'
+                        ? 'bg-green-500'
+                        : 'bg-cyan-500'
                         }`}
                     style={{ width: `${progress * 100}%` }}
                 />

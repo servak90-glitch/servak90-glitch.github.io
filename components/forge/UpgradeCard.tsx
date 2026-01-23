@@ -10,7 +10,7 @@ import { audioEngine } from '../../services/audioEngine';
  * Upgrade Card component for drill parts
  * Phase 2.2: Changed from instant buyUpgrade to startCraft (crafting queue)
  */
-const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, resources, onStartCraft }) => {
+const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, resources, onStartCraft, craftingQueue }) => {
     const lang = useGameStore(s => s.settings.language);
     const unlockedBlueprints = useGameStore(s => s.unlockedBlueprints);
     if (!next) return (
@@ -27,9 +27,13 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
     const isFusionLocked = next.tier >= 13;
     const requiresBlueprint = next.blueprintId;
     const hasBlueprint = !requiresBlueprint || unlockedBlueprints.includes(requiresBlueprint);
+
+    // Проверка: есть ли этот предмет уже в крафте?
+    const isAlreadyCrafting = craftingQueue.some(job => job.partId === next.id);
+
     const cost = (next.cost || {}) as Partial<Resources>;
     const costKeys = Object.keys(cost) as Array<keyof Resources>;
-    const canAfford = !isFusionLocked && hasBlueprint && costKeys.every(r => resources[r] >= (cost[r] || 0));
+    const canAfford = !isFusionLocked && hasBlueprint && !isAlreadyCrafting && costKeys.every(r => resources[r] >= (cost[r] || 0));
 
     return (
         <div className="bg-zinc-900 p-3 md:p-4 border border-zinc-700 flex flex-col justify-between min-h-[180px] md:min-h-[220px] hover:border-zinc-500 transition-colors group relative">
@@ -95,7 +99,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                             : 'bg-zinc-950 border-zinc-800 text-zinc-600 cursor-not-allowed'}
          `}
             >
-                {isFusionLocked ? 'ТОЛЬКО СЛИЯНИЕ' : !hasBlueprint ? 'НУЖЕН ЧЕРТЕЖ' : canAfford ? 'START CRAFT' : 'НЕДОСТУПНО'}
+                {isFusionLocked ? 'ТОЛЬКО СЛИЯНИЕ' : !hasBlueprint ? 'НУЖЕН ЧЕРТЕЖ' : isAlreadyCrafting ? '⏳ В КРАФТЕ' : canAfford ? 'START CRAFT' : 'НЕДОСТУПНО'}
             </button>
         </div>
     );
