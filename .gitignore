@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .agent
 .vscode
+
+# Deployment instructions (local only)
+TELEGRAM_DEPLOYMENT.md
