@@ -531,8 +531,8 @@ const App: React.FC = () => {
                                 </button>
                             </div>
 
-                            <div className="absolute bottom-4 left-4 z-40 pointer-events-auto">
-                                <QuickAccessBar />
+                            <div className={`absolute ${isMobile ? 'bottom-4 left-4' : 'bottom-4 left-4'} z-40 pointer-events-auto`}>
+                                <QuickAccessBar orientation={isMobile ? 'vertical' : 'horizontal'} />
                             </div>
 
                             <DrillStatsPanel />
