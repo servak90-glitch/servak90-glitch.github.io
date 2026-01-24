@@ -1,25 +1,32 @@
 import React from 'react';
 import { UpgradeCardProps } from './types';
 import { Resources } from '../../types';
+import { getResourceLabel } from '../../services/gameMath';
 import { useGameStore } from '../../store/gameStore';
-import { t } from '../../services/localization';
+import { t, TL } from '../../services/localization';
 import { audioEngine } from '../../services/audioEngine';
+import {
+    ChevronRight,
+    Lock,
+    Zap,
+    Scroll,
+    CheckCircle2,
+    AlertCircle,
+    Boxes
+} from 'lucide-react';
 
-
-/**
- * Upgrade Card component for drill parts
- * Phase 2.2: Changed from instant buyUpgrade to startCraft (crafting queue)
- */
 const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, resources, onStartCraft, craftingQueue }) => {
     const lang = useGameStore(s => s.settings.language);
     const unlockedBlueprints = useGameStore(s => s.unlockedBlueprints);
-    if (!next) return (
 
-        <div className="bg-zinc-900 p-3 md:p-4 border border-zinc-800 opacity-50 flex flex-col justify-between min-h-[160px] md:min-h-[200px]">
+    if (!next) return (
+        <div className="glass-panel p-4 opacity-50 flex flex-col justify-between min-h-[220px] bg-white/5 border-white/5 grayscale">
             <div>
-                <h3 className="text-zinc-500 font-bold mb-2 pixel-text text-xs md:text-sm">{title}</h3>
-                <div className="text-[10px] md:text-xs text-zinc-600 font-mono mb-2">TIER {current.tier}</div>
-                <p className="text-[10px] md:text-xs text-zinc-600">МАКСИМУМ</p>
+                <h3 className="text-white/40 font-bold mb-2 font-technical text-xs tracking-widest">{title}</h3>
+                <div className="text-[11px] text-white/20 font-technical mb-2 uppercase">{t(TL.ui.protocolMax, lang)}</div>
+                <div className="flex items-center gap-1.5 text-xs text-white/30 font-technical">
+                    <span className="bg-white/5 px-2 py-0.5 rounded border border-white/5">{t(TL.ui.level_label, lang)} {current.tier}</span>
+                </div>
             </div>
         </div>
     );
@@ -27,8 +34,6 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
     const isFusionLocked = next.tier >= 13;
     const requiresBlueprint = next.blueprintId;
     const hasBlueprint = !requiresBlueprint || unlockedBlueprints.includes(requiresBlueprint);
-
-    // Проверка: есть ли этот предмет уже в крафте?
     const isAlreadyCrafting = craftingQueue.some(job => job.partId === next.id);
 
     const cost = (next.cost || {}) as Partial<Resources>;
@@ -36,51 +41,69 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
     const canAfford = !isFusionLocked && hasBlueprint && !isAlreadyCrafting && costKeys.every(r => resources[r] >= (cost[r] || 0));
 
     return (
-        <div className="bg-zinc-900 p-3 md:p-4 border border-zinc-700 flex flex-col justify-between min-h-[180px] md:min-h-[220px] hover:border-zinc-500 transition-colors group relative">
+        <div className={`glass-panel p-5 flex flex-col justify-between min-h-[280px] transition-all duration-300 group relative hover:translate-y-[-2px] 
+            ${canAfford ? 'hover:bg-white/[0.07] hover:border-white/20 shadow-lg' : 'bg-void/40'}
+        `}>
             <div>
-                <h3 className="text-cyan-400 font-bold mb-1 pixel-text text-xs md:text-sm group-hover:text-white transition-colors truncate">{title}</h3>
-                <div className="text-[9px] md:text-[10px] text-zinc-500 mb-2 font-mono">
-                    TIER {current.tier} <span className="text-zinc-300">➔ {next.tier}</span>
-                </div>
-
-                <div className="bg-black/50 p-2 mb-2 border border-zinc-800 min-h-[40px] md:min-h-[50px]">
-                    <p className="text-[9px] md:text-[10px] text-zinc-300 italic leading-tight">"{t(next.description, lang)}"</p>
-
-                    <div className="mt-1 text-[8px] md:text-[9px] text-green-400 font-mono grid grid-cols-2 gap-x-2">
-                        {(next.baseStats as any).damage && <span>DMG: {(next.baseStats as any).damage}</span>}
-                        {(next.baseStats as any).speed && <span>SPD: {(next.baseStats as any).speed}</span>}
-                        {(next.baseStats as any).cooling && <span>COOL: {(next.baseStats as any).cooling}</span>}
-                        {(next.baseStats as any).energyOutput && <span>PWR: {(next.baseStats as any).energyOutput}</span>}
-                        {(next.baseStats as any).torque && <span className="text-amber-400">TRQ: {(next.baseStats as any).torque}%</span>}
-                        {(next.baseStats as any).regen && <span className="text-emerald-400">REG: {(next.baseStats as any).regen}/s</span>}
-                        {(next.baseStats as any).luck && <span className="text-purple-400">LCK: {(next.baseStats as any).luck}%</span>}
-                        {(next.baseStats as any).cargoCapacity && <span className="text-blue-400">CRG: {(next.baseStats as any).cargoCapacity}</span>}
-                        {(next.baseStats as any).energyCost > 0 && <span className="text-red-500 col-span-2">LOAD: -{(next.baseStats as any).energyCost} W</span>}
+                <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-cyan-400 font-bold font-technical text-sm tracking-widest leading-none truncate group-hover:text-white transition-colors">{title}</h3>
+                    <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded border border-white/5 text-[10px] font-technical text-white/40">
+                        <span>{current.tier}</span>
+                        <ChevronRight className="w-3 h-3 text-cyan-500/50" />
+                        <span className="text-white font-bold">{next.tier}</span>
                     </div>
                 </div>
 
-                {/* Индикатор чертежа */}
+                <div className="bg-white/5 rounded-sm p-3 mb-4 border border-white/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-bl from-cyan-500/10 to-transparent pointer-events-none" />
+                    <p className="text-[10px] text-white/50 italic leading-snug mb-3 font-medium">
+                        "{t(next.description, lang)}"
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-white/5 pt-2">
+                        {renderStat(t(TL.ui.statDmg, lang), (next.baseStats as any).damage, "text-red-400")}
+                        {renderStat(t(TL.ui.statSpd, lang), (next.baseStats as any).speed, "text-cyan-400")}
+                        {renderStat(t(TL.ui.statCool, lang), (next.baseStats as any).cooling, "text-blue-400")}
+                        {renderStat(t(TL.ui.statPwr, lang), (next.baseStats as any).energyOutput, "text-yellow-400")}
+                        {renderStat(t(TL.ui.statReg, lang), (next.baseStats as any).regen, "text-emerald-400")}
+                        {renderStat(t(TL.ui.statCrg, lang), (next.baseStats as any).cargoCapacity, "text-amber-400")}
+                    </div>
+                </div>
+
                 {requiresBlueprint && (
-                    <div className={`text-[9px] md:text-[10px] font-bold font-mono text-center py-1 px-2 mb-2 border ${hasBlueprint
-                        ? 'bg-purple-900/30 border-purple-500/50 text-purple-300'
-                        : 'bg-red-900/30 border-red-500/50 text-red-400 animate-pulse'
-                        }`}>
-                        {hasBlueprint ? '📜 ЧЕРТЕЖ ПОЛУЧЕН' : '⚠️ ТРЕБУЕТСЯ ЧЕРТЕЖ'}
+                    <div className={`flex items-center gap-2 text-[10px] font-bold font-technical px-3 py-1.5 mb-4 rounded border transition-colors
+                        ${hasBlueprint
+                            ? 'bg-purple-950/20 border-purple-500/30 text-purple-400'
+                            : 'bg-red-950/20 border-red-500/30 text-red-400 animate-pulse'}
+                    `}>
+                        {hasBlueprint ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Scroll className="w-3.5 h-3.5" />}
+                        {hasBlueprint ? t(TL.ui.schematicLoaded, lang) : t(TL.ui.schematicRequired, lang)}
                     </div>
                 )}
 
-                <div className="space-y-1 mb-3">
+                <div className="space-y-2 mb-5">
                     {isFusionLocked ? (
-                        <div className="text-[10px] text-purple-400 font-bold font-mono py-2 text-center animate-pulse">ТРЕБУЕТСЯ СЛИЯНИЕ</div>
+                        <div className="flex items-center justify-center gap-2 bg-purple-500/10 border border-purple-500/30 p-2 rounded text-[10px] text-purple-400 font-bold uppercase tracking-widest animate-pulse">
+                            <Lock className="w-3.5 h-3.5" />
+                            {t(TL.ui.fusionRequired, lang)}
+                        </div>
                     ) : (
-                        costKeys.map(res => (
-                            <div key={res} className="flex justify-between text-[9px] md:text-[10px] font-mono border-b border-zinc-800/50 pb-0.5">
-                                <span className="text-zinc-500 uppercase">{res}</span>
-                                <span className={resources[res] >= (cost[res] || 0) ? 'text-green-400' : 'text-red-500'}>
-                                    {cost[res]?.toLocaleString()}
-                                </span>
+                        <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center gap-1.5 opacity-40 mb-1">
+                                <Boxes className="w-3 h-3" />
+                                <span className="text-[9px] font-technical uppercase">{t(TL.ui.requiredMaterials, lang)}</span>
                             </div>
-                        ))
+                            <div className="grid grid-cols-2 gap-2">
+                                {costKeys.map(res => (
+                                    <div key={res} className="flex justify-between items-center text-[10px] font-technical border-b border-white/5 pb-0.5">
+                                        <span className="text-white/40 uppercase text-[9px]">{t(getResourceLabel(res), lang)}</span>
+                                        <span className={resources[res] >= (cost[res] || 0) ? 'text-green-400' : 'text-red-400'}>
+                                            {formatVal(cost[res] || 0)}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
@@ -91,18 +114,59 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                     onStartCraft(next.id, type);
                     audioEngine.playBaseBuild(next.id as any);
                 }}
-                className={`w-full py-2 md:py-3 text-[10px] md:text-xs font-bold pixel-text transition-all border active:scale-95
-            ${isFusionLocked
-                        ? 'bg-zinc-950 border-purple-900/50 text-zinc-600 cursor-not-allowed opacity-50'
+                className={`w-full py-3.5 rounded text-[11px] font-bold font-technical transition-all flex items-center justify-center gap-2 relative overflow-hidden group/btn
+                    ${isFusionLocked
+                        ? 'bg-purple-900/10 border border-purple-900/30 text-purple-900/50 cursor-not-allowed'
                         : canAfford
-                            ? 'bg-cyan-900/50 border-cyan-500 hover:bg-cyan-500 hover:text-black text-cyan-400'
-                            : 'bg-zinc-950 border-zinc-800 text-zinc-600 cursor-not-allowed'}
-         `}
+                            ? 'bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] active:scale-95'
+                            : 'bg-white/5 border border-white/10 text-white/20 cursor-not-allowed'}
+                `}
             >
-                {isFusionLocked ? 'ТОЛЬКО СЛИЯНИЕ' : !hasBlueprint ? 'НУЖЕН ЧЕРТЕЖ' : isAlreadyCrafting ? '⏳ В КРАФТЕ' : canAfford ? 'START CRAFT' : 'НЕДОСТУПНО'}
+                {isFusionLocked ? (
+                    t(TL.ui.fusionLocked, lang)
+                ) : !hasBlueprint ? (
+                    t(TL.ui.unavailable, lang)
+                ) : isAlreadyCrafting ? (
+                    <>
+                        <Zap className="w-3.5 h-3.5 animate-pulse" />
+                        <span>{t(TL.ui.processing, lang)}</span>
+                    </>
+                ) : canAfford ? (
+                    <>
+                        <HammerIcon />
+                        <span className="tracking-widest uppercase">{t(TL.ui.initiateUpgrade, lang)}</span>
+                    </>
+                ) : (
+                    t(TL.ui.insufficientFunds, lang)
+                )}
+                {canAfford && !isAlreadyCrafting && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:animate-shimmer" />
+                )}
             </button>
         </div>
     );
 };
+
+const renderStat = (label: string, val: any, color: string) => {
+    if (val === undefined || val === 0) return null;
+    return (
+        <div className="flex justify-between items-center bg-black/20 px-1.5 py-0.5 rounded border border-white/[0.03]">
+            <span className="text-[9px] text-white/30 font-technical uppercase">{label}</span>
+            <span className={`text-[10px] font-technical font-bold ${color}`}>
+                {val}{typeof val === 'number' && val > 0 && label === 'TRQ' ? '%' : ''}
+            </span>
+        </div>
+    );
+};
+
+const formatVal = (v: number) => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v;
+
+const HammerIcon = () => (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0-.83-.83-.83-2.17 0-3L12 9" />
+        <path d="M17.64 15 22 10.64" />
+        <path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.31c0-1.55-1.1-2.85-2.63-3.03l-.53-.06c-1.29-.14-2.5.59-3.11 1.75l-.23.44a2.91 2.91 0 0 1-2.58 1.56H9.42c-1.53 0-2.85 1.06-3.13 2.56L6 12" />
+    </svg>
+);
 
 export default UpgradeCard;

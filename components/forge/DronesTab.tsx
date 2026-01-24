@@ -3,7 +3,7 @@ import { DronesTabProps } from './types';
 import { Resources } from '../../types';
 import { useGameStore } from '../../store/gameStore';
 import { DRONES } from '../../constants';
-import { t } from '../../services/localization';
+import { t, TL } from '../../services/localization';
 
 
 const DronesTab: React.FC<DronesTabProps> = ({ resources, droneLevels }) => {
@@ -23,7 +23,7 @@ const DronesTab: React.FC<DronesTabProps> = ({ resources, droneLevels }) => {
                                 <h4 className="font-bold pixel-text text-xs" style={{ color: drone.color }}>{t(drone.name, lang)}</h4>
 
                                 <span className="text-[9px] bg-black px-1.5 py-0.5 rounded text-white border border-zinc-800">
-                                    LVL {lvl} <span className="text-zinc-600">/ {drone.maxLevel}</span>
+                                    {t(TL.ui.level_label, lang)} {lvl} <span className="text-zinc-600">/ {drone.maxLevel}</span>
                                 </span>
                             </div>
 
@@ -33,12 +33,12 @@ const DronesTab: React.FC<DronesTabProps> = ({ resources, droneLevels }) => {
                                 </div>
 
                                 <div className="text-[10px] font-mono text-white font-bold">
-                                    {lvl > 0 ? t(drone.effectDescription(lvl), lang) : "СТАТУС: НЕ АКТИВЕН"}
+                                    {lvl > 0 ? t(drone.effectDescription(lvl), lang) : `${t(TL.ui.status, lang)}: ${t(TL.ui.inactive, lang)}`}
                                 </div>
 
                                 {!isMaxed && (
                                     <div className="text-[9px] font-mono text-zinc-500 mt-1 flex items-center gap-1">
-                                        <span>NEXT:</span>
+                                        <span>{t(TL.ui.next, lang)}</span>
                                         <span className="text-green-400">{t(drone.effectDescription(lvl + 1), lang)}</span>
                                     </div>
                                 )}
@@ -60,7 +60,7 @@ const DronesTab: React.FC<DronesTabProps> = ({ resources, droneLevels }) => {
                                 </div>
                             ) : (
                                 <div className="mb-3 text-center py-4 text-[10px] text-zinc-500 font-mono border border-zinc-800 bg-black/20">
-                                    МАКСИМАЛЬНЫЙ УРОВЕНЬ
+                                    {t(TL.ui.protocolMax, lang)}
                                 </div>
                             )}
                         </div>
@@ -74,7 +74,7 @@ const DronesTab: React.FC<DronesTabProps> = ({ resources, droneLevels }) => {
                                     : 'bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-white'}
               `}
                         >
-                            {lvl === 0 ? 'СОБРАТЬ' : isMaxed ? 'МАКСИМУМ' : 'УЛУЧШИТЬ'}
+                            {lvl === 0 ? t(TL.ui.assemble, lang) : isMaxed ? t(TL.ui.max, lang) : t(TL.ui.upgrade, lang)}
                         </button>
                     </div>
                 );

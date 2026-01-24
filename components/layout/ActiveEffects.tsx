@@ -1,39 +1,65 @@
-
 import React from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { t } from '../../services/localization';
 import { ActiveEffect } from '../../types';
+import {
+    Zap,
+    ShieldAlert,
+    Sparkles,
+    Clock,
+    Radiation,
+    Activity
+} from 'lucide-react';
 
 const EffectBadge: React.FC<{ effect: ActiveEffect; lang: 'RU' | 'EN' }> = ({ effect, lang }) => {
-    // Convert ticks to seconds (10 ticks = 1 sec)
     const secondsLeft = Math.ceil(effect.duration / 10);
 
-    let bg = 'bg-zinc-800';
-    let text = 'text-zinc-300';
-    let border = 'border-zinc-600';
+    let Icon = Sparkles;
+    let colorClass = 'text-emerald-400';
+    let bgClass = 'bg-emerald-500/10';
+    let borderClass = 'border-emerald-500/30';
+    let glowClass = 'shadow-[0_0_10px_rgba(16,185,129,0.2)]';
 
     switch (effect.type) {
         case 'BUFF':
-            bg = 'bg-green-950/80';
-            text = 'text-green-400';
-            border = 'border-green-700';
+            Icon = Zap;
+            colorClass = 'text-cyan-400';
+            bgClass = 'bg-cyan-500/10';
+            borderClass = 'border-cyan-500/30';
+            glowClass = 'shadow-[0_0_10px_rgba(34,211,238,0.2)]';
             break;
         case 'DEBUFF':
-            bg = 'bg-red-950/80';
-            text = 'text-red-400';
-            border = 'border-red-700';
+            Icon = ShieldAlert;
+            colorClass = 'text-rose-400';
+            bgClass = 'bg-rose-500/10';
+            borderClass = 'border-rose-500/30';
+            glowClass = 'shadow-[0_0_10px_rgba(244,63,94,0.2)]';
             break;
         case 'ANOMALY':
-            bg = 'bg-purple-950/80';
-            text = 'text-purple-400';
-            border = 'border-purple-700';
+            Icon = Radiation;
+            colorClass = 'text-purple-400';
+            bgClass = 'bg-purple-500/10';
+            borderClass = 'border-purple-500/30';
+            glowClass = 'shadow-[0_0_10px_rgba(168,85,247,0.2)]';
             break;
     }
 
     return (
-        <div className={`flex items-center gap-2 px-2 py-0.5 rounded-sm border ${bg} ${border} animate-in fade-in zoom-in duration-300`}>
-            <span className={`text-[10px] font-bold ${text}`}>{t(effect.name, lang)}</span>
-            <span className="text-[10px] font-mono text-white/80">{secondsLeft}s</span>
+        <div className={`flex items-center gap-2 px-3 py-1 glass-panel border ${borderClass} ${bgClass} ${glowClass} animate-in fade-in zoom-in duration-300 group`}>
+            <div className={`transition-transform duration-300 group-hover:scale-110 ${colorClass}`}>
+                <Icon className="w-3 h-3" />
+            </div>
+            <div className="flex flex-col">
+                <span className={`text-[9px] font-black font-technical uppercase tracking-wider leading-none ${colorClass}`}>
+                    {t(effect.name, lang)}
+                </span>
+            </div>
+            <div className="flex items-center gap-1 ml-1 pl-2 border-l border-white/10">
+                <Clock className="w-2.5 h-2.5 text-white/30" />
+                <span className="text-[10px] font-bold font-technical text-white/60 tracking-tighter">
+                    {secondsLeft}s
+                </span>
+            </div>
         </div>
     );
 };
@@ -45,7 +71,7 @@ const ActiveEffects: React.FC = () => {
     if (effects.length === 0) return null;
 
     return (
-        <div className="w-full flex flex-wrap gap-1 px-2 py-1 bg-transparent pointer-events-none z-30 justify-center">
+        <div className="w-full flex flex-wrap gap-2 px-4 py-2 bg-transparent pointer-events-none z-30 justify-center">
             {effects.map(effect => (
                 <EffectBadge key={effect.id} effect={effect} lang={lang} />
             ))}

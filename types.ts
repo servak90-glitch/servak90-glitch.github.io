@@ -490,7 +490,7 @@ export type FusionConditionType = 'ZERO_HEAT' | 'MAX_HEAT' | 'DEPTH_REACHED' | '
 export interface FusionCondition {
   type: FusionConditionType;
   target: number;
-  description: string;
+  description: LocalizedString;
 }
 
 export interface MergeRecipe {
@@ -748,7 +748,7 @@ export interface ReputationState {
 // === QUEST SYSTEM (PHASE 3.1) ===
 
 export type QuestStatus = 'available' | 'active' | 'completed' | 'failed';
-export type QuestType = 'DELIVERY' | 'COLLECTION' | 'EXPLORATION' | 'COMBAT';
+export type QuestType = 'DELIVERY' | 'COLLECTION' | 'EXPLORATION' | 'COMBAT' | 'STORY';
 
 export type QuestObjectiveType = 'COLLECT' | 'DELIVER' | 'REACH_DEPTH' | 'DEFEAT_BOSS' | 'BUILD_BASE' | 'TRAVEL_TO';
 
@@ -1096,6 +1096,9 @@ export interface GameState {
 
   // === PHASE 4.1: RAID TIMER ===
   lastRaidCheck: number;                // Timestamp последней проверки рейдов (для предотвращения спама)
+
+  // === PERFORMANCE OPTIMIZATION ===
+  stats: Stats;                        // Pre-calculated stats for each tick
 }
 
 export type VisualEvent =

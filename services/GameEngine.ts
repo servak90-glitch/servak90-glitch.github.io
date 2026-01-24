@@ -68,7 +68,7 @@ export class GameEngine {
         }
 
         // === ВЫЧИСЛЕНИЕ СТАТОВ ===
-        const stats = calculateStats(state.drill, state.skillLevels, state.equippedArtifacts, state.inventory, state.depth);
+        const stats = calculateStats(state.drill, state.skillLevels, state.equippedArtifacts, state.inventory, state.depth, state.activeEffects);
         if (state.isGodMode) {
             // В режиме бога — полное HP
             state = { ...state, integrity: stats.integrity };
@@ -110,12 +110,11 @@ export class GameEngine {
             state,
             stats,
             activeEffects,
-            // Override drilling state if event changed heat or other blockers?
-            // Assume drilling continues unless heat stops it
             heatResult.update.isDrilling,
             heatResult.update.isOverheated,
             dt,
-            activePerks
+            activePerks,
+            { isInfiniteFuel: state.isInfiniteFuel, isZeroWeight: state.isZeroWeight }
         );
         visualEvents.push(...drillResult.events);
         Object.assign(resourceChanges, drillResult.resourceChanges);
@@ -125,7 +124,8 @@ export class GameEngine {
             state,
             stats,
             shieldResult.isShielding,
-            heatResult.update.isOverheated
+            heatResult.update.isOverheated,
+            dt
         );
         visualEvents.push(...combatResult.events);
         Object.assign(resourceChanges, combatResult.resourceChanges);
@@ -419,7 +419,9 @@ export class GameEngine {
 
                 // Ресурсы и HP
                 resources: newResources,
-                currentCargoWeight: recalculateCargoWeight(newResources),  // [CARGO SYSTEM] Автообновление веса
+                currentCargoWeight: Object.keys(resourceChanges).length > 0
+                    ? recalculateCargoWeight(newResources)
+                    : state.currentCargoWeight,
                 integrity,
                 xp: (combatResult.update.xp ?? state.xp), // Combat XP updates
 
@@ -454,7 +456,10 @@ export class GameEngine {
                 ...(state.eventCheckTick % 10 === 0 ? { activeExpeditions } : {}),
 
                 // Перемещение
-                ...travelResult.update
+                ...travelResult.update,
+
+                // PERFORMANCE: Pre-calculated stats
+                stats: stats
             },
             events: visualEvents,
             questUpdates

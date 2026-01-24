@@ -5,7 +5,7 @@ import { useGameStore } from '../../store/gameStore';
 import { FUSION_RECIPES } from '../../constants';
 import { ARTIFACTS } from '../../services/artifactRegistry';
 import { BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS } from '../../constants';
-import { t, TEXT_IDS } from '../../services/localization';
+import { t, TEXT_IDS, TL } from '../../services/localization';
 
 
 const ALL_PARTS = [...BITS, ...ENGINES, ...COOLERS, ...HULLS, ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES, ...POWER_CORES, ...ARMORS];
@@ -168,7 +168,7 @@ const FusionTab: React.FC<FusionTabProps> = ({
                                 <div>
                                     <div className="flex justify-between items-start mb-2">
                                         <h4 className="text-red-500 font-bold pixel-text text-xs leading-snug">{targetPart ? t(targetPart.name, lang) : recipe.resultId}</h4>
-                                        <span className="text-[9px] bg-purple-900/50 text-purple-300 px-1 rounded">GODLY</span>
+                                        <span className="text-[9px] bg-purple-900/50 text-purple-300 px-1 rounded">{t(TL.ui.godly as any, lang)}</span>
                                     </div>
 
                                     <div className="text-[10px] text-zinc-400 mb-3 border-l-2 border-purple-800 pl-2">
@@ -180,14 +180,14 @@ const FusionTab: React.FC<FusionTabProps> = ({
                                         <div className="flex justify-between text-[9px] font-mono">
                                             <span className="text-zinc-500">{t(TEXT_IDS.FUSION_REQUIRED, lang)}</span>
                                             <span className={hasCatalyst ? "text-white" : "text-red-500"}>
-                                                {recipe.catalyst.amount} {recipe.catalyst.resource}
+                                                {recipe.catalyst.amount} {t(TL.resources[recipe.catalyst.resource as any] as any, lang)}
                                             </span>
                                         </div>
 
 
                                         {recipe.condition && (
                                             <div className="flex justify-between text-[9px] font-mono border-t border-zinc-800 pt-1 mt-1">
-                                                <span className="text-zinc-500">{recipe.condition.description}:</span>
+                                                <span className="text-zinc-500">{t(recipe.condition.description, lang)}:</span>
                                                 <span className={statusColor}>
                                                     {conditionStatus}
                                                 </span>

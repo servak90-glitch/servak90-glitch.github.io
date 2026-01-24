@@ -256,7 +256,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'bit_12',
     componentBId: 'bit_12',
     catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 },
-    condition: { type: 'DEPTH_REACHED', target: 100000, description: 'Достигните глубины 100,000м' },
+    condition: { type: 'DEPTH_REACHED', target: 100000, description: { RU: 'Достигните глубины 100,000м', EN: 'Reach depth 100,000m' } },
     description: { RU: 'Два Антиматериевых пера создают Разлом Реальности', EN: 'Two Antimatter Nibs create Reality Breach' }
   },
   {
@@ -265,7 +265,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'bit_13',
     componentBId: 'bit_13',
     catalyst: { resource: ResourceType.NANO_SWARM, amount: 2000 },
-    condition: { type: 'ZERO_HEAT', target: 0, description: 'Слияние при нулевом нагреве' },
+    condition: { type: 'ZERO_HEAT', target: 0, description: { RU: 'Слияние при нулевом нагреве', EN: 'Fusion at zero heat' } },
     description: { RU: 'Два Разлома создают Спираль Судьбы', EN: 'Two Breaches create Spiral of Fate' }
   },
   {
@@ -274,7 +274,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'bit_14',
     componentBId: 'bit_14',
     catalyst: { resource: ResourceType.DIAMONDS, amount: 500 },
-    condition: { type: 'NO_DAMAGE', target: 100, description: 'Слияние при 100% HP' },
+    condition: { type: 'NO_DAMAGE', target: 100, description: { RU: 'Слияние при 100% HP', EN: 'Fusion at 100% HP' } },
     description: { RU: 'Две Спирали создают Пронзающий Пустоту', EN: 'Two Spirals create Void Piercer' }
   },
 
@@ -285,7 +285,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'eng_12',
     componentBId: 'eng_12',
     catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1500 },
-    condition: { type: 'MAX_HEAT', target: 100, description: 'Слияние при максимальном нагреве' },
+    condition: { type: 'MAX_HEAT', target: 100, description: { RU: 'Слияние при максимальном нагреве', EN: 'Fusion at max heat' } },
     description: { RU: 'Две Темные материи создают Нулевую точку', EN: 'Two Dark Matters create Zero Point' }
   },
   {
@@ -294,7 +294,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'fus_eng_13',
     componentBId: 'fus_eng_13',
     catalyst: { resource: ResourceType.NANO_SWARM, amount: 3000 },
-    condition: { type: 'DEPTH_REACHED', target: 150000, description: 'Достигните глубины 150,000м' },
+    condition: { type: 'DEPTH_REACHED', target: 150000, description: { RU: 'Достигните глубины 150,000м', EN: 'Reach depth 150,000m' } },
     description: { RU: 'Две Нулевые точки создают Квантовый суперпозитор', EN: 'Two Zero Points create Quantum Superpositor' }
   },
   {
@@ -313,7 +313,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'cool_12',
     componentBId: 'cool_12',
     catalyst: { resource: ResourceType.ICE, amount: 5000 },
-    condition: { type: 'ZERO_HEAT', target: 0, description: 'Слияние при нулевом нагреве' },
+    condition: { type: 'ZERO_HEAT', target: 0, description: { RU: 'Слияние при нулевом нагреве', EN: 'Fusion at zero heat' } },
     description: { RU: 'Два Стрингера Пустоты создают Энтропийный якорь', EN: 'Two Void Stringers create Entropy Anchor' }
   },
   {
@@ -340,7 +340,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'hull_12',
     componentBId: 'hull_12',
     catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2000 },
-    condition: { type: 'NO_DAMAGE', target: 100, description: 'Слияние при 100% HP' },
+    condition: { type: 'NO_DAMAGE', target: 100, description: { RU: 'Слияние при 100% HP', EN: 'Fusion at 100% HP' } },
     description: { RU: 'Два Зеркала создают Ковчег Предтеч', EN: 'Two Mirrors create Ark of the Precursors' }
   },
   {
@@ -349,7 +349,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'hull_13',
     componentBId: 'hull_13',
     catalyst: { resource: ResourceType.NANO_SWARM, amount: 4000 },
-    condition: { type: 'DEPTH_REACHED', target: 200000, description: 'Достигните глубины 200,000м' },
+    condition: { type: 'DEPTH_REACHED', target: 200000, description: { RU: 'Достигните глубины 200,000м', EN: 'Reach depth 200,000m' } },
     description: { RU: 'Два Ковчега создают Сингулярную оболочку', EN: 'Two Arks create Singular Shell' }
   },
   {
@@ -368,7 +368,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'cpu_12',
     componentBId: 'cpu_12',
     catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1200 },
-    condition: { type: 'DEPTH_REACHED', target: 120000, description: 'Достигните глубины 120,000м' },
+    condition: { type: 'DEPTH_REACHED', target: 120000, description: { RU: 'Достигните глубины 120,000м', EN: 'Reach depth 120,000m' } },
     description: { RU: 'Два Предсказателя создают Систему "Доминация"', EN: 'Two Forecasters create System "Domination"' }
   },
   {
@@ -377,7 +377,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'cpu_13',
     componentBId: 'cpu_13',
     catalyst: { resource: ResourceType.NANO_SWARM, amount: 2500 },
-    condition: { type: 'ZERO_HEAT', target: 0, description: 'Слияние при нулевом нагреве' },
+    condition: { type: 'ZERO_HEAT', target: 0, description: { RU: 'Слияние при нулевом нагреве', EN: 'Fusion at zero heat' } },
     description: { RU: 'Две Системы создают Матрицу Братана', EN: 'Two Systems create Brotan Matrix' }
   },
   {
@@ -396,7 +396,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'ctrl_12',
     componentBId: 'ctrl_12',
     catalyst: { resource: ResourceType.NANO_SWARM, amount: 1500 },
-    condition: { type: 'ZERO_HEAT', target: 0, description: 'Слияние при нулевом нагреве' },
+    condition: { type: 'ZERO_HEAT', target: 0, description: { RU: 'Слияние при нулевом нагреве', EN: 'Fusion at zero heat' } },
     description: { RU: 'Два Волевых интерфейса создают Симбиоз', EN: 'Two Will Interfaces create Symbiosis' }
   },
   {
@@ -423,7 +423,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'gear_12',
     componentBId: 'gear_12',
     catalyst: { resource: ResourceType.DIAMONDS, amount: 300 },
-    condition: { type: 'MAX_HEAT', target: 100, description: 'Слияние при максимальном нагреве' },
+    condition: { type: 'MAX_HEAT', target: 100, description: { RU: 'Слияние при максимальном нагреве', EN: 'Fusion at max heat' } },
     description: { RU: 'Два Вариатора "Тьма" создают Разрушитель связей', EN: 'Two Variators "Darkness" create Bond Breaker' }
   },
   {
@@ -450,7 +450,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'pwr_12',
     componentBId: 'pwr_12',
     catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1800 },
-    condition: { type: 'NO_DAMAGE', target: 100, description: 'Слияние при 100% HP' },
+    condition: { type: 'NO_DAMAGE', target: 100, description: { RU: 'Слияние при 100% HP', EN: 'Fusion at 100% HP' } },
     description: { RU: 'Две Сингулярности создают Энергию Пустоты', EN: 'Two Singularities create Void Energy' }
   },
   {
@@ -477,7 +477,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'arm_12',
     componentBId: 'arm_12',
     catalyst: { resource: ResourceType.EMERALDS, amount: 300 },
-    condition: { type: 'DEPTH_REACHED', target: 180000, description: 'Достигните глубины 180,000м' },
+    condition: { type: 'DEPTH_REACHED', target: 180000, description: { RU: 'Достигните глубины 180,000м', EN: 'Reach depth 180,000m' } },
     description: { RU: 'Два Пространственных сдвига создают Щит "Абсолют"', EN: 'Two Spatial Shifts create Shield "Absolute"' }
   },
   {
@@ -486,7 +486,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'arm_13',
     componentBId: 'arm_13',
     catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2500 },
-    condition: { type: 'NO_DAMAGE', target: 100, description: 'Слияние при 100% HP' },
+    condition: { type: 'NO_DAMAGE', target: 100, description: { RU: 'Слияние при 100% HP', EN: 'Fusion at 100% HP' } },
     description: { RU: 'Два Щита создают Фрактальную броню', EN: 'Two Shields create Fractal Armor' }
   },
   {
@@ -505,7 +505,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentAId: 'cargo_12',
     componentBId: 'cargo_12',
     catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2500 },
-    condition: { type: 'ZERO_HEAT', target: 0, description: 'Слияние при нулевом нагреве' },
+    condition: { type: 'ZERO_HEAT', target: 0, description: { RU: 'Слияние при нулевом нагреве', EN: 'Fusion at zero heat' } },
     description: { RU: 'Два Подпространственных склада создают Квантовый накопитель', EN: 'Two Subspace Warehouses create Quantum Accumulator' }
   },
   {

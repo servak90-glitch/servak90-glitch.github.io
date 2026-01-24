@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { useDrillState, useCombatState, useCombatActions, useDrillActions } from '../store/selectors';
+import { useDrillStats, useDrillDynamic, useCombatState, useCombatActions, useDrillActions, useAbilities } from '../store/selectors';
 import { formatCompactNumber } from '../services/gameMath';
 import { calculateShieldRechargeCost } from '../services/gameMath';
 import { abilitySystem } from '../services/systems/AbilitySystem';
@@ -8,7 +8,20 @@ import { checkWeakness } from '../services/systems/CombatSystem';
 import { AbilityType } from '../types';
 import BossOverlay from './BossOverlay';
 import { t } from '../services/localization';
-
+import {
+    Zap,
+    Flame,
+    Shield,
+    TrendingUp,
+    Target,
+    Lock,
+    BatteryCharging,
+    Sword,
+    AlertCircle,
+    Activity,
+    ShieldAlert
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CombatOverlayProps {
     onDrillStart: (e: any) => void;
@@ -16,154 +29,259 @@ interface CombatOverlayProps {
     onRechargeShield: () => void;
 }
 
+const AbilityIcons: Record<AbilityType, React.ReactNode> = {
+    'EMP_BURST': <Zap className="w-5 h-5" />,
+    'THERMAL_STRIKE': <Flame className="w-5 h-5" />,
+    'BARRIER': <Shield className="w-5 h-5" />,
+    'OVERLOAD': <TrendingUp className="w-5 h-5" />
+};
+
 const CombatOverlay: React.FC<CombatOverlayProps> = ({ onDrillStart, onDrillEnd, onRechargeShield }) => {
-    // Selectors
     const { currentBoss } = useCombatState();
-    const { depth, heat, shieldCharge, resources } = useDrillState();
-    const { isDrilling, isOverheated } = useDrillActions();
-    const lang = useGameStore(state => state.settings.language);
+    const { resources } = useDrillStats();
+    const { depth, heat, shieldCharge } = useDrillDynamic();
+    const { isDrilling } = useDrillActions();
 
+    const lang = useGameStore(s => s.settings.language);
+    const { activeAbilities, activateAbility } = useAbilities();
+    const { damageWeakPoint } = useCombatActions();
 
-    // We need active abilities from state
-    const activeAbilities = useGameStore(state => state.activeAbilities || []);
-
-    // Derived
-    const rechargeCost = calculateShieldRechargeCost(depth);
-    const canAffordRecharge = resources[rechargeCost.resource] >= rechargeCost.cost;
+    const rechargeCost = useMemo(() => calculateShieldRechargeCost(depth), [depth]);
+    const canAffordRecharge = useMemo(() => resources[rechargeCost.resource] >= rechargeCost.cost, [resources, rechargeCost]);
 
     if (!currentBoss) return null;
 
     const hpPercent = (currentBoss.currentHp / currentBoss.maxHp) * 100;
-
-    // Ability Handlers
-    const activateAbility = useGameStore(state => state.activateAbility);
-
-    const handleAbilityClick = (id: AbilityType) => {
-        activateAbility(id);
-    };
-
-    const abilitiesStart = ['EMP_BURST', 'THERMAL_STRIKE', 'BARRIER', 'OVERLOAD'] as AbilityType[];
+    const isCritical = hpPercent < 25;
+    const abilitiesOrder = ['EMP_BURST', 'THERMAL_STRIKE', 'BARRIER', 'OVERLOAD'] as AbilityType[];
 
     return (
-        <>
-            {/* BOSS HEALTH BAR */}
-            <div className="absolute top-4 left-0 right-0 z-30 flex flex-col items-center px-4 pointer-events-auto">
-                <h2 className={`text-lg md:text-2xl font-black pixel-text mb-2 drop-shadow-[0_0_10px_red] text-center ${currentBoss.isMob ? 'text-orange-500' : 'text-red-600'}`}>
-                    {t(currentBoss.name, lang)}
+        <div className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-between p-4 pb-12 overflow-hidden">
+            {/* BOSS HUD */}
+            <div className="w-full max-w-2xl animate-in slide-in-from-top-8 duration-700 pointer-events-auto">
+                <div className={`glass-panel p-5 border-t-2 relative overflow-hidden transition-colors duration-500
+                    ${currentBoss.isMob ? 'border-orange-500/50 bg-orange-950/10' :
+                        isCritical ? 'border-rose-600 bg-rose-950/20 shadow-[0_0_30px_rgba(225,29,72,0.2)]' : 'border-rose-500/50 bg-rose-950/10'}
+                `}>
+                    {/* Background Noise Effect */}
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none" />
 
-                    {currentBoss.phases && currentBoss.phases[0] > 1 && <span className="text-sm ml-2 animate-pulse text-yellow-400">PHASE {currentBoss.phases[0]}</span>}
-                </h2>
-                <div className="w-full max-w-lg h-4 md:h-8 bg-black border-2 border-red-800 relative overflow-hidden">
-                    {currentBoss.isInvulnerable && <div className="absolute inset-0 bg-cyan-500/50 z-10 flex items-center justify-center animate-pulse"><span className="text-[10px] font-black text-white tracking-widest bg-black/50 px-2">ЩИТ</span></div>}
-                    <div className="h-full bg-red-600 transition-all duration-200" style={{ width: `${hpPercent}%` }} />
+                    <div className="flex justify-between items-end mb-4 relative z-10">
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <Activity className={`w-3.5 h-3.5 ${isCritical ? 'text-rose-500 animate-pulse' : 'text-rose-400/60'}`} />
+                                <span className={`text-[10px] font-technical uppercase tracking-[0.3em] ${isCritical ? 'text-rose-500 font-black' : 'text-rose-400/60'}`}>
+                                    {isCritical ? 'CRITICAL_INTEGRITY_FAILURE' : 'HIGH_THREAT_ENTITY_DETECTED'}
+                                </span>
+                            </div>
+                            <h2 className={`text-xl md:text-4xl font-black font-technical tracking-tighter uppercase 
+                                ${currentBoss.isMob ? 'text-orange-400 neon-text-orange' : 'text-white neon-text-red'}
+                            `}>
+                                {t(currentBoss.name, lang as 'RU' | 'EN').toUpperCase()}
+                            </h2>
+                        </div>
+                        <div className="text-right flex flex-col items-end">
+                            <span className="text-[10px] font-technical text-white/40 uppercase tracking-widest mb-1.5">Hull_Structure</span>
+                            <div className="flex items-baseline gap-1">
+                                <span className={`text-2xl md:text-3xl font-black font-technical tracking-tighter ${isCritical ? 'text-rose-500' : 'text-white'}`}>
+                                    {Math.ceil(hpPercent)}
+                                </span>
+                                <span className="text-xs font-bold text-rose-500/60">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Pro Segmented HP BAR */}
+                    <div className="w-full h-5 md:h-7 bg-black/60 rounded-sm border border-white/10 relative overflow-hidden">
+                        {currentBoss.isInvulnerable && (
+                            <div className="absolute inset-0 bg-cyan-500/40 z-20 flex items-center justify-center animate-pulse">
+                                <Lock className="w-4 h-4 text-white mr-2" />
+                                <span className="text-xs font-black text-white tracking-[0.3em]">ARMOR_LOCK_ACTIVE</span>
+                            </div>
+                        )}
+
+                        {/* HP Segments overlay */}
+                        <div className="absolute inset-0 flex gap-[2px] z-10 opacity-30 pointer-events-none">
+                            {[...Array(30)].map((_, i) => (
+                                <div key={i} className="flex-1 h-full border-r border-black/40" />
+                            ))}
+                        </div>
+
+                        <div
+                            className={`h-full transition-all duration-500 relative shadow-lg
+                                ${isCritical ? 'bg-gradient-to-r from-rose-700 via-rose-500 to-rose-400' : 'bg-gradient-to-r from-rose-900 via-rose-600 to-rose-500'}
+                            `}
+                            style={{ width: `${hpPercent}%` }}
+                        >
+                            {/* Inner Shimmer */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] animate-shimmer" />
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* BOSS WEAK POINTS OVERLAY */}
-            <BossOverlay onWeakPointClick={useGameStore(s => s.damageWeakPoint)} />
+            <BossOverlay onWeakPointClick={damageWeakPoint} />
 
-            {/* ABILITIES BAR */}
-            <div className="absolute top-24 right-4 z-40 flex flex-col gap-2 pointer-events-auto">
-                {abilitiesStart.map((id, idx) => {
+            {/* STRATEGIC ABILITIES (Floating Bento Right) */}
+            <div className="absolute top-1/2 -translate-y-1/2 right-2 md:right-6 z-40 flex flex-col gap-2 md:gap-4 pointer-events-auto">
+                {abilitiesOrder.map((id, idx) => {
                     const def = abilitySystem.getAbilityDef(id);
                     const state = activeAbilities.find(a => a.id === id);
                     const cooldown = state ? state.cooldownRemaining : 0;
                     const isActive = state ? state.isActive : false;
                     const onCooldown = cooldown > 0;
-
-                    if (!def) return null; // Safety
+                    if (!def) return null;
 
                     const isEffective = currentBoss && checkWeakness(currentBoss.type, id);
 
                     return (
-                        <button
-                            key={id}
-                            onClick={() => handleAbilityClick(id)}
-                            disabled={onCooldown || isActive}
-                            className={`relative w-12 h-12 md:w-14 md:h-14 border-2 flex items-center justify-center transition-all active:scale-95
-                                ${isActive ? 'border-yellow-400 bg-yellow-900/50 animate-pulse' :
-                                    onCooldown ? 'border-zinc-700 bg-zinc-900 opacity-50 cursor-not-allowed' :
-                                        isEffective ? 'border-green-400 bg-green-900/40 shadow-[0_0_15px_rgba(74,222,128,0.5)] animate-pulse' :
-                                            'border-cyan-600 bg-black hover:bg-cyan-900/50 text-white'}
-                            `}
-                        >
-                            <span className={`text-xl md:text-2xl ${isEffective ? 'scale-110' : ''}`}>{def.icon}</span>
-
-                            {/* Hotkey Number */}
-                            <span className="absolute top-0 left-1 text-[8px] font-mono text-zinc-500">{idx + 1}</span>
-
-                            {/* Effectiveness Indicator */}
-                            {isEffective && (
-                                <div className="absolute -top-2 -right-2 text-[8px] md:text-[10px] bg-green-500 text-black px-1 font-bold rounded z-10">
-                                    CRIT
+                        <div key={id} className="relative group">
+                            <button
+                                onClick={() => activateAbility(id)}
+                                disabled={onCooldown || isActive}
+                                className={`
+                                    w-12 h-12 md:w-16 md:h-16 glass-panel flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group/btn
+                                    ${isActive ? 'border-yellow-400 bg-yellow-400/20 shadow-[0_0_20px_rgba(250,204,21,0.3)]' :
+                                        onCooldown ? 'opacity-30 blur-[0.5px] cursor-not-allowed' :
+                                            isEffective ? 'border-green-400 bg-green-400/10 shadow-[0_0_15px_rgba(74,222,128,0.2)]' :
+                                                'hover:border-white/40 hover:bg-white/10'}
+                                `}
+                            >
+                                <div className={`transition-transform duration-300 group-hover/btn:scale-110 ${isActive ? 'text-yellow-400' : isEffective ? 'text-green-400' : 'text-white/70'} [&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5`}>
+                                    {AbilityIcons[id]}
                                 </div>
-                            )}
+                                <span className={`hidden md:block text-[7px] font-black font-technical tracking-widest mt-1.5 ${isActive ? 'text-yellow-400' : 'text-white/20'}`}>
+                                    {id.split('_')[0]}
+                                </span>
 
-                            {/* Cooldown Overlay */}
-                            {onCooldown && (
-                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center font-bold text-lg md:text-xl text-white drop-shadow-md">
-                                    {Math.ceil(cooldown / 1000)}
+                                {/* Cooldown Overlay */}
+                                {onCooldown && (
+                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center">
+                                        <span className="text-sm md:text-xl font-black font-technical text-white/80">{Math.ceil(cooldown / 1000)}</span>
+                                    </div>
+                                )}
+
+                                {/* Slot Indicator */}
+                                <div className="absolute top-1 right-1.5 text-[7px] font-black font-technical text-white/10 uppercase italic">
+                                    SYS_{idx + 1}
                                 </div>
-                            )}
+                            </button>
 
-                            {/* Heat Cost */}
-                            <div className="absolute -bottom-2 right-0 bg-black text-[10px] sm:text-xs font-bold text-red-400 px-1 border border-red-900/50 shadow-sm z-20">
-                                {def.heatCost > 0 ? `+${def.heatCost}H` : ''}
-                                {def.heatCost < 0 ? `${def.heatCost}H` : ''}
+                            {/* Tooltip Hover Overlay */}
+                            <div className="absolute left-0 -translate-x-full top-1/2 -translate-y-1/2 pr-4 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                                <div className="glass-panel py-2 px-4 border-white/10 bg-black/80 whitespace-nowrap">
+                                    <div className="text-[10px] font-black font-technical text-white uppercase mb-1">{t(def.name as any, lang)}</div>
+                                    <div className={`text-[8px] font-bold font-technical ${def.heatCost > 0 ? 'text-rose-400' : 'text-cyan-400'}`}>
+                                        {def.heatCost > 0 ? `Thermal Load: +${def.heatCost}%` : `System Efficiency: ${def.heatCost}%`}
+                                    </div>
+                                </div>
                             </div>
-                        </button>
+                        </div>
                     );
                 })}
             </div>
 
+            {/* ACTION CONTROLS HUD */}
+            <div className="w-full max-w-4xl flex items-end justify-between pointer-events-auto mt-auto gap-4">
 
-            {/* BOTTOM CONTROLS (Attack & Shield) */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto flex items-end gap-4">
-
-                {/* EMERGENCY RECHARGE BUTTON */}
-                <button
-                    onClick={onRechargeShield}
-                    disabled={!canAffordRecharge}
-                    className={`w-12 h-12 rounded-full border-2 flex flex-col items-center justify-center bg-black/80 mb-2 transition-all active:scale-95
-                ${canAffordRecharge ? 'border-yellow-500 text-yellow-400 hover:bg-yellow-900/50' : 'border-zinc-800 text-zinc-600 opacity-50'}
-            `}
-                >
-                    <span className="text-xl">⚡</span>
-                    <span className="text-[8px] font-bold">{rechargeCost.cost > 0 ? formatCompactNumber(rechargeCost.cost) : 'FREE'}</span>
-                </button>
-
-                <div className="relative">
+                {/* RECHARGE MODULE */}
+                <div className="flex flex-col items-center gap-3 w-32">
                     <button
-                        className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 shadow-[0_0_20px_rgba(255,0,0,0.5)] flex items-center justify-center pixel-text text-sm md:text-lg font-black tracking-widest transition-transform active:scale-95 touch-none select-none
-                    ${heat > 90 ? 'bg-red-900 border-red-500 text-red-100 animate-pulse' : 'bg-red-950 border-red-800 text-red-500 hover:border-red-400 hover:text-white'}
-                    ${isDrilling ? 'scale-95 border-red-400 text-white bg-red-900 shadow-[0_0_30px_rgba(255,0,0,0.5)]' : ''}
-                    ${currentBoss.isInvulnerable ? 'opacity-50 cursor-not-allowed border-zinc-600' : ''}
-                `}
+                        onClick={onRechargeShield}
+                        disabled={!canAffordRecharge}
+                        className={`
+                            group relative w-16 h-16 rounded-full glass-panel flex items-center justify-center transition-all active:scale-95
+                            ${canAffordRecharge ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]' : 'opacity-20 cursor-not-allowed grayscale'}
+                        `}
+                    >
+                        <BatteryCharging className={`w-8 h-8 transition-transform group-hover:scale-110 ${canAffordRecharge ? 'animate-pulse' : ''}`} />
+                        <div className="absolute -bottom-1 glass-panel px-2 py-0.5 border-cyan-500/30 text-[9px] font-black text-white bg-black/80">
+                            {rechargeCost.cost > 0 ? formatCompactNumber(rechargeCost.cost) : 'FREE'}
+                        </div>
+                    </button>
+                    <div className="text-center">
+                        <span className="text-[9px] font-technical font-black text-cyan-400/40 uppercase tracking-[0.2em] block">Shield_Regen</span>
+                    </div>
+                </div>
+
+                {/* CENTRAL ATTACK CONSOLE */}
+                <div className="relative group">
+                    {/* Ring Indicators Container */}
+                    <div className="absolute inset-0 -m-8 pointer-events-none">
+                        {/* Static Outer Ring */}
+                        <div className="absolute inset-0 rounded-full border border-white/5 scale-110" />
+                        {/* Dynamic Shield Ring */}
+                        <svg className="absolute inset-0 w-full h-full -rotate-90 scale-125" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+                            <circle
+                                cx="50" cy="50" r="46" fill="none"
+                                stroke={shieldCharge < 30 ? '#f43f5e' : isDrilling ? '#22d3ee' : '#3b82f6'}
+                                strokeWidth="3"
+                                strokeDasharray="289"
+                                strokeDashoffset={289 * (1 - shieldCharge / 100)}
+                                className="transition-all duration-300"
+                                style={{ filter: 'drop-shadow(0 0 8px currentColor)' }}
+                            />
+                        </svg>
+                    </div>
+
+                    <button
+                        className={`
+                            w-40 h-40 md:w-52 md:h-52 rounded-full glass-panel border-4 flex flex-col items-center justify-center transition-all active:scale-90 select-none relative z-10 overflow-hidden
+                            ${heat > 85 ? 'border-rose-500 bg-rose-500/10 animate-pulse' : 'border-cyan-500/40 bg-white/5'}
+                            ${isDrilling ? 'shadow-[0_0_60px_rgba(34,211,238,0.2)]' : ''}
+                            ${currentBoss.isInvulnerable ? 'opacity-50 grayscale' : ''}
+                        `}
                         onPointerDown={onDrillStart}
                         onPointerUp={onDrillEnd}
                         onPointerLeave={onDrillEnd}
                     >
-                        {currentBoss.isInvulnerable ? 'ЗАЩИТА' : 'АТАКА'}
+                        {/* Status Label */}
+                        <div className="absolute top-8 text-[9px] font-black font-technical text-white/20 uppercase tracking-[0.4em]">Combat_Link</div>
 
-                        {/* SHIELD CAPACITOR INDICATOR (RING) */}
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none -rotate-90 scale-110" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="48" fill="none" stroke="#222" strokeWidth="3" />
-                            <circle
-                                cx="50" cy="50" r="48" fill="none"
-                                stroke={shieldCharge < 25 ? '#ef4444' : isDrilling ? '#22c55e' : '#3b82f6'}
-                                strokeWidth="4"
-                                strokeDasharray="301.59"
-                                strokeDashoffset={301.59 * (1 - shieldCharge / 100)}
-                                className="transition-all duration-100"
-                            />
-                        </svg>
+                        <div className={`my-2 transition-all duration-500 ${isDrilling ? 'scale-125 rotate-[15deg] text-cyan-400' : 'text-white'}`}>
+                            {currentBoss.isInvulnerable ? <ShieldAlert className="w-14 h-14" /> : <Sword className="w-16 h-16" />}
+                        </div>
+
+                        <div className="flex flex-col items-center">
+                            <span className="text-lg md:text-xl font-black tracking-[0.2em] font-technical text-white uppercase italic">
+                                {currentBoss.isInvulnerable ? 'DEFENDING' : isDrilling ? 'STRIKING' : 'STANDBY'}
+                            </span>
+                            <span className="text-[10px] font-bold font-technical text-cyan-400">
+                                {Math.floor(shieldCharge)}% ENERGY
+                            </span>
+                        </div>
+
+                        {/* Shimmer Effect when active */}
+                        {isDrilling && <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/20 via-transparent to-transparent animate-pulse" />}
                     </button>
-                    <div className="absolute -top-6 left-0 right-0 text-center text-[10px] font-bold text-cyan-400">
-                        {Math.floor(shieldCharge)}%
+
+                    {/* HEAT WARNING */}
+                    <AnimatePresence>
+                        {heat > 80 && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                                className="absolute -top-12 left-1/2 -translate-x-1/2 glass-panel px-4 py-2 border-rose-500 bg-rose-500/20 text-rose-500 font-black font-technical text-xs tracking-widest whitespace-nowrap animate-pulse"
+                            >
+                                <AlertCircle className="w-3.5 h-3.5 inline-block mr-2" />
+                                OVERHEAT_WARNING
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                {/* SENSOR ARRAY (Diagnostic) */}
+                <div className="flex flex-col items-center gap-3 w-32 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
+                    <div className="w-16 h-16 rounded-full glass-panel flex items-center justify-center border-rose-500/30">
+                        <Target className="w-8 h-8 text-rose-500/60" />
+                    </div>
+                    <div className="text-center">
+                        <span className="text-[9px] font-technical font-black text-rose-400/40 uppercase tracking-[0.2em] block">Sensor_Array</span>
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 

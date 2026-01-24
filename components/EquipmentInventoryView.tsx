@@ -6,7 +6,7 @@ import { WeightBar } from './equipment/WeightBar';
 import { EquipmentDoll } from './equipment/EquipmentDoll';
 import { DrillSlot, InventoryItem } from '../types';
 import { ARTIFACTS, getArtifactColor } from '../services/artifactRegistry';
-import { t } from '../services/localization';
+import { t, TL } from '../services/localization';
 
 interface EquipmentInventoryViewProps {
     onClose: () => void;
@@ -52,16 +52,16 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
     }, [artifactItems]);
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-0 md:p-4">
             <div
-                className="bg-[#0a0e17] border-2 border-[#3b82f6] rounded-lg p-4 md:p-6 max-w-6xl w-full h-[95vh] md:h-[90vh] flex flex-col overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.3)]"
+                className="bg-[#0a0e17] md:border-2 md:border-[#3b82f6] md:rounded-lg p-4 md:p-6 w-full h-full md:max-w-6xl md:h-[90vh] flex flex-col overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.3)]"
             >
                 {/* Header */}
-                <div className="flex justify-between items-center mb-4 shrink-0">
+                <div className="flex justify-between items-center mb-6 md:mb-4 shrink-0">
                     <div className="flex items-center gap-3">
-                        <span className="text-2xl md:text-3xl">⚙️</span>
-                        <h2 className="text-xl md:text-3xl font-bold text-[#3b82f6] font-['Inter'] uppercase tracking-tighter">
-                            {lang === 'RU' ? 'ИНВЕНТАРЬ И АРХИВ' : 'INVENTORY & ARCHIVE'}
+                        <span className="text-xl md:text-3xl">⚙️</span>
+                        <h2 className="text-base md:text-3xl font-black text-[#3b82f6] font-technical uppercase tracking-tighter italic">
+                            {t(TL.ui.inventoryTitle, lang)}
                         </h2>
                     </div>
                     <button
@@ -86,7 +86,7 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                 {/* ↔️ ЗОНА 2: Quick Access (10% высоты) */}
                 <div className="h-[12%] md:h-[10%] mb-4 border border-gray-700/30 rounded-lg p-2 bg-gray-900/10 shrink-0">
                     <div className="text-[10px] text-gray-500 mb-1 uppercase tracking-widest font-bold">
-                        {lang === 'RU' ? 'БЫСТРЫЙ ДОСТУП (Q | E | R | F)' : 'QUICK ACCESS (Q | E | R | F)'}
+                        {t(TL.ui.quickAccess, lang)} (Q | E | R | F)
                     </div>
                     <div className="grid grid-cols-4 gap-2 h-10 md:h-12">
                         {['Q', 'E', 'R', 'F'].map((key, idx) => {
@@ -108,7 +108,7 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                                         </div>
                                     ) : (
                                         <span className="text-gray-600 text-[10px] uppercase font-bold group-hover:text-gray-400 transition-colors">
-                                            {lang === 'RU' ? 'Пусто' : 'Empty'}
+                                            {t(TL.ui.empty_label, lang)}
                                         </span>
                                     )}
                                 </div>
@@ -125,13 +125,13 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                             onClick={() => setTab('EQUIPMENT')}
                             className={`px-4 py-1.5 rounded-t font-bold text-xs transition-all ${tab === 'EQUIPMENT' ? 'bg-[#3b82f6] text-white' : 'bg-gray-800 text-gray-500 hover:text-gray-300'}`}
                         >
-                            {lang === 'RU' ? '🔧 ОБОРУДОВАНИЕ' : '🔧 EQUIPMENT'}
+                            {t(TL.ui.equipmentTab, lang)}
                         </button>
                         <button
                             onClick={() => setTab('ARTIFACTS')}
                             className={`px-4 py-1.5 rounded-t font-bold text-xs transition-all ${tab === 'ARTIFACTS' ? 'bg-[#10b981] text-white' : 'bg-gray-800 text-gray-500 hover:text-gray-300'}`}
                         >
-                            {lang === 'RU' ? '💎 АРТЕФАКТЫ' : '💎 ARTIFACTS'}
+                            {t(TL.ui.artifactsTab, lang)}
                         </button>
                     </div>
 
@@ -141,12 +141,12 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                                 <WeightBar />
                                 <div className="flex justify-between items-center mb-3 mt-2">
                                     <div className="text-xs text-gray-400 uppercase font-bold tracking-wider">
-                                        {lang === 'RU' ? 'Склад Оборудования' : 'Equipment Storage'} {selectedSlot && <span className="text-[#3b82f6]">/ {selectedSlot.toUpperCase()}</span>}
+                                        {t(TL.ui.equipmentStorage, lang)} {selectedSlot && <span className="text-[#3b82f6]">/ {selectedSlot.toUpperCase()}</span>}
                                         <span className="ml-2 text-gray-600">({filteredEquipment.length})</span>
                                     </div>
                                     {selectedSlot && (
                                         <button onClick={() => setSelectedSlot(null)} className="text-[#3b82f6] text-[10px] uppercase font-bold hover:underline">
-                                            {lang === 'RU' ? 'Сбросить фильтр' : 'Reset filter'}
+                                            {t(TL.ui.resetFilter, lang)}
                                         </button>
                                     )}
                                 </div>
@@ -159,7 +159,7 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                                 {filteredEquipment.length === 0 && (
                                     <div className="flex flex-col items-center justify-center py-12 text-gray-600 border-2 border-dashed border-gray-800 rounded-lg">
                                         <span className="text-4xl mb-2 opacity-20">📦</span>
-                                        <p className="text-sm">{lang === 'RU' ? 'Ничего не найдено' : 'Nothing found'}</p>
+                                        <p className="text-sm">{t(TL.ui.noItemsFound, lang)}</p>
                                     </div>
                                 )}
                             </>
@@ -205,7 +205,7 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                                                     </>
                                                 ) : (
                                                     <p className="text-[10px] text-zinc-500 italic">
-                                                        {isAnalyzing ? (lang === 'RU' ? 'Выполняется анализ...' : 'Analyzing...') : (lang === 'RU' ? 'Требуется анализ' : 'Analysis required')}
+                                                        {isAnalyzing ? t(TL.ui.analyzing, lang) : t(TL.ui.analysisRequired, lang)}
                                                     </p>
                                                 )}
                                             </div>

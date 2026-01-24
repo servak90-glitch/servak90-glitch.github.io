@@ -307,14 +307,31 @@ export function rollRandomEvent(
  */
 
 // Реестр предопределённых эффектов для lookup по effectId
-const EFFECT_PRESETS: Record<string, { type: 'BUFF' | 'DEBUFF' | 'NEUTRAL' | 'ANOMALY'; value: number; name: string; description: string; duration: number }> = {
-    'BAR_XP_BOOST': { type: 'BUFF', value: 25, name: 'XP Boost', description: '+25% XP за 5 минут', duration: 300 },
-    'BAR_DRILL_BOOST': { type: 'BUFF', value: 20, name: 'Drill Boost', description: '+20% скорости бурения', duration: 300 },
-    'BAR_LUCK_BOOST': { type: 'BUFF', value: 15, name: 'Fortune', description: '+15% к удаче', duration: 300 },
-    'JEWELER_CRIT': { type: 'BUFF', value: 10, name: 'Critical Eye', description: '+10% крит шанс', duration: 600 },
-    'OVERHEAT_DEBUFF': { type: 'DEBUFF', value: -20, name: 'Overheated', description: '-20% охлаждения', duration: 60 },
-    'RADIATION_SICKNESS': { type: 'ANOMALY', value: -10, name: 'Radiation', description: 'Радиационное заражение', duration: 120 },
-    'VOID_BLESSING': { type: 'ANOMALY', value: 50, name: 'Void Blessing', description: 'Благословение Пустоты', duration: 180 }
+const EFFECT_PRESETS: Record<string, { type: 'BUFF' | 'DEBUFF' | 'NEUTRAL' | 'ANOMALY'; value: number; name: string; description: string; duration: number, modifiers: any }> = {
+    // BAR DRINKS
+    'BAR_OIL_STOUT': { type: 'BUFF', value: 1, name: 'Oil Stout', description: 'HP Regen Activated', duration: 300, modifiers: { heatGenMultiplier: 2.0 } },
+    'BAR_RUSTY_NAIL': { type: 'BUFF', value: 3, name: 'Rusty Nail', description: 'Click x3, Auto-drill x0.5', duration: 300, modifiers: { clickPowerMultiplier: 3.0, drillSpeedMultiplier: 0.5 } },
+    'BAR_NUCLEAR_WHISKEY': { type: 'BUFF', value: 5, name: 'Nuclear Whiskey', description: 'Speed x5, hull damage risk', duration: 60, modifiers: { drillSpeedMultiplier: 5.0 } },
+    'BAR_VOID_COCKTAIL': { type: 'BUFF', value: 10, name: 'Void Cocktail', description: 'Resources x10, blindness', duration: 180, modifiers: { resourceMultiplier: 10.0 } },
+
+    // PREMIUM BUFFS
+    'PREMIUM_NANO_REPAIR': { type: 'BUFF', value: 1, name: 'Nano-Repair', description: 'Auto-repair systems active', duration: 600, modifiers: {} }, // Handled in regeneration logic
+    'PREMIUM_DIAMOND_COAT': { type: 'BUFF', value: 2, name: 'Diamond Coating', description: 'Drilling Speed x2', duration: 300, modifiers: { drillSpeedMultiplier: 2.0 } },
+    'PREMIUM_VOID_SHIELD': { type: 'BUFF', value: 1.5, name: 'Void Shield', description: 'Defense +50%', duration: 180, modifiers: { defenseMultiplier: 1.5 } },
+    'PREMIUM_QUANTUM_LUCK': { type: 'BUFF', value: 100, name: 'Quantum Luck', description: 'Max Loot Chance', duration: 300, modifiers: { consumableDropMultiplier: 10.0, luckPctBoost: 50 } },
+    'PREMIUM_ABSOLUTE_ZERO': { type: 'BUFF', value: 0, name: 'Absolute Zero', description: 'Heat Generation Disabled', duration: 120, modifiers: { heatGenMultiplier: 0 } },
+    'PREMIUM_MAGNETIC_STORM': { type: 'BUFF', value: 3, name: 'Magnetic Storm', description: 'Resources x3', duration: 300, modifiers: { resourceMultiplier: 3.0 } },
+    'PREMIUM_OVERDRIVE': { type: 'BUFF', value: 5, name: 'Core Overdrive', description: 'Click Power x5', duration: 60, modifiers: { clickPowerMultiplier: 5.0 } },
+    'PREMIUM_CHRONOS': { type: 'BUFF', value: 3, name: 'Chronos Field', description: 'Auto-mining x3', duration: 300, modifiers: { drillSpeedMultiplier: 3.0 } },
+
+    // LEGACY & SPECIAL
+    'BAR_XP_BOOST': { type: 'BUFF', value: 25, name: 'XP Boost', description: '+25% XP за 5 минут', duration: 300, modifiers: { xpMultiplier: 1.25 } },
+    'BAR_DRILL_BOOST': { type: 'BUFF', value: 20, name: 'Drill Boost', description: '+20% скорости бурения', duration: 300, modifiers: { drillSpeedMultiplier: 1.2 } },
+    'BAR_LUCK_BOOST': { type: 'BUFF', value: 15, name: 'Fortune', description: '+15% к удаче', duration: 300, modifiers: { luckPctBoost: 15 } },
+    'JEWELER_CRIT': { type: 'BUFF', value: 10, name: 'Critical Eye', description: '+10% крит шанс', duration: 600, modifiers: { critChanceBoost: 10 } },
+    'OVERHEAT_DEBUFF': { type: 'DEBUFF', value: -20, name: 'Overheated', description: '-20% охлаждения', duration: 60, modifiers: { coolingMultiplier: 0.8 } },
+    'RADIATION_SICKNESS': { type: 'ANOMALY', value: -10, name: 'Radiation', description: 'Радиационное заражение', duration: 120, modifiers: { drillSpeedMultiplier: 0.9 } },
+    'VOID_BLESSING': { type: 'ANOMALY', value: 50, name: 'Void Blessing', description: 'Благословение Пустоты', duration: 180, modifiers: { resourceMultiplier: 1.5, drillSpeedMultiplier: 1.5 } }
 };
 
 export function createEffect(effectIdOrType: string, value?: number) {
@@ -329,7 +346,7 @@ export function createEffect(effectIdOrType: string, value?: number) {
                 name: preset.name,
                 description: preset.description,
                 duration: preset.duration,
-                modifiers: {}
+                modifiers: preset.modifiers || {}
             };
         }
         // Не найдено - возвращаем null

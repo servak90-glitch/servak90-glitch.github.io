@@ -3,14 +3,16 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useGameStore } from './store/gameStore';
 import {
     useGameCore,
-    useDrillState,
+    useDrillStats,
+    useDrillDynamic,
     useDrillActions,
     useCombatState,
     useCombatActions,
     useCityState,
     useCityActions,
     useSettingsActions,
-    useAIState
+    useAIState,
+    useStatsProperty
 } from './store/selectors';
 import { View, Language } from './types';
 import { calculateStats, calculateShieldRechargeCost, formatCompactNumber, calculateTotalFuel } from './services/gameMath';
@@ -18,6 +20,7 @@ import { BIOMES } from './constants';
 import { audioEngine } from './services/audioEngine';
 import { t, TEXT_IDS } from './services/localization';
 import { useResponsive } from './services/hooks/useResponsive';
+import { AlertTriangle } from 'lucide-react';
 
 // Components
 import DrillRenderer from './components/DrillRenderer';
@@ -47,7 +50,7 @@ import { QuickAccessBar } from './components/QuickAccessBar';
 import { PredictionAlert } from './components/PredictionAlert';
 import { DrillStatsPanel } from './components/DrillStatsPanel';
 
-const GAME_VERSION = "v4.5.0 (SURVIVAL & GREED)";
+const GAME_VERSION = "v5.1.0 (VISUAL REVOLUTION)";
 
 const TravelProgressMini = ({ travel, lang }: { travel: any, lang: string }) => {
     const [progress, setProgress] = useState(0);
@@ -121,12 +124,31 @@ const SideTunnelProgressMini = ({ tunnel, lang }: { tunnel: any, lang: string })
     );
 };
 
-const App: React.FC = () => {
-    // --- OPTIMIZED STORE ACCESS (Grouped Selectors) ---
-    const { isGameActive, activeView, settings, enterGame, manualLoad, tick } = useGameCore();
-    const lang = settings.language;
 
-    const { depth, heat, shieldCharge, resources, drill, xp, integrity, currentCargoWeight, sideTunnel } = useDrillState();
+const App: React.FC = () => {
+    // --- ATOMIC STORE ACCESS (Phase 4.1 Stability) ---
+    // Используем точечные селекторы для функций, чтобы они были 100% стабильны
+    const isGameActive = useGameStore(s => s.isGameActive);
+    const activeView = useGameStore(s => s.activeView);
+    // Атомарная подписка на язык, чтобы не ререндерить App при смене других настроек
+    const lang = useGameStore(s => s.settings.language);
+    const settings = useGameStore(s => s.settings);
+    const isZeroWeight = useGameStore(s => s.isZeroWeight);
+    const isInfiniteEnergy = useGameStore(s => s.isInfiniteEnergy);
+
+    const enterGame = useGameStore(s => s.enterGame);
+    const manualLoad = useGameStore(s => s.manualLoad);
+    const tick = useGameStore(s => s.tick);
+
+    // Групповые селекторы для статических данных (useShallow внутри selectors.ts)
+    const { drill, resources, xp, integrity, currentCargoWeight, sideTunnel } = useDrillStats();
+    // Извлекаем только нужные поля из stats атомарно, чтобы App не ререндерился на каждом тике
+    const totalCargoCapacity = useStatsProperty('totalCargoCapacity');
+    const energyProd = useStatsProperty('energyProd');
+    const energyCons = useStatsProperty('energyCons');
+    const maxIntegrity = useStatsProperty('integrity');
+
+    const { depth, heat, shieldCharge } = useDrillDynamic();
     const { isDrilling, isOverheated, setDrilling, manualClick, manualRechargeShield } = useDrillActions();
 
     const { currentBoss, combatMinigame, eventQueue, isCoolingGameActive, clickFlyingObject } = useCombatState();
@@ -241,7 +263,7 @@ const App: React.FC = () => {
                     // Drill tip is roughly at center X, 35% height + spread
                     if (e.position === 'DRILL_TIP') {
                         x = window.innerWidth / 2;
-                        y = window.innerHeight * 0.35 + 100; // Below center
+                        y = window.innerHeight * 0.35 + 205; // Calibrated for 0.45 scale
                     }
                     pixiOverlayRef.current?.emitParticle(x, y, e.color, e.kind, e.count);
                 }
@@ -320,18 +342,18 @@ const App: React.FC = () => {
     }, [isMobile]);
 
     // [DEV_CONTEXT: HARDCORE MATH] Added depth to stats calc
-    const stats = useMemo(() => calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth), [drill, skillLevels, equippedArtifacts, inventory, depth]);
-    const forgeStats = { prod: drill.power.baseStats.energyOutput, cons: stats.energyCons };
+    // stats is now replaced by atomic properties (Phase 4.1)
+    const forgeStats = { prod: drill.power.baseStats.energyOutput, cons: energyCons };
     const energyLoad = forgeStats.prod > 0 ? (forgeStats.cons / forgeStats.prod) * 100 : 100;
-    const isLowPower = energyLoad > 100;
+    const isLowPower = energyLoad > 100 && !isInfiniteEnergy;
 
     // Interaction Logic
     const handleDrillStart = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
         if (e.cancelable) e.preventDefault();
 
-        const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth);
-        const energyLoad = stats.energyProd > 0 ? (stats.energyCons / stats.energyProd) * 100 : 100;
-        const isCargoFull = currentCargoWeight > stats.totalCargoCapacity && !useGameStore.getState().isZeroWeight;
+        // energyProd and totalCargoCapacity are already available from useStatsProperty (Phase 4.1)
+        const energyLoadValue = energyProd > 0 ? (energyCons / energyProd) * 100 : 100;
+        const isCargoFull = currentCargoWeight > totalCargoCapacity && !isZeroWeight;
         const totalFuel = calculateTotalFuel(resources);
 
         if (totalFuel < 1) {
@@ -348,7 +370,7 @@ const App: React.FC = () => {
             return;
         }
 
-        if (energyLoad > 100 || isCargoFull) {
+        if ((energyLoadValue > 100 && !isInfiniteEnergy) || isCargoFull) {
             let x = 0, y = 0;
             if ('touches' in e) {
                 x = e.touches[0].clientX;
@@ -357,7 +379,7 @@ const App: React.FC = () => {
                 x = (e as React.MouseEvent).clientX;
                 y = (e as React.MouseEvent).clientY;
             }
-            textRef.current?.addText(x, y - 50, energyLoad > 100 ? "ПЕРЕГРУЗКА!" : "СКЛАД ПОЛОН!", "DAMAGE");
+            textRef.current?.addText(x, y - 50, (energyLoadValue > 100 && !isInfiniteEnergy) ? "ПЕРЕГРУЗКА!" : "СКЛАД ПОЛОН!", "DAMAGE");
             audioEngine.playError();
             return;
         }
@@ -499,7 +521,7 @@ const App: React.FC = () => {
                             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto flex items-center justify-center">
                                 <button
                                     className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center justify-center pixel-text text-sm md:text-lg font-black tracking-widest transition-transform active:scale-95 touch-none select-none relative
-                                ${isLowPower || (currentCargoWeight > stats.totalCargoCapacity && !useGameStore.getState().isZeroWeight)
+                                ${isLowPower || (currentCargoWeight > totalCargoCapacity && !isZeroWeight)
                                             ? 'bg-zinc-900 border-orange-600 text-orange-500 cursor-not-allowed opacity-90 animate-pulse'
                                             : isOverheated
                                                 ? 'bg-zinc-800 border-red-900 text-red-500 cursor-not-allowed opacity-80'
@@ -514,7 +536,7 @@ const App: React.FC = () => {
                                     onPointerUp={handleDrillEnd}
                                     onPointerLeave={handleDrillEnd}
                                 >
-                                    {calculateTotalFuel(resources) < 1 ? 'НЕТ ТОПЛИВА' : isLowPower ? 'ПЕРЕГРУЗКА!' : (currentCargoWeight > stats.totalCargoCapacity && !useGameStore.getState().isZeroWeight) ? 'СКЛАД ПОЛОН' : isOverheated ? 'ОСТЫВАНИЕ' : (heat > 90 ? '!!!' : 'БУРИТЬ')}
+                                    {calculateTotalFuel(resources) < 1 ? 'НЕТ ТОПЛИВА' : isLowPower ? 'ПЕРЕГРУЗКА!' : (currentCargoWeight > totalCargoCapacity && !isZeroWeight) ? 'СКЛАД ПОЛОН' : isOverheated ? 'ОСТЫВАНИЕ' : (heat > 90 ? '!!!' : 'БУРИТЬ')}
 
                                     {/* SHIELD CAPACITOR INDICATOR (RING) */}
                                     <svg className="absolute inset-0 w-full h-full pointer-events-none -rotate-90 scale-110" viewBox="0 0 100 100">
@@ -555,7 +577,7 @@ const App: React.FC = () => {
                         {activeView === View.FORGE && <ForgeView />}
                         {activeView === View.CITY && (
                             <CityView
-                                biome={currentBiome} resources={resources} heat={heat} integrity={integrity} maxIntegrity={stats.integrity} xp={xp} depth={depth}
+                                biome={currentBiome} resources={resources} heat={heat} integrity={integrity} maxIntegrity={maxIntegrity} xp={xp} depth={depth}
                                 onTrade={tradeCity} onHeal={healCity} onRepair={repairHull}
                             />
                         )}
@@ -581,45 +603,90 @@ const App: React.FC = () => {
             />
 
             {!isGameActive && (
-                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black">
-                    <div className="absolute top-4 right-4 flex gap-2">
+                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-void overflow-hidden">
+                    {/* Background Decors */}
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] animate-pulse" />
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10" />
+
+                    <div className="absolute top-4 right-4 flex gap-2 z-10">
+                        <div className="glass-panel p-1 flex gap-2 border-white/10 bg-black/40">
+                            <button
+                                onClick={() => setIsHelpOpen(true)}
+                                className="px-4 py-2 hover:bg-white/5 text-white/40 hover:text-white text-[10px] font-black font-technical uppercase tracking-widest transition-all"
+                            >
+                                {t(TEXT_IDS.MANUAL_BUTTON, lang)}
+                            </button>
+                            <button
+                                onClick={() => setIsSettingsOpen(true)}
+                                className="px-4 py-2 hover:bg-white/5 text-white/40 hover:text-white text-[10px] font-black font-technical uppercase tracking-widest transition-all"
+                            >
+                                {t(TEXT_IDS.SETTINGS_BUTTON, lang)}
+                            </button>
+                        </div>
+                        <div className="glass-panel p-1 flex gap-1 border-white/10 bg-black/40">
+                            {(['RU', 'EN'] as Language[]).map(l => (
+                                <button
+                                    key={l}
+                                    onClick={() => setLanguage(l)}
+                                    className={`px-3 py-1.5 text-[10px] font-black font-technical transition-all rounded-sm ${lang === l ? 'bg-cyan-500 text-black' : 'text-white/20 hover:text-white/50'}`}
+                                >
+                                    {l}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="mb-8 relative group">
+                            <div className="absolute -inset-4 bg-cyan-500/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                            <h1 className="text-5xl md:text-8xl font-black text-center leading-[0.85] font-technical tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/20 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                                COSMIC<br />
+                                <span className="neon-text-cyan tracking-[-0.05em]">EXCAVATOR</span>
+                            </h1>
+                        </div>
+
+                        <div className="max-w-md px-6 text-center mb-12">
+                            <div className="glass-panel p-4 border-rose-500/20 bg-rose-500/5 animate-pulse">
+                                <p className="text-[10px] text-rose-400 font-technical uppercase tracking-[0.2em] leading-relaxed">
+                                    {t(TEXT_IDS.HARDCORE_WARNING, lang)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="text-white/20 font-technical text-[10px] tracking-[0.5em] mb-12 uppercase">{GAME_VERSION}</div>
+
                         <button
-                            onClick={() => setIsHelpOpen(true)}
-                            className="px-4 py-2 border border-zinc-700 text-zinc-400 hover:text-white text-xs font-bold"
+                            onClick={handleInitClick}
+                            className="group relative px-12 py-5 bg-transparent overflow-hidden active:scale-95 transition-transform"
                         >
-                            {t(TEXT_IDS.MANUAL_BUTTON, lang)}
+                            <div className="absolute inset-0 bg-cyan-500 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                            <div className="absolute inset-0 border-2 border-cyan-500 group-hover:border-white transition-colors duration-500" />
+                            <span className="relative z-10 text-cyan-500 group-hover:text-black font-black font-technical text-2xl tracking-[0.2em] uppercase transition-colors duration-500">
+                                {t(TEXT_IDS.INIT_BUTTON, lang)}
+                            </span>
                         </button>
-                        <button onClick={() => setIsSettingsOpen(true)} className="px-4 py-2 border border-zinc-700 text-zinc-400 hover:text-white text-xs font-bold">{t(TEXT_IDS.SETTINGS_BUTTON, lang)}</button>
-                        {(['RU', 'EN'] as Language[]).map(l => (
-                            <button key={l} onClick={() => setLanguage(l)} className={`px-3 py-2 border text-xs font-bold ${lang === l ? 'bg-cyan-900 border-cyan-500 text-cyan-400' : 'border-zinc-700 text-zinc-500 hover:text-white'}`}>{l}</button>
-                        ))}
                     </div>
-                    <h1 className="text-2xl md:text-5xl mb-4 text-center px-4 leading-tight pixel-text text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">COSMIC<br /><span className="text-cyan-400">EXCAVATOR</span></h1>
-
-                    <div className="max-w-md px-4 text-center mb-8">
-                        <p className="text-[10px] md:text-xs text-red-500 font-mono border border-red-900 bg-red-950/20 p-2 animate-pulse">
-                            {t(TEXT_IDS.HARDCORE_WARNING, lang)}
-                        </p>
-                    </div>
-
-                    <div className="text-zinc-500 font-mono text-xs mb-8">{GAME_VERSION}</div>
-
-                    <button onClick={handleInitClick} className="px-8 py-4 bg-white text-black font-black text-xl hover:bg-cyan-400 transition-colors pixel-text">{t(TEXT_IDS.INIT_BUTTON, lang)}</button>
                 </div>
             )}
 
             {showFirstRunModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-lg p-6">
-                    <div className="max-w-md w-full border-2 border-red-600 bg-zinc-950 p-6 shadow-[0_0_50px_rgba(255,0,0,0.3)]">
-                        <h2 className="text-red-500 font-black pixel-text text-lg mb-4 flex items-center gap-2">
-                            <span>⚠️</span> {t(TEXT_IDS.FIRST_RUN_TITLE, lang)}
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-void/90 backdrop-blur-2xl p-6 animate-in fade-in duration-700">
+                    <div className="max-w-md w-full glass-panel border-rose-500/30 bg-rose-500/5 p-8 shadow-[0_0_100px_rgba(244,63,94,0.1)] relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent" />
+
+                        <h2 className="text-rose-500 font-black font-technical text-2xl mb-6 flex items-center gap-3 uppercase tracking-tighter">
+                            <AlertTriangle className="w-8 h-8" />
+                            {t(TEXT_IDS.FIRST_RUN_TITLE, lang)}
                         </h2>
-                        <p className="text-white font-mono text-sm leading-relaxed mb-6">
+
+                        <p className="text-white/60 font-technical text-xs leading-relaxed mb-10 uppercase tracking-widest border-l border-white/10 pl-4 py-2">
                             {t(TEXT_IDS.FIRST_RUN_BODY, lang)}
                         </p>
+
                         <button
                             onClick={handleFirstRunConfirm}
-                            className="w-full py-4 bg-red-600 hover:bg-red-500 text-black font-black pixel-text text-sm transition-colors"
+                            className="w-full py-5 bg-rose-600 hover:bg-rose-500 text-white font-black font-technical text-sm tracking-[0.3em] uppercase transition-all shadow-[0_10px_30px_rgba(225,29,72,0.3)] active:scale-[0.98]"
                         >
                             {t(TEXT_IDS.BTN_ACKNOWLEDGE, lang)}
                         </button>

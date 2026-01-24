@@ -16,6 +16,14 @@ const TARGET_RESOURCES: ResourceType[] = [
     ResourceType.DIAMONDS, ResourceType.ANCIENT_TECH
 ];
 
+import {
+    Satellite,
+    Radio,
+    Zap,
+    Wifi,
+    CheckCircle2
+} from 'lucide-react';
+
 const ExpeditionTab: React.FC = () => {
     const { resources, launchExpedition, activeExpeditions, collectRewards, cancelExpedition } = useGameStore();
 
@@ -38,154 +46,227 @@ const ExpeditionTab: React.FC = () => {
     const canAfford = resources.nanoSwarm >= cost;
 
     return (
-        <div className="flex flex-col h-full gap-4">
+        <div className="max-w-6xl mx-auto space-y-8 pb-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-            {/* NEW EXPEDITION PANEL */}
-            <div className="bg-zinc-900 border border-zinc-700 p-4">
-                <h3 className="pixel-text text-lg text-white mb-4 border-b border-zinc-800 pb-2">ЦЕНТР ЭКСПЕДИЦИЙ</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* LEFT: SETTINGS */}
-                    <div className="space-y-4">
-                        {/* Difficulty */}
-                        <div className="flex gap-2">
-                            {DIFFICULTIES.map(d => (
-                                <button
-                                    key={d.id}
-                                    onClick={() => setSelectedDiff(d.id)}
-                                    className={`flex-1 py-2 text-[10px] font-bold border transition-colors
-                                        ${selectedDiff === d.id
-                                            ? `bg-zinc-800 ${d.color} border-${d.color.split('-')[1]}-400`
-                                            : 'bg-black text-zinc-500 border-zinc-800 hover:border-zinc-600'
-                                        }`}
-                                >
-                                    {d.label}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="text-[10px] text-zinc-400 font-mono text-center">
-                            РИСК: <span className={DIFFICULTIES.find(d => d.id === selectedDiff)?.color}>{DIFFICULTIES.find(d => d.id === selectedDiff)?.risk}</span>
-                        </div>
-
-                        {/* Resource Target */}
-                        <div className="grid grid-cols-5 gap-1">
-                            {TARGET_RESOURCES.map(r => (
-                                <button
-                                    key={r}
-                                    onClick={() => setSelectedResource(r)}
-                                    className={`p-1 border text-[10px] font-mono uppercase truncate
-                                        ${selectedResource === r ? 'bg-zinc-800 text-cyan-400 border-cyan-400' : 'bg-black text-zinc-600 border-zinc-800'}
-                                    `}
-                                    title={r}
-                                >
-                                    {r.substring(0, 3)}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Drone Count Slider */}
-                        <div>
-                            <div className="flex justify-between text-[10px] text-zinc-400 map-1">
-                                <span>ДРОНЫ (НАНОВОЛОКНО)</span>
-                                <span className="text-white font-bold">{droneCount}</span>
+                {/* LEFT: MISSION CONTROL (4 cols / 12) */}
+                <div className="lg:col-span-5 space-y-6">
+                    <div className="relative group">
+                        <div className="absolute -inset-0.5 bg-gradient-to-br from-cyan-500/30 to-purple-500/30 blur opacity-40 group-hover:opacity-70 transition duration-1000"></div>
+                        <div className="relative bg-black/60 backdrop-blur-2xl border border-white/5 p-6 md:p-8">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-2 bg-cyan-500/10 rounded-sm border border-cyan-500/20">
+                                    <Satellite className="w-6 h-6 text-cyan-500" />
+                                </div>
+                                <h3 className="text-sm font-black text-white tracking-[0.3em] uppercase italic">Expedition Control</h3>
                             </div>
-                            <input
-                                type="range"
-                                min="1"
-                                max="100"
-                                value={droneCount}
-                                onChange={(e) => setDroneCount(parseInt(e.target.value))}
-                                className="w-full accent-cyan-500"
-                            />
-                            <div className="flex justify-between text-[10px] mt-1">
-                                <span>СТОИМОСТЬ: <span className={canAfford ? 'text-green-400' : 'text-red-500'}>{cost} NS</span></span>
-                                <span>БАЛАНС: {Math.floor(resources.nanoSwarm)} NS</span>
-                            </div>
-                        </div>
 
-                        <button
-                            onClick={handleLaunch}
-                            disabled={!canAfford}
-                            className={`w-full py-4 font-bold pixel-text text-sm transition-all
-                                ${canAfford
-                                    ? 'bg-cyan-900/50 text-cyan-400 border border-cyan-500 hover:bg-cyan-800/50 hover:scale-[1.02]'
-                                    : 'bg-zinc-900 text-zinc-600 border border-zinc-800 cursor-not-allowed'}
-                            `}
-                        >
-                            ЗАПУСТИТЬ ПРОТОКОЛ
-                        </button>
-                    </div>
+                            <div className="space-y-6">
+                                {/* Difficulty: Cyber Select */}
+                                <div className="space-y-3">
+                                    <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Select Protocol Difficulty</label>
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                                        {DIFFICULTIES.map(d => (
+                                            <button
+                                                key={d.id}
+                                                onClick={() => setSelectedDiff(d.id)}
+                                                className={`py-3 px-1 text-[8px] font-black border transition-all duration-300
+                                                    ${selectedDiff === d.id
+                                                        ? `bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]`
+                                                        : 'bg-white/5 text-zinc-500 border-white/5 hover:border-white/20 hover:text-white'
+                                                    }`}
+                                            >
+                                                {d.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="flex justify-between items-center text-[8px] font-mono p-2 bg-white/5 rounded-sm">
+                                        <span className="text-zinc-500 uppercase">Calculated Risk:</span>
+                                        <span className={DIFFICULTIES.find(d => d.id === selectedDiff)?.color + " font-black"}>
+                                            {DIFFICULTIES.find(d => d.id === selectedDiff)?.risk}
+                                        </span>
+                                    </div>
+                                </div>
 
-                    {/* RIGHT: ACTIVE MISSIONS */}
-                    <div className="bg-black/40 border border-zinc-800 p-2 overflow-y-auto max-h-[300px] scrollbar-thin">
-                        <div className="text-[10px] text-zinc-500 mb-2 font-mono text-center">- АКТИВНЫЕ МИССИИ -</div>
+                                {/* Resource Target: Grid */}
+                                <div className="space-y-3">
+                                    <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Target Acquisition</label>
+                                    <div className="grid grid-cols-5 gap-1.5">
+                                        {TARGET_RESOURCES.map(r => (
+                                            <button
+                                                key={r}
+                                                onClick={() => setSelectedResource(r)}
+                                                className={`p-2 border text-[8px] font-mono uppercase transition-all
+                                                    ${selectedResource === r
+                                                        ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                                                        : 'bg-white/5 text-zinc-600 border-white/5 hover:border-white/20'}
+                                                `}
+                                                title={r}
+                                            >
+                                                {r.substring(0, 3)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
 
-                        {activeExpeditions.length === 0 && (
-                            <div className="text-center py-10 text-zinc-700 text-xs italic">
-                                НЕТ АКТИВНЫХ ЭКСПЕДИЦИЙ
-                            </div>
-                        )}
-
-                        {activeExpeditions.map(exp => {
-                            const diff = DIFFICULTIES.find(d => d.id === exp.difficulty);
-                            const progress = Math.min(100, Math.max(0, ((now - exp.startTime) / exp.duration) * 100));
-                            const timeLeft = Math.max(0, Math.ceil((exp.duration - (now - exp.startTime)) / 1000));
-                            const isDone = timeLeft <= 0;
-
-                            return (
-                                <div key={exp.id} className="mb-2 bg-zinc-900 border border-zinc-700 p-2 relative overflow-hidden group">
-                                    {/* Progress BG */}
-                                    <div
-                                        className="absolute inset-0 bg-cyan-900/10 pointer-events-none transition-all duration-1000"
-                                        style={{ width: `${progress}%` }}
-                                    />
-
-                                    <div className="relative flex justify-between items-start mb-1">
-                                        <div className="text-[10px] font-bold text-white">
-                                            {diff?.label} <span className="text-zinc-500">#{exp.id}</span>
+                                {/* Drone Count Slider: Premium Feel */}
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-end">
+                                        <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest whitespace-nowrap">Swarm Density</label>
+                                        <span className="text-xl font-black text-white font-mono leading-none">{droneCount}<span className="text-[10px] text-cyan-500 ml-1">DRONES</span></span>
+                                    </div>
+                                    <div className="relative h-6 flex items-center">
+                                        <div className="absolute inset-0 h-1 my-auto bg-white/5 rounded-full" />
+                                        <div className="absolute inset-y-0 left-0 h-1 my-auto bg-cyan-500 rounded-full shadow-[0_0_10px_#06b6d4]" style={{ width: `${droneCount}%` }} />
+                                        <input
+                                            type="range"
+                                            min="1"
+                                            max="100"
+                                            value={droneCount}
+                                            onChange={(e) => setDroneCount(parseInt(e.target.value))}
+                                            className="absolute inset-0 w-full opacity-0 cursor-pointer h-6 z-10"
+                                        />
+                                        <div className="absolute h-4 w-1 bg-white shadow-[0_0_5px_white] pointer-events-none" style={{ left: `calc(${droneCount}% - 2px)` }}></div>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[9px] font-mono bg-black/40 p-3 border border-white/5">
+                                        <div className="flex flex-col">
+                                            <span className="text-zinc-500 text-[8px] uppercase tracking-widest">Required NS</span>
+                                            <span className={canAfford ? 'text-green-400 font-black' : 'text-red-500 font-black'}>{cost} NS</span>
                                         </div>
-                                        <div className="text-[10px] font-mono text-cyan-400">
-                                            {exp.droneCount} DRONES
+                                        <div className="h-6 w-px bg-white/5" />
+                                        <div className="flex flex-col text-right">
+                                            <span className="text-zinc-500 text-[8px] uppercase tracking-widest">Available NS</span>
+                                            <span className="text-white font-black">{Math.floor(resources.nanoSwarm)} NS</span>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div className="flex justify-between items-end">
-                                        <div className="text-[10px] text-zinc-400 font-mono">
-                                            ЦЕЛЬ: <span className="text-white uppercase">{exp.resourceTarget}</span>
+                                <button
+                                    onClick={handleLaunch}
+                                    disabled={!canAfford}
+                                    className={`w-full py-5 font-black uppercase tracking-[0.4em] text-[10px] transition-all relative group/btn overflow-hidden
+                                        ${canAfford
+                                            ? 'bg-cyan-500 text-black hover:bg-white shadow-[0_10px_30px_rgba(6,182,212,0.2)]'
+                                            : 'bg-white/5 text-zinc-600 border border-white/5 cursor-not-allowed'}
+                                    `}
+                                >
+                                    {canAfford ? 'INITIATE SWARM DEPLOYMENT' : 'INSUFFICIENT NANOMATERIALS'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-cyan-950/20 border border-cyan-500/20 p-4 rounded-sm">
+                        <h4 className="text-[8px] font-black text-cyan-500 uppercase tracking-widest mb-2">Protocol Briefing</h4>
+                        <p className="text-[10px] text-zinc-400 font-mono leading-relaxed italic">
+                            "Swarm expeditions utilize temporary <span className="text-cyan-400">Nano Swarm</span> constructs to infiltrate deep void sectors. Chance of complete asset loss increases with protocol difficulty."
+                        </p>
+                    </div>
+                </div>
+
+                {/* RIGHT: TRACKING (8 cols / 12) */}
+                <div className="lg:col-span-7">
+                    <div className="bg-black/40 backdrop-blur-md border border-white/5 min-h-[500px] flex flex-col p-6 md:p-8">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <div className="h-1 w-8 bg-zinc-800" />
+                                <h3 className="text-xs font-black text-zinc-500 tracking-[0.3em] uppercase italic">Active Operations</h3>
+                            </div>
+                            <div className="text-[10px] font-mono text-zinc-600">
+                                STATUS: <span className="text-green-500 animate-pulse">MONITORING</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar pr-2">
+                            {activeExpeditions.length === 0 && (
+                                <div className="flex flex-col items-center justify-center py-32 opacity-20 group">
+                                    <Radio className="w-16 h-16 mb-4 grayscale group-hover:grayscale-0 transition-all duration-1000" />
+                                    <div className="text-[10px] font-black uppercase tracking-[1em]">Scanning Deep Tunnels...</div>
+                                </div>
+                            )}
+
+                            {activeExpeditions.map(exp => {
+                                const diff = DIFFICULTIES.find(d => d.id === exp.difficulty);
+                                const progress = Math.min(100, Math.max(0, ((now - exp.startTime) / exp.duration) * 100));
+                                const timeLeft = Math.max(0, Math.ceil((exp.duration - (now - exp.startTime)) / 1000));
+                                const isDone = timeLeft <= 0;
+
+                                return (
+                                    <div key={exp.id} className="relative bg-white/5 border border-white/5 p-5 group hover:bg-white/10 transition-all overflow-hidden">
+                                        {/* Background Static Line Animation Effect */}
+                                        <Satellite className="absolute top-2 right-2 w-10 h-10 opacity-5 pointer-events-none group-hover:scale-125 transition-transform duration-1000" />
+
+                                        <div className="relative flex justify-between items-center mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs
+                                                    ${isDone ? 'border-green-500 text-green-500' : 'border-cyan-500/50 text-cyan-400 animate-pulse'}`}>
+                                                    {isDone ? '✓' : '⚡'}
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] font-black text-white uppercase tracking-widest">
+                                                        {diff?.label} MISSION <span className="text-zinc-600 ml-2 font-mono">#{exp.id.substring(0, 6)}</span>
+                                                    </div>
+                                                    <div className="text-[8px] font-mono text-zinc-500 uppercase">
+                                                        Deep Sector Exploration // Target: <span className="text-zinc-300 font-black">{exp.resourceTarget}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {!isDone && (
+                                                <div className="text-right">
+                                                    <div className="text-xl font-black text-white font-mono leading-none">
+                                                        {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                                                    </div>
+                                                    <div className="text-[8px] text-zinc-600 font-black uppercase tracking-widest mt-1">Remaining</div>
+                                                </div>
+                                            )}
                                         </div>
 
-                                        {isDone ? (
-                                            <button
-                                                onClick={() => collectRewards(exp.id)}
-                                                className="bg-green-600 text-white text-[10px] px-2 py-1 hover:bg-green-500 animate-pulse"
-                                            >
-                                                ЗАВЕРШИТЬ
-                                            </button>
-                                        ) : (
-                                            <div className="text-[10px] font-mono text-zinc-500">
-                                                {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                                        {/* Progress Bar: Sci-Fi Style */}
+                                        <div className="space-y-1 mb-4">
+                                            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full transition-all duration-1000 ease-linear
+                                                        ${isDone ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-cyan-500 shadow-[0_0_10px_#06b6d4]'}`}
+                                                    style={{ width: `${progress}%` }}
+                                                />
+                                            </div>
+                                            <div className="flex justify-between text-[7px] font-mono font-black text-zinc-600 uppercase tracking-widest">
+                                                <span>Transmission Link</span>
+                                                <span>{progress.toFixed(1)}% Stable</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-between items-center bg-black/40 p-3 border border-white/5">
+                                            <div className="text-[9px] text-zinc-500 font-mono">
+                                                SWARM DENSITY: <span className="text-white">{exp.droneCount} UNITS</span>
+                                            </div>
+
+                                            {isDone ? (
+                                                <button
+                                                    onClick={() => collectRewards(exp.id)}
+                                                    className="bg-green-500 text-black text-[9px] font-black px-6 py-2 hover:bg-white transition-colors animate-pulse uppercase tracking-[0.2em]"
+                                                >
+                                                    Receive Data
+                                                </button>
+                                            ) : (
+                                                <div className="flex gap-2">
+                                                    <div className="text-[8px] text-cyan-500 font-black animate-pulse uppercase tracking-widest">Acquiring Target...</div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {exp.log.length > 0 && (
+                                            <div className="mt-3 text-[8px] text-zinc-600 font-mono italic px-3 py-2 bg-black/20 border-l-2 border-zinc-800 max-h-12 overflow-y-auto no-scrollbar">
+                                                {"> "} {exp.log[exp.log.length - 1]}
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* STATUS TEXT OR LOG */}
-                                    {exp.log.length > 0 && (
-                                        <div className="mt-1 text-[8px] text-zinc-600 truncate font-mono border-t border-zinc-800/50 pt-1">
-                                            {exp.log[exp.log.length - 1]}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            {/* INFO PANEL */}
-            <div className="bg-zinc-900/50 border border-zinc-800 p-3 text-[10px] text-zinc-500 font-mono">
-                <p>Экспедиции требуют <span className="text-cyan-400">Нановолокно (Nano Swarm)</span> для создания временных дронов.</p>
-                <p>В случае успеха вы получите ресурсы и вернете часть нановолокна (выжившие дроны).</p>
-                <p className="text-red-400">ВНИМАНИЕ: При провале миссии все дроны и ресурсы будут потеряны.</p>
             </div>
         </div>
     );

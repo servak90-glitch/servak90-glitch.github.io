@@ -1,149 +1,186 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from '../../store/gameStore';
-import { calculateStats, calculateTotalFuel } from '../../services/gameMath';
+import { calculateTotalFuel } from '../../services/gameMath';
 import { calculateTotalMass } from '../../services/mathEngine';
+import {
+    Activity,
+    Flame,
+    Zap,
+    Package,
+    Fuel,
+    Snowflake,
+    Wrench,
+    ZapOff,
+    ShieldCheck
+} from 'lucide-react';
 
 const StatusStrip: React.FC = () => {
-    const heat = useGameStore(s => s.heat);
-    const integrity = useGameStore(s => s.integrity);
-    const resources = useGameStore(s => s.resources);
+    const { integrity, heat, stats, resources, drill, equipmentInventory } = useGameStore(useShallow(s => ({
+        integrity: s.integrity,
+        heat: s.heat,
+        stats: s.stats,
+        resources: s.resources,
+        drill: s.drill,
+        equipmentInventory: s.equipmentInventory
+    })));
 
-    // Needed to calculate max integrity and energy load
-    const drill = useGameStore(s => s.drill);
-    const skillLevels = useGameStore(s => s.skillLevels);
-    const equippedArtifacts = useGameStore(s => s.equippedArtifacts);
-    const inventory = useGameStore(s => s.inventory);
-    const depth = useGameStore(s => s.depth);
-
-    const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth);
     const maxIntegrity = stats.integrity || 100;
-
-    // Energy Load Calculation
     const energyLoadRaw = stats.energyProd > 0 ? (stats.energyCons / stats.energyProd) * 100 : 100;
-    const energyLoad = Math.min(100, energyLoadRaw);
     const isOverloaded = energyLoadRaw > 100;
 
-    // Fuel weight calculation (for tooltip)
     const totalFuelUnits = calculateTotalFuel(resources);
     const maxFuelUnits = 10000;
     const fuelPercent = Math.min(100, (totalFuelUnits / maxFuelUnits) * 100);
     const isLowFuel = totalFuelUnits < 500;
 
-    // Cargo Calculation (Payload vs Total Capacity)
-    const cargoCapacity = stats.totalCargoCapacity || 5000; // Use stats for correct sync
-    const { payload } = calculateTotalMass(drill, resources, useGameStore(s => s.equipmentInventory));
+    const cargoCapacity = stats.totalCargoCapacity || 5000;
+    const { payload } = useMemo(() => calculateTotalMass(drill, resources, equipmentInventory), [drill, resources, equipmentInventory]);
     const isCargoOverloaded = payload > cargoCapacity;
     const cargoPercent = Math.min(100, (payload / cargoCapacity) * 100);
 
     return (
-        <div className="w-full h-6 bg-black/80 border-b border-zinc-800 flex items-stretch z-40 relative pointer-events-none">
+        <div className="w-full h-10 glass-panel border-x-0 border-t-0 rounded-none flex items-stretch z-40 relative pointer-events-none p-0.5 overflow-hidden">
 
             {/* 1. INTEGRITY (HP) */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden group pointer-events-auto" title={`Прочность корпуса: ${Math.round(integrity)} / ${maxIntegrity} HP. Если упадет до 0 — бур сломается.`}>
-                <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
-                    <span className={`text-[10px] font-bold ${integrity < maxIntegrity * 0.3 ? 'text-red-500 animate-pulse' : 'text-green-500'}`}>✚</span>
-                </div>
-                <div className="flex-1 h-2 mx-1 bg-zinc-900 rounded-sm overflow-hidden relative">
-                    <div
-                        className={`h-full transition-all duration-300 ${integrity < maxIntegrity * 0.3 ? 'bg-red-600' : 'bg-green-600'}`}
-                        style={{ width: `${(integrity / maxIntegrity) * 100}%` }}
-                    />
-                </div>
-            </div>
+            <HUDItem
+                icon={<Activity className={`w-3 h-3 md:w-4 md:h-4 ${integrity < maxIntegrity * 0.3 ? 'text-red-500 animate-pulse' : 'text-green-400'}`} />}
+                label="HULL"
+                value={Math.round(integrity)}
+                maxValue={maxIntegrity}
+                percent={(integrity / maxIntegrity) * 100}
+                color={integrity < maxIntegrity * 0.3 ? 'bg-red-500' : 'bg-green-500'}
+                glow={integrity < maxIntegrity * 0.3 ? 'shadow-[0_0_10px_rgba(239,68,68,0.5)]' : ''}
+                tooltip={`Прочность корпуса: ${Math.round(integrity)} / ${maxIntegrity} HP`}
+            />
 
             {/* 2. HEAT */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden pointer-events-auto" title={`Температура бура: ${Math.round(heat)}%. При 95%+ — аварийный стоп. При 100% — урон корпусу.`}>
-                <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
-                    <span className={`text-[10px] font-bold ${heat > 80 ? 'text-orange-500 animate-pulse' : 'text-cyan-500'}`}>🔥</span>
-                </div>
-                <div className="flex-1 h-2 mx-1 bg-zinc-900 rounded-sm overflow-hidden relative">
-                    <div
-                        className={`h-full transition-all duration-300 ${heat > 80 ? 'bg-orange-500' : 'bg-cyan-600'}`}
-                        style={{ width: `${Math.min(100, heat)}%` }}
-                    />
-                    {/* Ambient Heat Marker */}
-                    {stats.ambientHeat > 0 && (
-                        <div
-                            className="absolute top-0 bottom-0 w-0.5 bg-zinc-500 opacity-50"
-                            style={{ left: `${stats.ambientHeat}%` }}
-                        />
-                    )}
-                </div>
-            </div>
+            <HUDItem
+                icon={<Flame className={`w-3 h-3 md:w-4 md:h-4 ${heat > 85 ? 'text-orange-500 animate-pulse' : 'text-cyan-400'}`} />}
+                label="HEAT"
+                value={Math.round(heat)}
+                unit="%"
+                percent={Math.min(100, heat)}
+                color={heat > 85 ? 'bg-orange-500' : 'bg-cyan-500'}
+                glow={heat > 85 ? 'shadow-[0_0_10px_rgba(251,146,60,0.5)]' : ''}
+                tooltip={`Температура: ${Math.round(heat)}%. Аварийная блокировка при 95%.`}
+                markers={stats.ambientHeat > 0 ? [{ pos: stats.ambientHeat, color: 'bg-white/30' }] : []}
+            />
 
             {/* 3. POWER */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden pointer-events-auto" title={`Нагрузка энергосети: ${Math.round(energyLoad)}%. Потребление: ${Math.round(stats.energyCons)}W / Генерация: ${Math.round(stats.energyProd)}W. Перегрузка снижает скорость.`}>
-                <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
-                    <span className={`text-[10px] font-bold ${isOverloaded ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}>⚡</span>
-                </div>
-                <div className="flex-1 h-2 mx-1 bg-zinc-900 rounded-sm overflow-hidden relative">
-                    <div
-                        className={`h-full transition-all duration-300 ${isOverloaded ? 'bg-red-500' : 'bg-yellow-500'}`}
-                        style={{ width: `${energyLoad}%` }}
-                    />
-                </div>
+            <HUDItem
+                icon={<Zap className={`w-3 h-3 md:w-4 md:h-4 ${isOverloaded ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`} />}
+                label="PWR"
+                value={Math.round(energyLoadRaw)}
+                unit="%"
+                percent={Math.min(100, energyLoadRaw)}
+                color={isOverloaded ? 'bg-red-500' : 'bg-yellow-500'}
+                tooltip={`Нагрузка: ${Math.round(stats.energyCons)}W / ${Math.round(stats.energyProd)}W`}
+            />
+
+            {/* 4. CARGO (Hidden on mobile) */}
+            <div className="hidden sm:flex flex-[1.5]">
+                <HUDItem
+                    icon={<Package className={`w-4 h-4 ${isCargoOverloaded ? 'text-red-500 animate-pulse' : 'text-blue-400'}`} />}
+                    label="CARGO"
+                    value={Math.round(payload / 100) / 10}
+                    unit="t"
+                    percent={cargoPercent}
+                    color={isCargoOverloaded ? 'bg-red-500' : 'bg-blue-500'}
+                    tooltip={`Заполненность: ${Math.round(payload)}кг / ${cargoCapacity}кг`}
+                />
             </div>
 
-            {/* 4. CARGO */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden pointer-events-auto" title={`Грузовой отсек: ${Math.round(payload)}кг / ${cargoCapacity}кг. Перегруз замедляет бур и увеличивает расход топлива.`}>
-                <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
-                    <span className={`text-[10px] font-bold ${isCargoOverloaded ? 'text-red-500 animate-pulse' : 'text-blue-400'}`}>📦</span>
-                </div>
-                <div className="flex-1 h-2 mx-1 bg-zinc-900 rounded-sm overflow-hidden relative">
-                    <div
-                        className={`h-full transition-all duration-300 ${isCargoOverloaded ? 'bg-red-500' : 'bg-blue-500'}`}
-                        style={{ width: `${cargoPercent}%` }}
-                    />
-                </div>
+            {/* 5. FUEL (Hidden on mobile) */}
+            <div className="hidden lg:flex flex-[1.5]">
+                <HUDItem
+                    icon={<Fuel className={`w-4 h-4 ${isLowFuel ? 'text-red-500 animate-pulse' : 'text-amber-400'}`} />}
+                    label="FUEL"
+                    value={Math.round(fuelPercent)}
+                    unit="%"
+                    percent={fuelPercent}
+                    color={isLowFuel ? 'bg-red-500' : 'bg-amber-500'}
+                    tooltip={`Запас: ~${Math.round(totalFuelUnits)} ед.`}
+                />
             </div>
 
-            {/* 5. FUEL */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden pointer-events-auto" title={`Запас топлива: ${Math.round(fuelPercent)}%\nУголь: ${resources.coal || 0} (${Math.round((resources.coal || 0) * 3)}кг)\nНефть: ${resources.oil || 0} (${Math.round((resources.oil || 0) * 2)}кг)\nГаз: ${resources.gas || 0} (${Math.round((resources.gas || 0) * 1)}кг)\nВсего: ~${Math.round(totalFuelUnits)} единиц`}>
-                <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
-                    <span className={`text-[10px] font-bold ${isLowFuel ? 'text-red-500 animate-pulse' : 'text-amber-400'}`}>⛽</span>
-                </div>
-                <div className="flex-1 h-2 mx-1 bg-zinc-900 rounded-sm overflow-hidden relative">
-                    <div
-                        className={`h-full transition-all duration-300 ${isLowFuel ? 'bg-red-500' : 'bg-amber-500'}`}
-                        style={{ width: `${fuelPercent}%` }}
-                    />
-                </div>
+            {/* 6. RESOURCES (Quick Peek - Hidden on mobile/tablet) */}
+            <div className="hidden xl:flex flex-1 items-center px-3 gap-4 border-r border-white/5 pointer-events-auto bg-white/5">
+                <ResItem icon={<Snowflake className="w-3 h-3 text-cyan-200" />} val={resources.ice} />
+                <ResItem icon={<ZapOff className="w-3 h-3 text-zinc-400" />} val={resources.scrap} />
+                <ResItem icon={<Wrench className="w-3 h-3 text-green-400" />} val={resources.repairKit} />
             </div>
 
-            {/* 6. SUPPLIES (Ice, Scrap, Kits) */}
-            <div className="flex-[0.5] flex items-center bg-zinc-950/50 px-2 gap-2 border-r border-zinc-900 pointer-events-auto" title={`Расходники: Лёд:${Math.floor(resources.ice || 0)}, Лом:${Math.floor(resources.scrap || 0)}, Ремкомплекты:${Math.floor(resources.repairKit || 0)}. Используются для крафта и ремонта.`}>
-                <div className="flex items-center gap-1">
-                    <span className="text-[10px] opacity-70">❄️</span>
-                    <span className="text-[10px] font-mono text-cyan-200">{Math.floor(resources.ice || 0)}</span>
-                </div>
-                <div className="flex items-center gap-1 text-[10px]">
-                    <span className="text-[10px] opacity-70">♻️</span>
-                    <span className="text-[10px] font-mono text-zinc-400">{Math.floor(resources.scrap || 0)}</span>
-                </div>
-            </div>
-
-            {/* 7. LICENSES */}
             <LicenseDisplay />
-
         </div>
     );
 };
 
+interface HUDItemProps {
+    icon: React.ReactNode;
+    label: string;
+    value: number | string;
+    unit?: string;
+    maxValue?: number;
+    percent: number;
+    color: string;
+    glow?: string;
+    tooltip: string;
+    markers?: { pos: number, color: string }[];
+}
+
+const HUDItem: React.FC<HUDItemProps> = ({ icon, label, value, unit, maxValue, percent, color, glow, tooltip, markers }) => (
+    <div className="flex-[1.5] flex flex-col justify-center px-2 border-r border-white/5 relative group pointer-events-auto hover:bg-white/5 transition-colors cursor-help" title={tooltip}>
+        <div className="flex items-center justify-between mb-0.5">
+            <div className="flex items-center gap-1.5">
+                {icon}
+                <span className="text-[10px] font-bold text-white/50 tracking-tighter uppercase font-technical leading-none">{label}</span>
+            </div>
+            <div className="text-[11px] font-technical font-bold text-white leading-none">
+                {value}<span className="text-[9px] opacity-50 ml-0.5">{unit || (maxValue ? '' : '')}</span>
+                {maxValue && <span className="text-[9px] opacity-30 ml-0.5">/ {maxValue}</span>}
+            </div>
+        </div>
+        <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden relative">
+            <div
+                className={`h-full transition-all duration-500 ease-out ${color} ${glow}`}
+                style={{ width: `${Math.max(2, percent)}%` }}
+            />
+            {markers?.map((m, i) => (
+                <div key={i} className={`absolute top-0 bottom-0 w-0.5 ${m.color}`} style={{ left: `${m.pos}%` }} />
+            ))}
+        </div>
+    </div>
+);
+
+const ResItem = ({ icon, val }: { icon: React.ReactNode, val: number | undefined }) => (
+    <div className="flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
+        {icon}
+        <span className="text-[11px] font-technical font-bold">{Math.floor(val || 0)}</span>
+    </div>
+);
+
 const LicenseDisplay: React.FC = () => {
     const unlockedLicenses = useGameStore(s => s.unlockedLicenses);
-    const lang = useGameStore(s => s.settings.language);
-
     return (
-        <div className="flex px-2 items-center bg-black/40 border-l border-zinc-900 gap-1.5 shrink-0 pointer-events-auto"
-            title={`Лицензии зон: ${unlockedLicenses.length > 0 ? unlockedLicenses.join(', ') : 'Нет активных'}. Необходимы для доступа в опасные регионы.`}>
-            <span className="text-[10px] font-bold text-zinc-500 mr-1">LIC:</span>
-            <div className={`w-1.5 h-1.5 rounded-full ${unlockedLicenses.includes('green') ? 'bg-green-500 shadow-[0_0_4px_#22c55e]' : 'bg-zinc-800'}`} />
-            <div className={`w-1.5 h-1.5 rounded-full ${unlockedLicenses.includes('yellow') ? 'bg-yellow-400 shadow-[0_0_4px_#facc15]' : 'bg-zinc-800'}`} />
-            <div className={`w-1.5 h-1.5 rounded-full ${unlockedLicenses.includes('red') ? 'bg-red-500 shadow-[0_0_4px_#ef4444]' : 'bg-zinc-800'}`} />
+        <div className="flex px-3 items-center bg-white/5 border-l border-white/5 gap-2 shrink-0 pointer-events-auto group">
+            <ShieldCheck className="w-4 h-4 text-zinc-500 group-hover:text-cyan-400 transition-colors" />
+            <div className="flex gap-1">
+                {['green', 'yellow', 'red'].map(l => (
+                    <div
+                        key={l}
+                        className={`w-2 h-2 rounded-full border border-black/20 transition-all duration-300 ${unlockedLicenses.includes(l as any)
+                            ? l === 'green' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
+                                l === 'yellow' ? 'bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)]' :
+                                    'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'
+                            : 'bg-white/5'
+                            }`}
+                    />
+                ))}
+            </div>
         </div>
     );
 };
 
 export default StatusStrip;
-

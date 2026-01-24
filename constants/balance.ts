@@ -25,14 +25,14 @@ export const CITY_TRADES = {
 } as const;
 
 /** Reverse trades configuration */
-export const REVERSE_TRADES: { source: ResourceType, target: ResourceType, label: string }[] = [
-    { source: ResourceType.STONE, target: ResourceType.CLAY, label: 'ДРОБИЛКА ПОРОДЫ' },
-    { source: ResourceType.COPPER, target: ResourceType.STONE, label: 'УТИЛИЗАЦИЯ ПРОВОДКИ' },
-    { source: ResourceType.IRON, target: ResourceType.COPPER, label: 'ПЕРЕПЛАВКА ЛОМА' },
-    { source: ResourceType.SILVER, target: ResourceType.IRON, label: 'ДЕМОНТАЖ ЭЛЕКТРОНИКИ' },
-    { source: ResourceType.GOLD, target: ResourceType.SILVER, label: 'РАЗМЫВ РУДЫ' },
-    { source: ResourceType.TITANIUM, target: ResourceType.GOLD, label: 'РАСЩЕПЛЕНИЕ СПЛАВОВ' },
-    { source: ResourceType.URANIUM, target: ResourceType.TITANIUM, label: 'ДЕАКТИВАЦИЯ ЯДРА' }
+export const REVERSE_TRADES: { source: ResourceType, target: ResourceType, label: { RU: string, EN: string } }[] = [
+    { source: ResourceType.STONE, target: ResourceType.CLAY, label: { RU: 'ДРОБИЛКА ПОРОДЫ', EN: 'ROCK CRUSHER' } },
+    { source: ResourceType.COPPER, target: ResourceType.STONE, label: { RU: 'УТИЛИЗАЦИЯ ПРОВОДКИ', EN: 'WIRING RECYCLING' } },
+    { source: ResourceType.IRON, target: ResourceType.COPPER, label: { RU: 'ПЕРЕПЛАВКА ЛОМА', EN: 'SCRAP MELTING' } },
+    { source: ResourceType.SILVER, target: ResourceType.IRON, label: { RU: 'ДЕМОНТАЖ ЭЛЕКТРОНИКИ', EN: 'ELECTRONICS DISMANTLE' } },
+    { source: ResourceType.GOLD, target: ResourceType.SILVER, label: { RU: 'РАЗМЫВ РУДЫ', EN: 'ORE WASHING' } },
+    { source: ResourceType.TITANIUM, target: ResourceType.GOLD, label: { RU: 'РАСЩЕПЛЕНИЕ СПЛАВОВ', EN: 'ALLOY SPLITTING' } },
+    { source: ResourceType.URANIUM, target: ResourceType.TITANIUM, label: { RU: 'ДЕАКТИВАЦИЯ ЯДРА', EN: 'CORE DEACTIVATION' } }
 ];
 
 // =============================================================================
@@ -62,9 +62,9 @@ export const CITY_SERVICE = {
 // =============================================================================
 
 export const GEM_TRADES = [
-    { gem: 'rubies' as ResourceType, label: 'РУБИН', xp: 500, moneyRes: 'gold' as ResourceType, moneyAmount: 100 },
-    { gem: 'emeralds' as ResourceType, label: 'ИЗУМРУД', xp: 1500, moneyRes: 'titanium' as ResourceType, moneyAmount: 50 },
-    { gem: 'diamonds' as ResourceType, label: 'АЛМАЗ', xp: 5000, moneyRes: 'ancientTech' as ResourceType, moneyAmount: 10 }
+    { gem: 'rubies' as ResourceType, label: { RU: 'РУБИН', EN: 'RUBY' }, xp: 500, moneyRes: 'gold' as ResourceType, moneyAmount: 100 },
+    { gem: 'emeralds' as ResourceType, label: { RU: 'ИЗУМРУД', EN: 'EMERALD' }, xp: 1500, moneyRes: 'titanium' as ResourceType, moneyAmount: 50 },
+    { gem: 'diamonds' as ResourceType, label: { RU: 'АЛМАЗ', EN: 'DIAMOND' }, xp: 5000, moneyRes: 'ancientTech' as ResourceType, moneyAmount: 10 }
 ];
 
 // =============================================================================
@@ -72,10 +72,10 @@ export const GEM_TRADES = [
 // =============================================================================
 
 export const BAR_DRINKS = [
-    { id: 'drink_oil', name: 'МАСЛЯНЫЙ СТАУТ', desc: 'Реген HP, но Нагрев x2', cost: 50, res: 'iron' as ResourceType, effectId: 'BAR_OIL_STOUT', icon: '🍺', color: 'text-amber-600' },
-    { id: 'drink_rust', name: 'РЖАВЫЙ ГВОЗДЬ', desc: 'Клик x3, но Авто-бур x0.5', cost: 100, res: 'copper' as ResourceType, effectId: 'BAR_RUSTY_NAIL', icon: '🍷', color: 'text-orange-500' },
-    { id: 'drink_nuke', name: 'ЯДЕРНЫЙ ВИСКИ', desc: 'Скорость x5, но урон обшивке', cost: 20, res: 'uranium' as ResourceType, effectId: 'BAR_NUCLEAR_WHISKEY', icon: '☢️', color: 'text-green-500' },
-    { id: 'drink_void', name: 'КОКТЕЙЛЬ ПУСТОТЫ', desc: 'Ресурсы x10, но слепота', cost: 10, res: 'rubies' as ResourceType, effectId: 'BAR_VOID_COCKTAIL', icon: '🌑', color: 'text-purple-500' },
+    { id: 'drink_oil', name: { RU: 'МАСЛЯНЫЙ СТАУТ', EN: 'OIL STOUT' }, desc: { RU: 'Реген HP, но Нагрев x2', EN: 'HP Regen, but Heat x2' }, cost: 50, res: 'iron' as ResourceType, effectId: 'BAR_OIL_STOUT', icon: '🍺', color: 'text-amber-600' },
+    { id: 'drink_rust', name: { RU: 'РЖАВЫЙ ГВОЗДЬ', EN: 'RUSTY NAIL' }, desc: { RU: 'Клик x3, но Авто-бур x0.5', EN: 'Click x3, but Auto-drill x0.5' }, cost: 100, res: 'copper' as ResourceType, effectId: 'BAR_RUSTY_NAIL', icon: '🍷', color: 'text-orange-500' },
+    { id: 'drink_nuke', name: { RU: 'ЯДЕРНЫЙ ВИСКИ', EN: 'NUCLEAR WHISKEY' }, desc: { RU: 'Скорость x5, но урон обшивке', EN: 'Speed x5, but hull damage' }, cost: 20, res: 'uranium' as ResourceType, effectId: 'BAR_NUCLEAR_WHISKEY', icon: '☢️', color: 'text-green-500' },
+    { id: 'drink_void', name: { RU: 'КОКТЕЙЛЬ ПУСТОТЫ', EN: 'VOID COCKTAIL' }, desc: { RU: 'Ресурсы x10, но слепота', EN: 'Resources x10, but blindness' }, cost: 10, res: 'rubies' as ResourceType, effectId: 'BAR_VOID_COCKTAIL', icon: '🌑', color: 'text-purple-500' },
 ];
 
 export const GAMBLING = {
@@ -94,14 +94,14 @@ export const GAMBLING = {
 // =============================================================================
 
 export const PREMIUM_BUFFS = [
-    { id: 'nano_repair', name: 'НАНО-СВАРКА', desc: 'Авто-ремонт (10 мин)', cost: 2000, res: 'titanium' as ResourceType, effectId: 'PREMIUM_NANO_REPAIR', icon: '🛠️', color: 'text-green-400' },
-    { id: 'diamond_coat', name: 'АЛМАЗНОЕ НАПЫЛЕНИЕ', desc: 'Скорость бурения x2 (5 мин)', cost: 50, res: 'diamonds' as ResourceType, effectId: 'PREMIUM_DIAMOND_COAT', icon: '✨', color: 'text-cyan-400' },
-    { id: 'void_shield', name: 'ЩИТ ПУСТОТЫ', desc: 'Защита +50% (3 мин)', cost: 100, res: 'ancientTech' as ResourceType, effectId: 'PREMIUM_VOID_SHIELD', icon: '🛡️', color: 'text-purple-400' },
-    { id: 'quant_luck', name: 'КВАНТОВАЯ УДАЧА', desc: 'Макс. шанс находок (5 мин)', cost: 500, res: 'rubies' as ResourceType, effectId: 'PREMIUM_QUANTUM_LUCK', icon: '🍀', color: 'text-amber-400' },
-    { id: 'abs_zero', name: 'АБСОЛЮТНЫЙ НОЛЬ', desc: 'Нагрев отключен (2 мин)', cost: 200, res: 'emeralds' as ResourceType, effectId: 'PREMIUM_ABSOLUTE_ZERO', icon: '❄️', color: 'text-blue-300' },
-    { id: 'mag_storm', name: 'МАГНИТНЫЙ ШТОРМ', desc: 'Ресурсы x3 (5 мин)', cost: 5000, res: 'gold' as ResourceType, effectId: 'PREMIUM_MAGNETIC_STORM', icon: '🧲', color: 'text-yellow-500' },
-    { id: 'overdrive', name: 'ИНЪЕКЦИЯ ЯДРА', desc: 'Сила клика x5 (1 мин)', cost: 100, res: 'uranium' as ResourceType, effectId: 'PREMIUM_OVERDRIVE', icon: '☢️', color: 'text-red-500' },
-    { id: 'chronos', name: 'ХРОНОС-ПОЛЕ', desc: 'Авто-добыча x3 (5 мин)', cost: 20, res: 'ancientTech' as ResourceType, effectId: 'PREMIUM_CHRONOS', icon: '⏳', color: 'text-pink-400' },
+    { id: 'nano_repair', name: { RU: 'НАНО-СВАРКА', EN: 'NANO-REPAIR' }, desc: { RU: 'Авто-ремонт (10 мин)', EN: 'Auto-repair (10 min)' }, cost: 2000, res: 'titanium' as ResourceType, effectId: 'PREMIUM_NANO_REPAIR', icon: '🛠️', color: 'text-green-400' },
+    { id: 'diamond_coat', name: { RU: 'АЛМАЗНОЕ НАПЫЛЕНИЕ', EN: 'DIAMOND COATING' }, desc: { RU: 'Скорость бурения x2 (5 мин)', EN: 'Drilling Speed x2 (5 min)' }, cost: 50, res: 'diamonds' as ResourceType, effectId: 'PREMIUM_DIAMOND_COAT', icon: '✨', color: 'text-cyan-400' },
+    { id: 'void_shield', name: { RU: 'ЩИТ ПУСТОТЫ', EN: 'VOID SHIELD' }, desc: { RU: 'Защита +50% (3 мин)', EN: 'Defense +50% (3 min)' }, cost: 100, res: 'ancientTech' as ResourceType, effectId: 'PREMIUM_VOID_SHIELD', icon: '🛡️', color: 'text-purple-400' },
+    { id: 'quant_luck', name: { RU: 'КВАНТОВАЯ УДАЧА', EN: 'QUANTUM LUCK' }, desc: { RU: 'Макс. шанс находок (5 мин)', EN: 'Max Loot Chance (5 min)' }, cost: 500, res: 'rubies' as ResourceType, effectId: 'PREMIUM_QUANTUM_LUCK', icon: '🍀', color: 'text-amber-400' },
+    { id: 'abs_zero', name: { RU: 'АБСОЛЮТНЫЙ НОЛЬ', EN: 'ABSOLUTE ZERO' }, desc: { RU: 'Нагрев отключен (2 мин)', EN: 'Heat Disabled (2 min)' }, cost: 200, res: 'emeralds' as ResourceType, effectId: 'PREMIUM_ABSOLUTE_ZERO', icon: '❄️', color: 'text-blue-300' },
+    { id: 'mag_storm', name: { RU: 'МАГНИТНЫЙ ШТОРМ', EN: 'MAGNETIC STORM' }, desc: { RU: 'Ресурсы x3 (5 мин)', EN: 'Resources x3 (5 min)' }, cost: 5000, res: 'gold' as ResourceType, effectId: 'PREMIUM_MAGNETIC_STORM', icon: '🧲', color: 'text-yellow-500' },
+    { id: 'overdrive', name: { RU: 'ИНЪЕКЦИЯ ЯДРА', EN: 'CORE INJECTION' }, desc: { RU: 'Сила клика x5 (1 мин)', EN: 'Click Power x5 (1 min)' }, cost: 100, res: 'uranium' as ResourceType, effectId: 'PREMIUM_OVERDRIVE', icon: '☢️', color: 'text-red-500' },
+    { id: 'chronos', name: { RU: 'ХРОНОС-ПОЛЕ', EN: 'CHRONOS FIELD' }, desc: { RU: 'Авто-добыча x3 (5 мин)', EN: 'Auto-mining x3 (5 min)' }, cost: 20, res: 'ancientTech' as ResourceType, effectId: 'PREMIUM_CHRONOS', icon: '⏳', color: 'text-pink-400' },
 ];
 
 // =============================================================================

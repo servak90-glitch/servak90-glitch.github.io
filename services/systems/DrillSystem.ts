@@ -68,7 +68,8 @@ export function processDrilling(
     isDrilling: boolean,
     isOverheated: boolean,
     dt: number,
-    activePerks: string[] = []
+    activePerks: string[] = [],
+    cheats: { isInfiniteFuel?: boolean, isZeroWeight?: boolean } = {} // NEW: Явная передача читов
 ): { update: DrillUpdate & { sideTunnel?: GameState['sideTunnel'] }; resourceChanges: ResourceChanges; events: VisualEvent[] } {
     const events: VisualEvent[] = [];
     let resourceChanges: ResourceChanges = {};
@@ -85,13 +86,22 @@ export function processDrilling(
         };
     }
 
+    // === ПРЕДВАРИТЕЛЬНЫЙ РАСЧЕТ МНОЖИТЕЛЕЙ ===
+    let speedMult = 1;
+    let resMult = 1;
+    let dropMult = 1;
+    activeEffects.forEach(e => {
+        if (e.modifiers.drillSpeedMultiplier) speedMult *= e.modifiers.drillSpeedMultiplier;
+        if (e.modifiers.resourceMultiplier) resMult *= e.modifiers.resourceMultiplier;
+        if (e.modifiers.consumableDropMultiplier) dropMult *= e.modifiers.consumableDropMultiplier;
+    });
+
+    if (activePerks.includes('EXECUTIVE')) {
+        resMult *= 2;
+    }
+
     // === PHASE 3: SIDE TUNNEL EXPLORATION ===
     if (state.sideTunnel && isDrilling && !isOverheated && !state.isBroken && !state.currentBoss) {
-        // Вычисляем мощность бура (упрощенно, без штрафов породе, но со множителями)
-        let speedMult = 1;
-        activeEffects.forEach(e => {
-            if (e.modifiers.drillSpeedMultiplier) speedMult *= e.modifiers.drillSpeedMultiplier;
-        });
         const drillPower = stats.totalSpeed * speedMult * (state.isOverdrive ? 10 : 1);
 
         const result = processSideTunnel(state, drillPower, dt, state.settings.language);
@@ -118,7 +128,6 @@ export function processDrilling(
 
     // Разблокировка контента по глубине
     if (!forgeUnlocked && depth >= 50) forgeUnlocked = true;
-    // ... (rest of the code)
     if (!cityUnlocked && depth >= 200) cityUnlocked = true;
     if (!skillsUnlocked && depth >= 400) skillsUnlocked = true;
     if (storageLevel === 0 && depth >= 600) storageLevel = 1;
@@ -129,7 +138,7 @@ export function processDrilling(
         // === ПРОВЕРКА ПЕРЕГРУЗА ===
         const cargoWeight = state.currentCargoWeight;
         const maxCapacity = stats.totalCargoCapacity;
-        if (!state.isZeroWeight && cargoWeight > maxCapacity) {
+        if (!cheats.isZeroWeight && cargoWeight > maxCapacity) {
             events.push({
                 type: 'LOG',
                 msg: `⚠️ ГРУЗОВОЙ ОТСЕК ПЕРЕПОЛНЕН! (${Math.floor(cargoWeight)}/${Math.floor(maxCapacity)}) Сбросьте балласт или вернитесь в город.`,
@@ -144,7 +153,7 @@ export function processDrilling(
 
         // === ПРОВЕРКА ТОПЛИВА ===
         const fuel = selectBestAvailableFuel(state.resources);
-        const isInfiniteFuel = (globalThis as any).gameStore?.getState?.().isInfiniteFuel;
+        const isInfiniteFuel = cheats.isInfiniteFuel;
 
         if (!fuel && !isInfiniteFuel) {
             // Топливо закончилось - блокируем бурение
@@ -177,31 +186,18 @@ export function processDrilling(
             });
         }
 
-        // Расчёт скорости с учётом твёрдости породы
+        // Использование сгруппированных множителей
+
+        // Расчёт скорости с учётом твёрдости породы (вынесено сюда для линейности)
         const hardness = Math.min(1.0, (depth / 10000));
-        const torqueMult = Math.max(0.1, 1.0 - (stats.torque / 100)); // Игнорирование твердости
-        const effHardness = hardness * torqueMult;
-        const speedPenalty = Math.max(0.05, 1.0 - effHardness);
-
-        // Модификаторы от эффектов
-        let speedMult = 1;
-        let resMult = 1;
-        activeEffects.forEach(e => {
-            if (e.modifiers.drillSpeedMultiplier) speedMult *= e.modifiers.drillSpeedMultiplier;
-            if (e.modifiers.resourceMultiplier) resMult *= e.modifiers.resourceMultiplier;
-        });
-
-        // Perk: Executive (Corporate Level 10) - Passive generation/extraction x2
-        if (activePerks.includes('EXECUTIVE')) {
-            resMult *= 2;
-        }
+        const torqueMult = Math.max(0.1, 1.0 - (stats.torque / 100));
+        const speedPenalty = Math.max(0.05, 1.0 - (hardness * torqueMult));
 
         // Итоговая мощность бурения
         let drillPower = stats.totalSpeed * speedPenalty * speedMult;
         if (state.isOverdrive) drillPower *= 100;
 
         // === ПОТРЕБЛЕНИЕ ТОПЛИВА ===
-        // Балансировка: 1 единица угля на 1 метр бурения при базовой эффективности
         const fuelCost = (drillPower * FUEL_CONSUMPTION_RATE * dt * 10) / (fuel?.efficiency || 1);
 
         if (!isInfiniteFuel && fuel) {
@@ -243,10 +239,6 @@ export function processDrilling(
         }
 
         // [BALANCE v0.5] Consumable Drops (Prospector Luck)
-        let dropMult = 1;
-        activeEffects.forEach(e => {
-            if (e.modifiers.consumableDropMultiplier) dropMult *= e.modifiers.consumableDropMultiplier;
-        });
 
         // Базовый шанс: 0.05% в секунду (уменьшено в 4 раза)
         if (Math.random() < 0.0005 * dropMult * dt * 60) {

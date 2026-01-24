@@ -169,7 +169,7 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                 const screenW = app.screen.width;
                                 const screenH = app.screen.height;
                                 const cx = screenW / 2;
-                                const cy = screenH * 0.4;
+                                const cy = screenH * 0.35;
 
                                 const state = useGameStore.getState();
                                 const { activeDrones, droneLevels, flyingObjects, heat, integrity, depth } = state;
@@ -232,10 +232,10 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                     }
                                     p.sprite.x = p.x;
                                     p.sprite.y = p.y;
-                                    const targetScaleY = 1 + (warpSpeed - 1) * 0.1 * p.z;
+                                    const targetScaleY = 1 + (warpSpeed - 1) * 0.2 * p.z;
                                     p.sprite.scale.y += (targetScaleY - p.sprite.scale.y) * 0.1;
-                                    p.sprite.scale.x = Math.max(0.5, 1 - (targetScaleY - 1) * 0.1);
-                                    p.sprite.alpha = p.z * 0.6;
+                                    p.sprite.scale.x = Math.max(0.4, 1 - (targetScaleY - 1) * 0.15);
+                                    p.sprite.alpha = p.z * 0.5;
                                 });
 
                                 for (let i = globalParticles.length - 1; i >= 0; i--) {
@@ -244,8 +244,15 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                     p.life -= dt;
                                     p.sprite.x += p.vx * dt;
                                     p.sprite.y += p.vy * dt;
-                                    if (p.type === 'DEBRIS') { p.vy += 0.2 * dt; p.sprite.rotation += 0.1 * dt; }
-                                    else if (p.type === 'SMOKE') { p.sprite.alpha = (p.life / p.maxLife) * 0.5; p.sprite.scale.x += 0.01 * dt; p.sprite.scale.y += 0.01 * dt; }
+                                    if (p.type === 'DEBRIS') {
+                                        p.vy += 0.2 * dt; // Gravity (downwards)
+                                        p.sprite.rotation += 0.1 * dt;
+                                    }
+                                    else if (p.type === 'SMOKE') {
+                                        p.sprite.alpha = (p.life / p.maxLife) * 0.5;
+                                        p.sprite.scale.x += 0.01 * dt;
+                                        p.sprite.scale.y += 0.01 * dt;
+                                    }
                                     else { p.sprite.alpha = p.life / p.maxLife; }
                                     if (p.life <= 0) { p.sprite.destroy(); globalParticles.splice(i, 1); }
                                 }
@@ -520,7 +527,8 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                 if (type === 'DEBRIS') {
                     const ang = (Math.random() - 0.5) * Math.PI;
                     const spd = Math.random() * 5 + 2;
-                    vx = Math.sin(ang) * spd; vy = -Math.abs(Math.cos(ang) * spd) - 2;
+                    vx = Math.sin(ang) * spd;
+                    vy = -Math.abs(Math.cos(ang) * spd) - 2; // Fly UP
                     life = 40 + Math.random() * 20;
                 } else if (type === 'SPARK') {
                     tex = globalTextures.spark;
@@ -530,7 +538,8 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                     life = 10 + Math.random() * 10;
                 } else if (type === 'SMOKE') {
                     tex = globalTextures.smoke;
-                    vx = (Math.random() - 0.5) * 1; vy = -1 - Math.random();
+                    vx = (Math.random() - 0.5) * 1;
+                    vy = -1 - Math.random(); // Drift UP
                     life = 50 + Math.random() * 30;
                 }
 

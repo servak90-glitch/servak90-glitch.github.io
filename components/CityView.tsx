@@ -9,6 +9,16 @@ import BarTab from './city/BarTab';
 import ExpeditionTab from './city/ExpeditionTab';
 import LicenseTab from './city/LicenseTab';
 
+import {
+  ShoppingCart,
+  ScrollText,
+  Gem,
+  Wrench,
+  Rocket,
+  Ticket,
+  GlassWater
+} from 'lucide-react';
+
 interface CityViewProps {
   biome: Biome;
   resources: Resources;
@@ -24,14 +34,14 @@ interface CityViewProps {
 
 type CityTab = 'TRADE' | 'CONTRACTS' | 'SERVICE' | 'BAR' | 'JEWELER' | 'EXPEDITIONS' | 'LICENSES';
 
-const TABS: { id: CityTab; label: string; icon: string }[] = [
-  { id: 'TRADE', label: 'РЫНОК', icon: '⚖️' },
-  { id: 'CONTRACTS', label: 'КОНТРАКТЫ', icon: '📜' },
-  { id: 'JEWELER', label: 'ЮВЕЛИР', icon: '💎' },
-  { id: 'SERVICE', label: 'СЕРВИС', icon: '🔧' },
-  { id: 'EXPEDITIONS', label: 'ЭКСПЕДИЦИИ', icon: '🚀' },
-  { id: 'LICENSES', label: 'ЛИЦЕНЗИИ', icon: '🎫' },
-  { id: 'BAR', label: 'БАР', icon: '🍺' },
+const TABS: { id: CityTab; label: string; icon: React.ReactNode }[] = [
+  { id: 'TRADE', label: 'РЫНОК', icon: <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" /> },
+  { id: 'CONTRACTS', label: 'КОНТРАКТЫ', icon: <ScrollText className="w-5 h-5 md:w-6 md:h-6" /> },
+  { id: 'JEWELER', label: 'ЮВЕЛИР', icon: <Gem className="w-5 h-5 md:w-6 md:h-6" /> },
+  { id: 'SERVICE', label: 'СЕРВИС', icon: <Wrench className="w-5 h-5 md:w-6 md:h-6" /> },
+  { id: 'EXPEDITIONS', label: 'ЭКСПЕДИЦИИ', icon: <Rocket className="w-5 h-5 md:w-6 md:h-6" /> },
+  { id: 'LICENSES', label: 'ЛИЦЕНЗИИ', icon: <Ticket className="w-5 h-5 md:w-6 md:h-6" /> },
+  { id: 'BAR', label: 'БАР', icon: <GlassWater className="w-5 h-5 md:w-6 md:h-6" /> },
 ];
 
 const CityView: React.FC<CityViewProps> = ({
@@ -81,27 +91,49 @@ const CityView: React.FC<CityViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#080808] relative overflow-hidden h-full pointer-events-auto">
-      {/* BACKGROUND DECORATION */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-10 left-10 text-[100px] text-zinc-800 font-black rotate-90">HUB-01</div>
-        <div className="absolute bottom-10 right-10 text-[100px] text-zinc-800 font-black">ZONE-A</div>
+    <div className="flex-1 flex flex-col bg-[#050505] relative overflow-hidden h-full pointer-events-auto">
+      {/* PREMIUM BACKGROUND EFFECTS */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[150px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 blur-[150px] rounded-full animate-pulse" />
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
+
+        {/* Decorative Grid */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'linear-gradient(rgba(20, 20, 20, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(20, 20, 20, 0.5) 1px, transparent 1px)',
+          backgroundSize: '40px 40px'
+        }} />
       </div>
 
-      {/* HEADER */}
-      <div className="p-4 md:p-6 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md z-10 relative">
-        <h2 className="text-xl md:text-3xl pixel-text text-white mb-1 md:mb-2 truncate">
-          {biome.hub || "НЕИЗВЕСТНОЕ ПОСЕЛЕНИЕ"}
-        </h2>
-        <div className="flex items-center gap-2 text-[10px] md:text-xs font-mono text-zinc-400">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
-          <span>СИСТЕМЫ: НОРМА</span>
-          <span className="ml-auto md:ml-4 text-zinc-600">ГЛУБИНА: {biome.depth}м</span>
+      {/* HEADER: SCI-FI GLASSMOPHISM 2.0 */}
+      <div className="p-4 md:p-6 border-b border-white/10 bg-black/40 backdrop-blur-xl z-10 relative flex justify-between items-end">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="h-1 w-12 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />
+            <span className="text-[10px] font-black text-cyan-500/80 tracking-[0.3em] uppercase">Sector Access Granted</span>
+          </div>
+          <h2 className="text-2xl md:text-4xl font-black text-white tracking-tighter uppercase italic leading-none truncate">
+            {biome.hub || "HUB ENTITY"}
+          </h2>
+        </div>
+
+        <div className="text-right hidden md:block">
+          <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">Station Telemetry</div>
+          <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-3 py-1.5 rounded-sm">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e]" />
+              <span className="text-[10px] text-zinc-300 font-bold">ONLINE</span>
+            </div>
+            <div className="h-4 w-px bg-white/10" />
+            <div className="text-[10px] text-zinc-400 font-mono">
+              LOC: <span className="text-white">{biome.depth < 1000 ? 'RUST_VALLEY' : 'DEEP_VOID'}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* CITY NAVIGATION */}
-      <div className="flex border-b border-zinc-800 z-10 relative bg-zinc-900 overflow-x-auto scrollbar-hide touch-pan-x">
+      {/* CITY NAVIGATION: DYNAMIC TABS */}
+      <div className="flex z-10 relative bg-black/60 backdrop-blur-md border-b border-white/5 overflow-x-auto no-scrollbar scroll-smooth">
         {TABS.map(tab => (
           <button
             key={tab.id}
@@ -109,19 +141,29 @@ const CityView: React.FC<CityViewProps> = ({
               setActiveTab(tab.id);
               audioEngine.playUITabSwitch();
             }}
-            className={`flex-1 min-w-[80px] md:min-w-0 py-3 md:py-4 px-2 md:px-4 text-[10px] md:text-xs font-bold font-mono transition-colors flex items-center justify-center gap-1 md:gap-2 whitespace-nowrap active:bg-zinc-800
-              ${activeTab === tab.id ? 'bg-zinc-800 text-cyan-400 border-b-2 border-cyan-400' : 'text-zinc-500 hover:text-white'}`}
+            className={`group relative flex-1 min-w-[90px] md:min-w-[120px] py-4 px-4 transition-all duration-300
+              ${activeTab === tab.id ? 'bg-cyan-500/5' : 'hover:bg-white/5'}`}
           >
-            <span className="text-base md:text-base">{tab.icon}</span>
-            <span className="hidden md:inline">{tab.label}</span>
-            <span className="md:hidden text-[9px]">{tab.label.substring(0, 4)}</span>
+            <div className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${activeTab === tab.id ? 'scale-110' : 'opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0'}`}>
+              <div className="drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{tab.icon}</div>
+              <span className={`text-[9px] md:text-[10px] font-black tracking-widest uppercase transition-colors
+                ${activeTab === tab.id ? 'text-cyan-400' : 'text-zinc-500 group-hover:text-zinc-200'}`}>
+                {tab.label}
+              </span>
+            </div>
+
+            {/* Active Indicator Line */}
+            <div className={`absolute bottom-0 left-0 h-[2px] bg-cyan-500 shadow-[0_-5px_15px_#06b6d4] transition-all duration-500
+              ${activeTab === tab.id ? 'w-full opacity-100' : 'w-0 opacity-0'}`} />
           </button>
         ))}
       </div>
 
-      {/* CONTENT AREA */}
-      <div className="flex-1 p-4 md:p-6 relative z-10 overflow-y-auto touch-pan-y overscroll-contain">
-        {renderActiveTab()}
+      {/* CONTENT AREA: WRAPPED IN GLASS CARDS */}
+      <div className="flex-1 p-4 md:p-8 relative z-10 overflow-y-auto no-scrollbar touch-pan-y overscroll-contain bg-gradient-to-b from-black/20 to-transparent">
+        <div className="max-w-6xl mx-auto min-h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {renderActiveTab()}
+        </div>
       </div>
     </div>
   );

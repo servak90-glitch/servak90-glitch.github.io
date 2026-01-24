@@ -100,6 +100,12 @@ const INITIAL_STATE: GameState = {
         coolantPaste: 0,
         advancedCoolant: 0
     },
+    stats: {
+        energyProd: 0, energyCons: 0, energyEfficiency: 1, totalDamage: 0, totalSpeed: 0, totalCooling: 0, torque: 0,
+        critChance: 0, luck: 0, predictionTime: 0, clickMult: 1, ventSpeed: 1, defense: 0, evasion: 0,
+        hazardResist: 0, integrity: 100, regen: 0, droneEfficiency: 1, drillingEfficiency: 1, ambientHeat: 0,
+        requiredTier: 1, skillMods: {}, artifactMods: {}, totalCargoCapacity: 5000
+    },
     drill: {
         [DrillSlot.BIT]: BITS[0],
         [DrillSlot.ENGINE]: ENGINES[0],
@@ -531,7 +537,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const s = get();
         if (!s.currentBoss) return;
 
-        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, s.activeEffects);
         const clickDamage = stats.totalDamage * stats.clickMult;
 
         const res = damageBossWeakPoint(s.currentBoss, wpId, clickDamage);

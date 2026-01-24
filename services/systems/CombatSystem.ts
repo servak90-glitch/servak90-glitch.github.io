@@ -78,7 +78,8 @@ export function processCombat(
     state: GameState,
     stats: Stats,
     isShielding: boolean,
-    isOverheated: boolean
+    isOverheated: boolean,
+    dt: number // NEW: Передача времени кадра
 ): CombatResult {
     const events: VisualEvent[] = [];
     const resourceChanges: ResourceChanges = {};
@@ -243,7 +244,7 @@ export function processCombat(
         // [BALANCING] Cooldown Logic to prevent spam
 
         // Decrement (Assuming ~10 ticks/sec or 0.1s tick)
-        minigameCooldown = minigameCooldown > 0 ? minigameCooldown - 0.1 : 0;
+        minigameCooldown = minigameCooldown > 0 ? minigameCooldown - dt : 0;
 
         if (combatMinigame === null && !currentBoss.isInvulnerable && minigameCooldown <= 0) {
             const chance = 0.005;

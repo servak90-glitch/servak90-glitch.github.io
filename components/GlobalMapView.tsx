@@ -14,17 +14,36 @@ import QuestPanel from './QuestPanel';
 import FactionPanel from './FactionPanel';
 import { BuildBaseModal } from './BuildBaseModal';
 import { BaseView } from './BaseView';
-import { audioEngine } from '../services/audioEngine';
-import { calculateStats } from '../services/gameMath';
+import { useDrillStats, useMapState, useMapActions } from '../store/selectors';
 import { calculateDistance } from '../services/regionMath';
-import { FUEL_TYPES, getFuelLabel } from '../services/travelMath';  // FUEL_TYPES нужен для UI
+import { FUEL_TYPES, getFuelLabel } from '../services/travelMath';
 import { TL, t } from '../services/localization';
+import {
+    Map as MapIcon,
+    ShoppingBag,
+    Truck,
+    ScrollText,
+    Crown,
+    Package,
+    Fuel,
+    ArrowUpCircle,
+    Navigation,
+    Clock,
+    Activity,
+    AlertTriangle,
+    Hammer,
+    Satellite,
+    Zap,
+    Search,
+    Cpu
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Mathematical Engine v0.3.6
 import { calculateTotalMass, calculateFuelConsumption } from '../services/mathEngine';
 import { FuelType } from '../services/mathEngineConfig';
 
-const TravelProgress = ({ travel, lang }: { travel: any, lang: string }) => {
+const TravelOverlay = ({ travel, lang }: { travel: any, lang: string }) => {
     const [progress, setProgress] = useState(0);
     const [timeLeft, setTimeLeft] = useState(0);
 
@@ -40,321 +59,416 @@ const TravelProgress = ({ travel, lang }: { travel: any, lang: string }) => {
     }, [travel]);
 
     return (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md">
-            <div className="w-80 p-6 bg-gray-900 border-2 border-cyan-500 rounded-lg shadow-[0_0_30px_rgba(6,182,212,0.5)]">
-                <h3 className="text-cyan-400 font-bold text-center mb-4 animate-pulse">
-                    {lang === 'RU' ? 'В ПУТИ...' : 'TRAVELING...'}
-                </h3>
-                <div className="flex justify-between text-[10px] text-gray-400 mb-2">
-                    <span>{travel.distance} km</span>
-                    <span>{timeLeft}s</span>
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-void/80 backdrop-blur-3xl animate-in fade-in duration-700">
+            <div className="absolute inset-0 mesh-bg opacity-30 pointer-events-none" />
+
+            <div className="w-full max-w-xl p-10 glass-panel border-cyan-500/20 relative overflow-hidden group shadow-[0_0_100px_rgba(34,211,238,0.1)]">
+                <div className="absolute -top-32 -left-32 w-64 h-64 bg-cyan-500/10 rounded-full blur-[100px] animate-pulse" />
+                <div className="absolute top-0 right-0 p-4 opacity-5">
+                    <Satellite className="w-32 h-32" />
                 </div>
-                <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-                    <div
-                        className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,1)] transition-all duration-300"
-                        style={{ width: `${progress}%` }}
-                    />
+
+                <div className="flex flex-col items-center relative z-10">
+                    <div className="p-4 glass-panel border-cyan-500/30 bg-cyan-500/5 mb-8 rounded-2xl pulse-glow-cyan">
+                        <Navigation className="w-10 h-10 text-cyan-400" />
+                    </div>
+
+                    <h3 className="text-3xl font-black font-technical text-white uppercase tracking-[0.3em] mb-3 italic">
+                        {lang === 'RU' ? 'ТРАНСПОРТИРОВКА' : 'TRANSIT_PROTOCOL_ACTIVE'}
+                    </h3>
+
+                    <div className="flex items-center gap-6 text-white/30 font-technical text-[10px] mb-10 uppercase tracking-[0.2em]">
+                        <div className="flex items-center gap-2 glass-panel border-white/5 bg-white/5 py-1 px-3">
+                            <Activity className="w-3 h-3 text-cyan-400" />
+                            <span>Dist: <span className="text-white font-bold">{travel.distance} KM</span></span>
+                        </div>
+                        <div className="flex items-center gap-2 glass-panel border-white/5 bg-white/5 py-1 px-3">
+                            <Clock className="w-3 h-3 text-purple-400" />
+                            <span>ETA: <span className="text-white font-bold">{timeLeft}S</span></span>
+                        </div>
+                    </div>
+
+                    <div className="w-full space-y-2 mb-10">
+                        <div className="flex justify-between text-[8px] font-black font-technical text-cyan-400/60 uppercase tracking-widest px-1">
+                            <span>Phase_Optimization</span>
+                            <span>{Math.floor(progress)}%</span>
+                        </div>
+                        <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/5 relative">
+                            <motion.div
+                                className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.5)] relative"
+                                style={{ width: `${progress}%` }}
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                            </motion.div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="flex items-center gap-3 glass-panel border-rose-500/20 bg-rose-500/5 py-2 px-6 text-[9px] font-black font-technical text-rose-400 uppercase tracking-[0.2em]">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            <span>Mass-Dependent Physics Applied</span>
+                        </div>
+                        <span className="text-[8px] text-white/20 font-technical uppercase italic">Void-Piercer Guidance System v.4.0</span>
+                    </div>
                 </div>
-                <p className="text-center text-[10px] text-gray-400 mt-4 italic">
-                    {lang === 'RU'
-                        ? 'Масса влияет на расход топлива и скорость'
-                        : 'Mass affects fuel consumption and speed'}
-                </p>
             </div>
         </div>
     );
 };
 
 export const GlobalMapView = () => {
-    // State
     const [activeTab, setActiveTab] = useState<'map' | 'market' | 'caravans' | 'quests' | 'factions'>('map');
     const [selectedRegion, setSelectedRegion] = useState<RegionId | null>(null);
     const [selectedFuel, setSelectedFuel] = useState<ResourceType>(ResourceType.COAL);
     const [isBuildModalOpen, setIsBuildModalOpen] = useState(false);
     const [managedBaseId, setManagedBaseId] = useState<string | null>(null);
 
-    // Store data
-    const currentRegion = useGameStore(s => s.currentRegion);
-    const resources = useGameStore(s => s.resources);
-    const playerBases = useGameStore(s => s.playerBases);
-    const caravans = useGameStore(s => s.caravans);
-    const travelToRegion = useGameStore(s => s.travelToRegion);
-    const buildBase = useGameStore(s => s.buildBase);
-    const currentCargoWeight = useGameStore(s => s.currentCargoWeight);
-    const level = useGameStore(s => s.level);
+    const { drill, resources, stats, equipmentInventory } = useDrillStats();
+    const { level, unlockedLicenses, travel, currentRegion, playerBases, caravans, currentCargoWeight } = useMapState();
+    const { travelToRegion, buildBase } = useMapActions();
     const lang = useGameStore(s => s.settings.language);
-    const unlockedLicenses = useGameStore(s => s.unlockedLicenses);
-    const travel = useGameStore(s => s.travel);
 
-    // Drill data for stats
-    const drill = useGameStore(s => s.drill);
-    const skillLevels = useGameStore(s => s.skillLevels);
-    const equippedArtifacts = useGameStore(s => s.equippedArtifacts);
-    const inventory = useGameStore(s => s.inventory);
-    const equipmentInventory = useGameStore(s => s.equipmentInventory);
-    const depth = useGameStore(s => s.depth);
-
-    // Derived
-    const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth);
-    const maxCapacity = stats.totalCargoCapacity || 5000;
-    const currentRegionData = REGIONS[currentRegion];
-    const cargoRatio = maxCapacity > 0 ? currentCargoWeight / maxCapacity : 0;
-    const isOverloaded = currentCargoWeight > maxCapacity;
-
-    const currentBase = playerBases.find(b => b.regionId === currentRegion);
-    const hasStationAccess = currentBase?.type === 'station';
-    const hasCaravanAccess = playerBases.length > 0;
-    const regionIds = useMemo(() => REGION_IDS, []);
+    const maxCapacity = useMemo(() => stats.totalCargoCapacity || 5000, [stats.totalCargoCapacity]);
+    const currentRegionData = useMemo(() => REGIONS[currentRegion], [currentRegion]);
+    const isOverloaded = useMemo(() => currentCargoWeight > maxCapacity, [currentCargoWeight, maxCapacity]);
+    const currentBase = useMemo(() => playerBases.find(b => b.regionId === currentRegion), [playerBases, currentRegion]);
+    const hasStationAccess = useMemo(() => currentBase?.type === 'station', [currentBase]);
+    const hasCaravanAccess = useMemo(() => playerBases.length > 0, [playerBases]);
 
     const handleTravel = () => {
         if (selectedRegion && selectedRegion !== currentRegion) {
             travelToRegion(selectedRegion, selectedFuel);
-            // audioEngine.playTravelStart(); // Удалено, т.к. вызывается внутри travelToRegion
         }
     };
 
-    const renderTabs = () => (
-        <div className="flex overflow-x-auto scrollbar-hide touch-pan-x gap-1 sm:gap-2 w-full mt-2 md:mt-0 snap-x snap-mandatory pb-1">
-            <button
-                onClick={() => setActiveTab('map')}
-                className={`flex-shrink-0 snap-start min-w-[60px] sm:min-w-[80px] md:min-w-0 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-t border-2 border-b-0 transition-all flex items-center justify-center gap-1 ${activeTab === 'map' ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
-            >
-                <span>🗺️</span>
-                <span className="hidden sm:inline">{t(TL.ui.map, lang)}</span>
-            </button>
-            <button
-                onClick={() => setActiveTab('market')}
-                className={`flex-shrink-0 snap-start min-w-[60px] sm:min-w-[80px] md:min-w-0 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-t border-2 border-b-0 transition-all flex items-center justify-center gap-1 ${!hasStationAccess ? 'bg-gray-900 text-gray-600 border-gray-800 cursor-not-allowed' : activeTab === 'market' ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
-                disabled={!hasStationAccess}
-            >
-                <span>💰</span>
-                <span className="hidden sm:inline">{t(TL.ui.market, lang)}</span>
-                {!hasStationAccess && <span className="hidden md:inline text-[10px] ml-1">{t(TL.ui.locked, lang)}</span>}
-            </button>
-            <button
-                onClick={() => setActiveTab('caravans')}
-                className={`flex-shrink-0 snap-start min-w-[60px] sm:min-w-[80px] md:min-w-0 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-t border-2 border-b-0 transition-all flex items-center justify-center gap-1 ${!hasCaravanAccess ? 'bg-gray-900 text-gray-600 border-gray-800 cursor-not-allowed' : activeTab === 'caravans' ? 'bg-purple-600 text-white border-purple-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
-                disabled={!hasCaravanAccess}
-            >
-                <span>🚛</span>
-                <span className="hidden sm:inline">{t(TL.ui.caravans, lang)}</span>
-                {!hasCaravanAccess && <span className="hidden md:inline text-[10px] ml-1">{t(TL.ui.locked, lang)}</span>}
-            </button>
-            <button
-                onClick={() => setActiveTab('quests')}
-                className={`flex-shrink-0 snap-start min-w-[60px] sm:min-w-[80px] md:min-w-0 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-t border-2 border-b-0 transition-all flex items-center justify-center gap-1 ${activeTab === 'quests' ? 'bg-blue-600 text-white border-blue-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
-            >
-                <span>📜</span>
-                <span className="hidden sm:inline">{t(TL.ui.quests, lang)}</span>
-            </button>
-            <button
-                onClick={() => setActiveTab('factions')}
-                className={`flex-shrink-0 snap-start min-w-[60px] sm:min-w-[80px] md:min-w-0 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-t border-2 border-b-0 transition-all flex items-center justify-center gap-1 ${activeTab === 'factions' ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
-            >
-                <span>👑</span>
-                <span className="hidden sm:inline">{t(TL.ui.factions, lang)}</span>
-            </button>
-        </div>
-    );
+    const tabs = [
+        { id: 'map', label: TL.ui.map, icon: <MapIcon className="w-4 h-4" />, color: 'text-cyan-400' },
+        { id: 'market', label: TL.ui.market, icon: <ShoppingBag className="w-4 h-4" />, color: 'text-amber-400', locked: !hasStationAccess },
+        { id: 'caravans', label: TL.ui.caravans, icon: <Truck className="w-4 h-4" />, color: 'text-purple-400', locked: !hasCaravanAccess },
+        { id: 'quests', label: TL.ui.quests, icon: <ScrollText className="w-4 h-4" />, color: 'text-rose-400' },
+        { id: 'factions', label: TL.ui.factions, icon: <Crown className="w-4 h-4" />, color: 'text-emerald-400' },
+    ];
+
+    const formatVal = (v: number) => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v;
 
     return (
-        <div className="flex-1 flex flex-col bg-black text-white p-2 md:p-4 pb-20 md:pb-4 relative overflow-hidden h-full">
-            {travel && <TravelProgress travel={travel} lang={lang} />}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-50" />
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-50" />
-            </div>
+        <div className="flex-1 flex flex-col bg-void text-white pb-20 md:pb-4 relative overflow-hidden h-full">
+            <div className="absolute inset-0 mesh-bg opacity-20 pointer-events-none" />
+            <AnimatePresence>
+                {travel && <TravelOverlay travel={travel} lang={lang} />}
+            </AnimatePresence>
 
-            <div className="max-w-6xl w-full mx-auto mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-2 md:gap-4 relative z-10 shrink-0">
-                <div className="flex justify-between w-full md:w-auto items-center">
-                    <div>
-                        <h1 className="text-3xl md:text-6xl font-black mb-1 md:mb-2 tracking-tighter pixel-text text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-500">
-                            {t(TL.ui.map, lang).toUpperCase()}
-                        </h1>
-                        <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-mono text-gray-400">
-                            <span>SECTOR: AEGIS-7</span>
-                            <span className="text-cyan-500">STATUS: ACTIVE</span>
-                            <div className="flex items-center gap-2 ml-4 bg-gray-900/50 border border-gray-800 rounded px-2 py-0.5">
-                                <span className="text-[9px] text-gray-500 font-bold uppercase">{lang === 'RU' ? 'Лицензии' : 'Licenses'}:</span>
-                                <div className="flex gap-1.5">
+            {/* HEADER HUB BENTO */}
+            <div className="max-w-7xl w-full mx-auto p-6 md:p-10 flex flex-col gap-8 relative z-10 shrink-0">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-10">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-4 mb-3">
+                            <div className="p-3 glass-panel border-cyan-500/20 bg-cyan-500/5 hidden md:block">
+                                <Satellite className="w-8 h-8 text-cyan-400" />
+                            </div>
+                            <div className="flex flex-col">
+                                <h1 className="text-3xl md:text-7xl font-black font-technical uppercase tracking-tighter italic text-white leading-none">
+                                    {t(TL.ui.map, lang)}
+                                </h1>
+                                <div className="flex items-center gap-3 mt-2">
+                                    <div className="glass-panel px-3 py-1 border-white/10 bg-white/5 flex items-center gap-2">
+                                        <span className="text-[8px] font-black font-technical text-white/30 uppercase tracking-widest">{t(TL.ui.sectorId, lang)}</span>
+                                        <span className="text-[10px] md:text-xs font-black font-technical text-cyan-400">AEGIS_CORE_7</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-6 text-[10px] font-black font-technical uppercase tracking-[0.2em] text-white/30">
+                            <div className="flex items-center gap-2 text-emerald-400 glass-panel px-3 py-1 border-emerald-500/20 bg-emerald-500/5">
+                                <Activity className="w-3.5 h-3.5 animate-pulse" />
+                                <span>{t(TL.ui.scanningActive, lang)}</span>
+                            </div>
+                            <div className="flex items-center gap-4 border-l border-white/5 pl-6">
+                                <span>{t(TL.ui.authClearance, lang)}</span>
+                                <div className="flex gap-2">
                                     {(['green', 'yellow', 'red'] as const).map(zone => (
-                                        <div key={zone} className={`w-2 h-2 rounded-full ${unlockedLicenses.includes(zone)
-                                            ? zone === 'green' ? 'bg-green-500 shadow-[0_0_4px_#22c55e]'
-                                                : zone === 'yellow' ? 'bg-yellow-400 shadow-[0_0_4px_#facc15]'
-                                                    : 'bg-red-500 shadow-[0_0_4px_#ef4444]'
-                                            : 'bg-gray-800'
-                                            }`} title={`${zone.toUpperCase()} license`} />
+                                        <div key={zone} className={`w-3 h-3 rounded-full border border-black/40 transition-shadow duration-500 ${unlockedLicenses.includes(zone)
+                                            ? zone === 'green' ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)]'
+                                                : zone === 'yellow' ? 'bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.8)]'
+                                                    : 'bg-rose-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]'
+                                            : 'bg-white/5 grayscale border-white/5'
+                                            }`} />
                                     ))}
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    {/* NAV DECK TABS */}
+                    <div className="w-full lg:w-auto flex glass-panel p-1 md:p-2 border-white/5 bg-black/40 overflow-x-auto no-scrollbar shrink-0 relative">
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/[0.02] to-transparent pointer-events-none" />
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                disabled={tab.locked}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`flex items-center gap-2 md:gap-3 px-4 md:px-8 py-3 md:py-4 rounded-none transition-all font-technical text-[9px] md:text-[10px] uppercase font-black tracking-[0.2em] relative group shrink-0
+                                    ${tab.locked ? 'opacity-20 cursor-not-allowed grayscale' :
+                                        activeTab === tab.id ? 'text-white bg-white/10' : 'text-white/30 hover:text-white/60'}
+                                `}
+                            >
+                                <span className={`transition-transform duration-300 group-hover:scale-125 ${activeTab === tab.id ? tab.color : ''} [&>svg]:w-3.5 [&>svg]:h-3.5 md:[&>svg]:w-4 md:[&>svg]:h-4`}>{tab.icon}</span>
+                                <span className="whitespace-nowrap">{t(tab.label, lang)}</span>
+                                {activeTab === tab.id && (
+                                    <motion.div layoutId="map-tab-active" className="absolute bottom-0 left-0 right-0 h-[2px] bg-white shadow-[0_-4px_10px_white]" />
+                                )}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-                {renderTabs()}
             </div>
 
-            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-4 relative z-10 min-h-0 overflow-y-auto touch-pan-y overscroll-contain">
-                {activeTab === 'map' && (
-                    <div className="flex-1 flex flex-col gap-4">
-                        <div className="bg-gray-800/50 border-2 border-cyan-500/30 rounded-lg p-3 md:p-4">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-                                <div>
-                                    <p className="text-gray-400 text-[10px] md:text-sm">{t(TL.ui.currentRegion, lang)}</p>
-                                    <p className="text-cyan-400 font-bold text-xs md:text-base text-nowrap">{t(TL.regions[currentRegion] || currentRegionData.name, lang)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-400 text-[10px] md:text-sm">{t(TL.ui.cargo, lang)}</p>
-                                    <p className={`font-bold text-xs md:text-base ${isOverloaded ? 'text-red-500' : 'text-green-400'}`}>
-                                        {Math.floor(currentCargoWeight)} / {Math.floor(maxCapacity)}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-400 text-[10px] md:text-sm">{t(TL.ui.fuel, lang)}</p>
-                                    <p className="text-yellow-400 font-bold text-xs md:text-base">{resources[ResourceType.COAL]}</p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-400 text-[10px] md:text-sm">{t(TL.ui.level, lang)}</p>
-                                    <p className="text-purple-400 font-bold text-xs md:text-base">Lvl {level}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div
-                            className="w-full h-[300px] md:h-[400px] bg-black/40 border-2 border-gray-700 rounded-lg overflow-hidden relative shadow-inner"
-                            style={{ touchAction: 'none' }}
+            {/* MAIN DASHBOARD SCENE */}
+            <div className="max-w-7xl w-full mx-auto px-6 md:px-10 mt-4 flex-1 flex flex-col gap-8 overflow-y-auto min-h-0 pb-32 scrollbar-hide relative z-10">
+                <AnimatePresence mode="wait">
+                    {activeTab === 'map' && (
+                        <motion.div
+                            key="map-scene"
+                            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+                            className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 h-full min-h-0 md:min-h-[660px]"
                         >
-                            <IsometricCanvas
-                                regions={regionIds as any}
-                                activeRegion={currentRegion}
-                                bases={playerBases}
-                                caravans={caravans}
-                                onRegionSelect={setSelectedRegion}
-                            />
-                            <div className="absolute top-2 right-2 md:top-4 md:right-4 pointer-events-none text-right hidden md:block">
-                                <p className="text-[10px] text-gray-500 font-mono">LMB: SELECT</p>
-                                <p className="text-[10px] text-gray-500 font-mono">DRAG: PAN</p>
-                            </div>
-                        </div>
+                            {/* LEFT WING: TELEMETRY & STATUS */}
+                            <div className="lg:col-span-4 flex flex-col gap-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <BentoStat icon={<Activity className="text-cyan-400" />} label={t(TL.ui.currentSector, lang)} val={t(TL.regions[currentRegion] || currentRegionData.name, lang)} />
+                                    <BentoStat icon={<Package className={isOverloaded ? 'text-rose-500' : 'text-emerald-400'} />} label={t(TL.ui.cargoLoad, lang)} val={`${Math.floor(currentCargoWeight)}/${Math.floor(maxCapacity)}`} urgent={isOverloaded} />
+                                    <BentoStat icon={<Fuel className="text-amber-400" />} label={t(TL.ui.carbonUnits, lang)} val={resources[ResourceType.COAL]} />
+                                    <BentoStat icon={<ArrowUpCircle className="text-purple-400" />} label={t(TL.ui.expDegree, lang)} val={`Rank_${level}`} />
+                                </div>
 
-                        {selectedRegion && selectedRegion !== currentRegion && (
-                            <div className="bg-gray-800/80 border-2 border-cyan-500 rounded-lg p-4 md:p-6 mb-4">
-                                <h3 className="text-lg md:text-2xl font-bold text-cyan-400 mb-3 md:mb-4">
-                                    🚀 {t(TL.ui.travelTo, lang)} {t(TL.regions[selectedRegion], lang)}
-                                </h3>
-                                <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                                    <div>
-                                        <label className="block text-gray-400 text-xs md:text-sm mb-2">{t(TL.ui.selectFuel, lang)}</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {FUEL_TYPES.map(fuel => {
-                                                const available = resources[fuel] || 0;
-                                                // NEW: Используем mathEngine v0.3.6
-                                                const totalMass = calculateTotalMass(drill, resources, equipmentInventory);
-                                                const distance = calculateDistance(currentRegion, selectedRegion);
-                                                const cost = Math.ceil(calculateFuelConsumption(
-                                                    distance,
-                                                    totalMass.grossWeight,
-                                                    maxCapacity,
-                                                    fuel as FuelType,
-                                                    currentRegion as any  // RegionId совместим
-                                                ));
-                                                const canAfford = available >= cost;
-                                                return (
-                                                    <button
-                                                        key={fuel}
-                                                        onClick={() => setSelectedFuel(fuel)}
-                                                        disabled={!canAfford}
-                                                        className={`p-2 md:p-3 rounded border transition-all text-left ${selectedFuel === fuel ? 'border-cyan-500 bg-cyan-500/20' : 'border-gray-600'} ${!canAfford ? 'opacity-50' : ''}`}
-                                                    >
-                                                        <div className="font-bold text-xs md:text-sm text-white">{t(TL.resources[fuel] || getFuelLabel(fuel), lang)}</div>
-                                                        <div className="text-[10px] md:text-xs text-gray-400">{available} / {cost}</div>
-                                                    </button>
-                                                );
-                                            })}
+                                {/* SCANNER INTERFACE */}
+                                <div className="glass-panel border-white/5 bg-black/40 overflow-hidden flex flex-col p-4 md:p-6 relative group">
+                                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <Cpu className="w-24 h-24" />
+                                    </div>
+                                    <div className="flex items-center gap-3 mb-4 md:mb-6">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                                        <h3 className="text-[10px] font-black font-technical text-white/50 uppercase tracking-[0.3em]">{t(TL.ui.regionDescriptor, lang)}</h3>
+                                    </div>
+
+                                    <div className="space-y-4 md:space-y-6 flex-1">
+                                        <AnimatePresence mode="wait">
+                                            {selectedRegion ? (
+                                                <motion.div key={selectedRegion} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4 md:space-y-6">
+                                                    <div>
+                                                        <h4 className="text-xl md:text-2xl font-black font-technical uppercase italic text-white mb-2">{t(TL.regions[selectedRegion] || REGIONS[selectedRegion].name, lang)}</h4>
+                                                        <p className="text-[10px] md:text-xs text-white/40 font-technical italic pr-4 md:pr-8">"{t(REGIONS[selectedRegion].description || '', lang)}"</p>
+                                                    </div>
+
+                                                    {selectedRegion !== currentRegion ? (
+                                                        <div className="space-y-3 md:space-y-4">
+                                                            <div>
+                                                                <label className="text-[8px] font-black font-technical uppercase text-white/30 mb-2 block tracking-widest">{t(TL.ui.propulsionSource, lang)}</label>
+                                                                <div className="grid grid-cols-2 gap-2">
+                                                                    {FUEL_TYPES.map(fuel => {
+                                                                        const available = resources[fuel] || 0;
+                                                                        const totalMass = calculateTotalMass(drill, resources, equipmentInventory);
+                                                                        const distance = calculateDistance(currentRegion, selectedRegion);
+                                                                        const cost = Math.ceil(calculateFuelConsumption(distance, totalMass.grossWeight, maxCapacity, fuel as FuelType, currentRegion as any));
+                                                                        const canAfford = available >= cost;
+                                                                        return (
+                                                                            <button
+                                                                                key={fuel}
+                                                                                disabled={!canAfford}
+                                                                                onClick={() => setSelectedFuel(fuel)}
+                                                                                className={`p-2 md:p-3 glass-panel text-left border-white/5 transition-all
+                                                                                    ${selectedFuel === fuel ? 'bg-cyan-500 text-black border-cyan-400' : 'bg-black/40 text-white/40 hover:bg-white/5'}
+                                                                                    ${!canAfford && 'opacity-20 cursor-not-allowed'}
+                                                                                `}
+                                                                            >
+                                                                                <div className="text-[8px] md:text-[9px] font-black font-technical uppercase mb-1">{t(TL.resources[fuel] || getFuelLabel(fuel), lang)}</div>
+                                                                                <div className="text-[7px] md:text-[8px] font-technical opacity-70 italic font-bold">
+                                                                                    {formatVal(available)} / {formatVal(cost)}
+                                                                                </div>
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex justify-between items-center py-3 md:py-4 border-y border-white/5">
+                                                                <span className="text-[8px] md:text-[9px] font-black font-technical text-white/30 uppercase tracking-widest">E-Distance</span>
+                                                                <span className="text-lg md:text-xl font-black font-technical text-white italic">{calculateDistance(currentRegion, selectedRegion)} KM</span>
+                                                            </div>
+                                                            <button
+                                                                onClick={handleTravel}
+                                                                disabled={isOverloaded}
+                                                                className={`w-full py-4 md:py-5 font-black font-technical text-[10px] md:text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 relative overflow-hidden group
+                                                                ${isOverloaded
+                                                                        ? 'bg-rose-500/10 border border-rose-500/30 text-rose-500 grayscale cursor-not-allowed'
+                                                                        : 'bg-cyan-500 text-black hover:bg-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.3)]'}`}
+                                                            >
+                                                                <Navigation className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                                                {isOverloaded ? t(TL.ui.overloaded, lang) : t(TL.ui.initiateTransit, lang)}
+                                                            </button>
+                                                        </div>
+                                                    ) : currentBase ? (
+                                                        <div className="glass-panel p-4 md:p-6 border-purple-500/20 bg-purple-500/5">
+                                                            <div className="flex items-center gap-3 mb-4">
+                                                                <div className="w-8 h-8 md:w-10 md:h-10 glass-panel flex items-center justify-center bg-purple-500/10 text-purple-400">
+                                                                    <Hammer className="w-4 h-4 md:w-5 md:h-5" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-[7px] md:text-[8px] font-black font-technical text-purple-400/60 uppercase">Base_Link_Operational</div>
+                                                                    <div className="text-xs md:text-sm font-black font-technical text-white uppercase">{t(TL.baseTypes[currentBase.type], lang)}</div>
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => setManagedBaseId(currentBase.id)}
+                                                                className="w-full py-2 md:py-3 glass-panel border-white/10 bg-white/5 hover:bg-white/10 text-white font-black font-technical text-[8px] md:text-[9px] uppercase tracking-widest transition-all"
+                                                            >
+                                                                {t(TL.ui.accessMainframe, lang)}
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-4 md:p-6 glass-panel border-cyan-500/20 bg-cyan-500/5 text-center">
+                                                            <div className="text-[10px] md:text-xs font-black font-technical text-cyan-400 uppercase tracking-widest mb-1">{t(TL.ui.youAreHere, lang)}</div>
+                                                            <div className="text-[8px] md:text-[9px] font-technical text-white/40 uppercase">{t(TL.ui.awaitingCommand, lang)}</div>
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center h-full text-center opacity-20 py-10 md:py-20">
+                                                    <Search className="w-10 h-10 md:w-12 md:h-12 mb-4" />
+                                                    <span className="text-[9px] md:text-[10px] font-black font-technical uppercase tracking-[0.3em]">Select_Destination_Node</span>
+                                                </div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-white/5 flex flex-wrap gap-1.5 md:gap-2">
+                                        {Object.keys(currentRegionData.resourceBonuses || {}).map(res => (
+                                            <div key={res} className="px-2 md:px-3 py-0.5 md:py-1 glass-panel border-white/10 bg-white/5 text-[8px] md:text-[9px] font-black font-technical text-white/40 uppercase">
+                                                {res}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* CENTER STAGE: ISOMETRIC SCANNER */}
+                            <div className="lg:col-span-8 glass-panel border-white/10 bg-black/60 relative overflow-hidden flex flex-col bento-glow shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] min-h-[400px] md:min-h-0 order-first md:order-none">
+                                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none" />
+                                <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20 flex items-center gap-4">
+                                    <div className="px-3 py-1.5 md:px-4 md:py-2 glass-panel border-cyan-500/30 bg-black/60 flex items-center gap-2 md:gap-3">
+                                        <div className="flex flex-col">
+                                            <span className="text-[7px] md:text-[8px] font-black font-technical text-white/30 uppercase tracking-widest">{t(TL.ui.globalCoordLink, lang)}</span>
+                                            <span className="text-[9px] md:text-[10px] font-black font-technical text-cyan-400 uppercase">{t(TL.ui.syncOk, lang)} // 84.192.X</span>
                                         </div>
                                     </div>
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between md:block">
-                                            <p className="text-gray-400 text-xs">{t(TL.ui.distance, lang)}</p>
-                                            <p className="text-white font-bold">{calculateDistance(currentRegion, selectedRegion)} km</p>
-                                        </div>
-                                        <button onClick={handleTravel} disabled={isOverloaded}
-                                            className={`w-full py-3 rounded-lg font-bold text-sm md:text-lg transition-all ${isOverloaded ? 'bg-red-900 text-red-300' : 'bg-cyan-600 hover:bg-cyan-500 text-white'}`}>
-                                            {isOverloaded ? t(TL.ui.overloaded, lang) : `🚀 ${t(TL.ui.startTravel, lang)}`}
+                                </div>
+
+                                <div className="absolute inset-0 pointer-events-auto">
+                                    <IsometricCanvas
+                                        regions={REGION_IDS}
+                                        activeRegion={selectedRegion || currentRegion}
+                                        bases={playerBases}
+                                        caravans={caravans}
+                                        onRegionSelect={setSelectedRegion}
+                                    />
+                                </div>
+
+                                {/* BASES QUICK ACCESS BOTTOM OVERLAY */}
+                                <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 z-20 flex justify-between items-end pointer-events-none">
+                                    <div className="flex gap-2 md:gap-3 overflow-x-auto no-scrollbar pointer-events-auto max-w-[70%]">
+                                        {playerBases.map(base => (
+                                            <button
+                                                key={base.id}
+                                                onClick={() => { setActiveTab('map'); setManagedBaseId(base.id); setSelectedRegion(base.regionId); }}
+                                                className={`p-1 md:p-1.5 glass-panel border-white/10 bg-black/60 hover:border-cyan-400 group transition-all text-left flex items-center gap-2 md:gap-3 shrink-0
+                                                  ${managedBaseId === base.id ? 'border-cyan-400 bg-cyan-400/5' : ''}
+                                                `}
+                                            >
+                                                <div className="p-1.5 md:p-2 glass-panel border-white/10 bg-white/5 text-cyan-400">
+                                                    <Hammer className="w-3 md:w-3.5 h-3 md:h-3.5" />
+                                                </div>
+                                                <div className="pr-2 md:pr-4 hidden sm:block">
+                                                    <div className="text-[7px] md:text-[8px] font-black font-technical text-white/30 uppercase leading-none mb-1">{t(TL.baseTypes[base.type], lang)}</div>
+                                                    <div className="text-[9px] md:text-[10px] font-black font-technical text-white uppercase leading-none">{t(TL.regions[base.regionId], lang)}</div>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {selectedRegion === currentRegion && !playerBases.find(b => b.regionId === currentRegion) && (
+                                        <button
+                                            onClick={() => setIsBuildModalOpen(true)}
+                                            className="px-4 py-2.5 md:px-6 md:py-4 glass-panel border-cyan-500/50 bg-cyan-500/5 hover:bg-cyan-500 hover:text-black transition-all flex items-center gap-2 md:gap-3 font-black font-technical text-[8px] md:text-[10px] uppercase tracking-[0.2em] pointer-events-auto"
+                                        >
+                                            <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-cyan-400 group-hover:text-inherit" />
+                                            {t(TL.ui.establishOutpost, lang)}
                                         </button>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
-                        )}
+                        </motion.div>
+                    )}
 
-                        {selectedRegion && playerBases.find(b => b.regionId === selectedRegion) && (
-                            <div className="bg-gray-800/80 border-2 border-cyan-500 rounded-lg p-4 md:p-6 shadow-[0_0_20px_rgba(6,182,212,0.1)] mb-4">
-                                <h3 className="text-lg md:text-2xl font-bold text-cyan-400 mb-2">
-                                    🏢 {lang === 'RU' ? 'Ваша база' : 'Your Base'}
-                                </h3>
-                                <div className="flex justify-between items-center mb-4">
-                                    <p className="text-sm text-gray-400">
-                                        {playerBases.find(b => b.regionId === selectedRegion)?.type.toUpperCase()} - {t(TL.regions[selectedRegion], lang)}
-                                    </p>
-                                    <span className="text-[10px] bg-green-900/50 text-green-400 px-2 py-1 rounded border border-green-500/30 uppercase">Active</span>
-                                </div>
-                                <button
-                                    onClick={() => setManagedBaseId(playerBases.find(b => b.regionId === selectedRegion)?.id || null)}
-                                    className="w-full py-3 rounded-lg font-bold text-sm md:text-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-lg shadow-cyan-900/40"
-                                >
-                                    ⚙️ {lang === 'RU' ? 'УПРАВЛЯТЬ БАЗОЙ' : 'MANAGE BASE'}
-                                </button>
-                            </div>
-                        )}
+                    {activeTab === 'market' && (
+                        <motion.div key="market-scene" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="h-full flex flex-col">
+                            <MarketView />
+                        </motion.div>
+                    )}
 
-                        {selectedRegion && !playerBases.find(b => b.regionId === selectedRegion) && (
-                            <div className="bg-gray-800/80 border-2 border-green-500 rounded-lg p-4 md:p-6 shadow-[0_0_20px_rgba(34,197,94,0.1)]">
-                                <h3 className="text-lg md:text-2xl font-bold text-green-400 mb-3">
-                                    🏗️ {lang === 'RU' ? 'Построить базу' : 'Build Base'}
-                                </h3>
-                                <p className="text-sm text-gray-400 mb-4">
-                                    No base in {t(TL.regions[selectedRegion], lang)}. Build one to store resources and access facilities.
-                                </p>
-                                <button
-                                    onClick={() => setIsBuildModalOpen(true)}
-                                    className="w-full py-3 rounded-lg font-bold text-sm md:text-lg bg-green-600 hover:bg-green-500 text-white transition-all shadow-lg shadow-green-900/40"
-                                >
-                                    🏗️ {lang === 'RU' ? 'ПОСТРОИТЬ БАЗУ' : 'BUILD BASE'}
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
+                    {activeTab === 'caravans' && (
+                        <motion.div key="caravan-scene" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="h-full flex flex-col">
+                            <CaravanPanel />
+                        </motion.div>
+                    )}
 
-                {activeTab === 'market' && <MarketView />}
-                {activeTab === 'caravans' && (
-                    <div className="p-2">
-                        <h1 className="text-2xl md:text-4xl font-bold text-purple-400 mb-2">🚛 {t(TL.caravan.title, lang)}</h1>
-                        <p className="text-gray-400 text-xs md:text-sm mb-6">{t(TL.caravan.subtitle, lang)}</p>
-                        <CaravanPanel />
-                    </div>
-                )}
-                {activeTab === 'quests' && <QuestPanel />}
-                {activeTab === 'factions' && <FactionPanel />}
+                    {activeTab === 'quests' && (
+                        <motion.div key="quests-scene" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="h-full flex flex-col">
+                            <QuestPanel />
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'factions' && (
+                        <motion.div key="factions-scene" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="h-full flex flex-col">
+                            <FactionPanel />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
-            {/* Build Base Modal */}
-            {isBuildModalOpen && selectedRegion && (
-                <BuildBaseModal
-                    regionId={selectedRegion}
-                    onClose={() => setIsBuildModalOpen(false)}
-                    onBuild={(baseType) => {
-                        buildBase(selectedRegion, baseType);
-                        setIsBuildModalOpen(false);
-                    }}
-                />
-            )}
-            {/* Managed Base View */}
-            {managedBaseId && (
-                <BaseView
-                    base={playerBases.find(b => b.id === managedBaseId)!}
-                    onClose={() => setManagedBaseId(null)}
-                />
-            )}
+            {/* MODALS */}
+            <AnimatePresence>
+                {isBuildModalOpen && (
+                    <BuildBaseModal
+                        regionId={currentRegion}
+                        onClose={() => setIsBuildModalOpen(false)}
+                        onBuild={(baseType) => buildBase(currentRegion, baseType)}
+                    />
+                )}
+                {managedBaseId && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-void/90 backdrop-blur-xl" onClick={() => setManagedBaseId(null)} />
+                        <div className="relative w-full max-w-5xl h-[85vh] glass-panel bg-void/60 border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
+                            <BaseView
+                                baseId={managedBaseId}
+                                onClose={() => setManagedBaseId(null)}
+                            />
+                        </div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
+
+const BentoStat = ({ icon, label, val, urgent = false }: { icon: any, label: string, val: any, urgent?: boolean }) => (
+    <div className={`glass-panel p-5 bg-white/[0.03] border-white/10 flex flex-col relative overflow-hidden transition-all duration-300 hover:bg-white/[0.05]
+        ${urgent ? 'border-rose-500/50 bg-rose-500/5' : ''}
+    `}>
+        <div className="flex items-center gap-3 mb-3 text-white/30">
+            <div className="p-1.5 glass-panel border-white/10 bg-white/5">{icon}</div>
+            <span className="text-[9px] font-black font-technical uppercase tracking-[0.2em]">{label}</span>
+        </div>
+        <div className={`text-sm md:text-base font-black font-technical text-white uppercase truncate ${urgent ? 'text-rose-400' : ''}`}>{val}</div>
+        {urgent && <div className="absolute top-0 right-0 p-2 text-rose-500 animate-pulse"><AlertTriangle className="w-3 h-3" /></div>}
+    </div>
+);

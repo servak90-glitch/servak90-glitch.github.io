@@ -1,9 +1,10 @@
 
 import React, { useEffect, useRef } from 'react';
-import { VisualEffectType } from '../types';
+import { VisualEffectType, ResourceType } from '../types';
 import { TUNNEL_PROPS, BIOMES } from '../constants';
 import { useGameStore } from '../store/gameStore';
 import { ARTIFACTS } from '../services/artifactRegistry';
+import { calculateStats, RESOURCE_WEIGHTS } from '../services/gameMath';
 
 interface DrillRendererProps {
     // No data props, component reads directly from store for performance
@@ -21,6 +22,30 @@ const getRarityColor = (rarity: string) => {
     }
 };
 
+const RESOURCE_COLORS: Record<string, string> = {
+    clay: '#8B4513',
+    stone: '#555555',
+    copper: '#B87333',
+    iron: '#A19D94',
+    silver: '#ced4da',
+    gold: '#ffd700',
+    titanium: '#212529',
+    uranium: '#70e000',
+    nanoSwarm: '#ff006e',
+    ancientTech: '#00f5d4',
+    rubies: '#ef233c',
+    emeralds: '#008000',
+    diamonds: '#caf0f8',
+    coal: '#1b263b',
+    oil: '#333533',
+    gas: '#00b4d8',
+    ice: '#ade8f4',
+    scrap: '#5c2e14',
+    repairKit: '#4cc9f0',
+    coolantPaste: '#4361ee',
+    advancedCoolant: '#3a0ca3'
+};
+
 const getPropAtDepth = (depthIndex: number) => {
     // Simple hash function for deterministic prop placement
     const sin = Math.sin(depthIndex * 12.9898);
@@ -33,6 +58,37 @@ const getPropAtDepth = (depthIndex: number) => {
         if (random < prop.chance) return prop;
     }
     return null;
+};
+
+// --- VISUAL THEMES ENGINE ---
+interface TierTheme {
+    metal: string;
+    darkMetal: string;
+    rust?: string;
+    highlight: string;
+    accent: string;
+    glow: string;
+    detallLevel: number; // 0-4
+}
+
+const THEMES: Record<string, TierTheme> = {
+    scrap: { metal: '#34251e', darkMetal: '#1a1412', rust: '#5c2e14', highlight: '#555', accent: '#a52a2a', glow: 'transparent', detallLevel: 0 },
+    iron: { metal: '#555555', darkMetal: '#2a2a2e', rust: '#444', highlight: '#888', accent: '#ccc', glow: 'rgba(255,255,255,0.05)', detallLevel: 1 },
+    heavy: { metal: '#2a2a2e', darkMetal: '#0f0f12', highlight: '#555', accent: '#1e1e21', glow: 'rgba(50,50,60,0.2)', detallLevel: 2 },
+    tech: { metal: '#1a1a1f', darkMetal: '#050508', highlight: '#00f5d4', accent: '#00b4d8', glow: 'rgba(0,245,212,0.3)', detallLevel: 3 },
+    energy: { metal: '#1c1917', darkMetal: '#0c0a09', highlight: '#ff9100', accent: '#fbbf24', glow: 'rgba(251,191,36,0.4)', detallLevel: 3 },
+    void: { metal: '#0a0510', darkMetal: '#020104', highlight: '#ff006e', accent: '#7000ff', glow: 'rgba(112,0,255,0.5)', detallLevel: 4 },
+    divine: { metal: '#f8fafc', darkMetal: '#cbd5e1', highlight: '#fbbf24', accent: '#fff', glow: 'rgba(251,191,36,0.6)', detallLevel: 4 },
+};
+
+const getThemeForTier = (tier: number): TierTheme => {
+    if (tier <= 1) return THEMES.scrap;
+    if (tier <= 3) return THEMES.iron;
+    if (tier <= 5) return THEMES.heavy;
+    if (tier <= 7) return THEMES.tech;
+    if (tier <= 9) return THEMES.energy;
+    if (tier <= 12) return THEMES.void;
+    return THEMES.divine;
 };
 
 // [DEV_CONTEXT: PERFORMANCE] Using React.memo to prevent re-renders from parent
@@ -67,7 +123,10 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
 
             // [DEV_CONTEXT: DIRECT ACCESS] Bypass React State for 60FPS
             const state = useGameStore.getState();
-            const { heat, drill, isDrilling, activeEffects, depth, selectedBiome, inventory, equippedArtifacts, isShielding } = state;
+            const { heat, drill, isDrilling, activeEffects, depth, selectedBiome, inventory, equippedArtifacts, isShielding, resources, skillLevels } = state;
+
+            // Stats calculation for cargo capacity
+            const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth, activeEffects);
 
             // [DEV_CONTEXT: WARP SYNC] Detect large depth changes (admin jump) and sync visuals
             if (Math.abs(depth - prevDepthRef.current) > 500) {
@@ -104,749 +163,581 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             const scale = Math.min(w / 400, h / 800);
             const cy = h * 0.35;
 
-            // Scroll Physics
-            const baseSpeed = spinning ? (heat >= 100 ? 0 : (15 + (drill.engine.tier * 2)) * 0.5) : 0;
+            // Scroll Physics (Vertical)
+            const baseSpeed = spinning ? (heat >= 100 ? 0 : (20 + (drill.engine.tier * 2))) : 0;
             scrollRef.current += baseSpeed;
 
             // Clear Canvas
             ctx.fillStyle = '#050505';
             ctx.fillRect(0, 0, w, h);
 
-            // --- 1. TUNNEL BACKGROUND RENDERING ---
+            // --- 1. TUNNEL BACKGROUND RENDERING (Vertical) ---
             const drawTunnel = () => {
-                // A. Gradient Background (Simulates depth fog)
+                // Background Gradient
                 const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
                 bgGrad.addColorStop(0, '#000');
-                bgGrad.addColorStop(0.3, `${biomeColor}11`);
-                bgGrad.addColorStop(1, `${biomeColor}44`);
+                bgGrad.addColorStop(0.3, `${biomeColor}05`);
+                bgGrad.addColorStop(0.7, `${biomeColor}11`);
+                bgGrad.addColorStop(1, '#000');
                 ctx.fillStyle = bgGrad;
                 ctx.fillRect(0, 0, w, h);
 
-                // B. Strata Lines & Props (Batched)
                 const segmentHeight = 200;
                 const scrollY = scrollRef.current % segmentHeight;
-                const currentSegmentIndex = Math.floor(scrollRef.current / segmentHeight);
-
                 const segmentsInView = Math.ceil(h / segmentHeight) + 1;
 
+                // Strata Lines (Horizontal)
                 for (let i = -1; i < segmentsInView; i++) {
                     const drawY = (i * segmentHeight) - scrollY;
-                    const absoluteSegmentIndex = currentSegmentIndex + i;
-
-                    // Draw Strata Band
-                    ctx.fillStyle = `${biomeColor}22`;
+                    ctx.fillStyle = `${biomeColor}15`;
                     ctx.fillRect(0, drawY, w, segmentHeight * 0.4);
-
-                    // Draw Separator Line
-                    ctx.fillStyle = `${biomeColor}55`;
+                    ctx.fillStyle = `${biomeColor}33`;
                     ctx.fillRect(0, drawY, w, 2);
-
-                    // Draw Prop (if exists)
-                    const prop = getPropAtDepth(absoluteSegmentIndex);
-                    if (prop) {
-                        const propX = (absoluteSegmentIndex % 2 === 0) ? w * 0.2 : w * 0.8;
-
-                        ctx.save();
-                        ctx.translate(propX, drawY + segmentHeight / 2);
-                        ctx.fillStyle = prop.color;
-                        ctx.globalAlpha = 0.5;
-
-                        if (prop.type === 'FOSSIL') {
-                            ctx.strokeStyle = '#AAA';
-                            ctx.lineWidth = 3;
-                            ctx.beginPath();
-                            ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
-                            ctx.moveTo(-5, -5); ctx.lineTo(-5, 5);
-                            ctx.moveTo(5, -5); ctx.lineTo(5, 5);
-                            ctx.stroke();
-                        } else if (prop.type === 'PIPE') {
-                            ctx.fillStyle = '#554433';
-                            ctx.fillRect(-15, -100, 30, 200); // Simple pipe
-                        } else if (prop.type === 'CRYSTAL') {
-                            ctx.beginPath();
-                            ctx.moveTo(0, -40);
-                            ctx.lineTo(25, 0);
-                            ctx.lineTo(0, 40);
-                            ctx.lineTo(-25, 0);
-                            ctx.fill();
-                        } else if (prop.type === 'RUIN') {
-                            ctx.fillStyle = '#333';
-                            ctx.fillRect(-25, -25, 50, 50);
-                            ctx.fillStyle = '#FFD700';
-                            ctx.font = '12px monospace';
-                            ctx.fillText('?', -4, 4);
-                        }
-                        ctx.restore();
-                    }
                 }
 
-                // C. Tunnel Walls (Optimized Noise)
+                // Walls (Left & Right)
                 const wallWidth = w * 0.15;
-                const wallSegHeight = 40; // Pixels per noise segment
+                const wallSegHeight = 40;
                 const wallScroll = scrollRef.current % wallSegHeight;
                 const noiseOffset = Math.floor(scrollRef.current / wallSegHeight);
-
                 const noiseArr = noiseBufferRef.current!;
                 const noiseLen = noiseArr.length;
 
                 ctx.fillStyle = '#000';
-
                 // Left Wall
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
+                ctx.beginPath(); ctx.moveTo(0, 0);
                 for (let i = -1; i < segmentsInView * (segmentHeight / wallSegHeight); i++) {
                     const y = (i * wallSegHeight) - wallScroll;
-                    // Loop noise buffer
                     const noiseIdx = Math.abs((noiseOffset + i) % noiseLen);
-                    const roughness = noiseArr[noiseIdx] * 30;
-                    ctx.lineTo(wallWidth + roughness, y);
+                    ctx.lineTo(wallWidth + noiseArr[noiseIdx] * 35, y);
                 }
-                ctx.lineTo(0, h);
-                ctx.closePath();
-                ctx.fill();
+                ctx.lineTo(0, h); ctx.lineTo(0, 0); ctx.fill();
 
                 // Right Wall
-                ctx.beginPath();
-                ctx.moveTo(w, 0);
+                ctx.beginPath(); ctx.moveTo(w, 0);
                 for (let i = -1; i < segmentsInView * (segmentHeight / wallSegHeight); i++) {
                     const y = (i * wallSegHeight) - wallScroll;
-                    // Offset noise index for variety on right side
                     const noiseIdx = Math.abs((noiseOffset + i + 50) % noiseLen);
-                    const roughness = noiseArr[noiseIdx] * 30;
-                    ctx.lineTo(w - wallWidth - roughness, y);
+                    ctx.lineTo(w - wallWidth - noiseArr[noiseIdx] * 35, y);
                 }
-                ctx.lineTo(w, h);
-                ctx.closePath();
-                ctx.fill();
-
-                // Speed Lines (Visual Juice)
-                if (spinning) {
-                    ctx.strokeStyle = biomeColor;
-                    ctx.lineWidth = 2;
-                    ctx.globalAlpha = 0.2;
-                    const speedLineCount = 4;
-                    for (let i = 0; i < speedLineCount; i++) {
-                        // Deterministic pseudo-random lines based on scroll
-                        const lineSeed = Math.floor(scrollRef.current / 300) + i;
-                        const xL = wallWidth + (lineSeed % 20);
-                        const xR = w - wallWidth - ((lineSeed * 2) % 20);
-                        const y = (scrollRef.current % h + (i * 200)) % h;
-                        const len = 100;
-
-                        ctx.beginPath(); ctx.moveTo(xL, y); ctx.lineTo(xL, y - len); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(xR, y); ctx.lineTo(xR, y - len); ctx.stroke();
-                    }
-                    ctx.globalAlpha = 1.0;
-                }
+                ctx.lineTo(w, h); ctx.lineTo(w, 0); ctx.fill();
             };
             drawTunnel();
 
-            // --- 2. DRILL RENDERING (Foreground) ---
-
-            let shakeX = 0;
-            let shakeY = 0;
+            // --- 2. DRILL RENDERING (Reference-Based Detailed View) ---
+            let shakeX = 0, shakeY = 0;
             if (spinning) {
-                const intensity = (heat / 50) + 0.5;
+                const intensity = (heat / 50) + 0.8;
                 shakeX = (Math.random() - 0.5) * intensity;
                 shakeY = (Math.random() - 0.5) * intensity;
             }
 
             ctx.save();
             ctx.translate(cx + shakeX, cy + shakeY);
-            ctx.scale(scale, scale);
+            ctx.scale(scale * 0.45, scale * 0.45);
 
-            // [DEV_CONTEXT: SHIELD RENDER]
-            if (isShielding) { // Render active shield
+            // COLOR PALETTE (Reference Match)
+            const cMetal = '#2a2a2e';
+            const cDarkMetal = '#1a1a1b';
+            const cRust = '#5c2e14';
+            const cLightRust = '#8b4513';
+            const cHighlight = '#8e8e93';
+            const cLight = '#fff7ad';
+
+            // UTILS: Texture & Detail
+            const drawWeathering = (x: number, y: number, w: number, h: number, seed: number) => {
                 ctx.save();
-                const shieldSize = 250 + Math.sin(tick * 0.2) * 5; // Fast pulse
-                const grad = ctx.createRadialGradient(0, 0, shieldSize * 0.8, 0, 0, shieldSize);
-                grad.addColorStop(0, 'rgba(56, 189, 248, 0)'); // Cyan center
-                grad.addColorStop(1, 'rgba(56, 189, 248, 0.4)'); // Cyan edge
-
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                // Hexagon Shield Shape
-                for (let i = 0; i < 6; i++) {
-                    const ang = (Math.PI / 3) * i;
-                    const sx = Math.cos(ang) * shieldSize;
-                    const sy = Math.sin(ang) * shieldSize;
-                    if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+                ctx.rect(x, y, w, h); ctx.clip();
+                const noise = noiseBufferRef.current!;
+                for (let i = 0; i < 40; i++) {
+                    const nx = x + noise[(seed + i) % 200] * w;
+                    const ny = y + noise[(seed + i * 2) % 200] * h;
+                    const size = 1 + noise[(seed + i * 3) % 200] * 3;
+                    ctx.fillStyle = i % 2 === 0 ? 'rgba(0,0,0,0.2)' : 'rgba(92, 46, 20, 0.3)';
+                    ctx.fillRect(nx, ny, size, size);
                 }
-                ctx.closePath();
-                ctx.fill();
-
-                ctx.strokeStyle = '#38bdf8'; // Cyan
-                ctx.lineWidth = 3;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = '#0ea5e9';
-                ctx.stroke();
                 ctx.restore();
-            } else if (activeBuffIds.includes('shield')) {
-                // Render Passive Item Shield (Purple) if active and no Kinetic Shield
-                ctx.save();
-                const shieldSize = 250 + Math.sin(tick * 0.05) * 10;
-                const grad = ctx.createRadialGradient(0, 0, shieldSize * 0.8, 0, 0, shieldSize);
-                grad.addColorStop(0, 'rgba(147, 51, 234, 0)');
-                grad.addColorStop(1, 'rgba(147, 51, 234, 0.4)');
-
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(0, 0, shieldSize, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.strokeStyle = '#a855f7';
-                ctx.lineWidth = 2;
-                ctx.globalAlpha = 0.5;
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            // TRACKS
-            const drawTracks = () => {
-                const trackW = 40 + (drill.engine.tier * 2);
-                const trackH = 280;
-                const trackX_Offset = 110;
-                const trackY = -100;
-
-                ctx.strokeStyle = '#444';
-                ctx.lineWidth = 2;
-
-                const drawOneTrack = (x: number) => {
-                    // Металлический градиент для гусениц (3D-эффект)
-                    const trackGrad = ctx.createLinearGradient(x - trackW / 2, 0, x + trackW / 2, 0);
-                    trackGrad.addColorStop(0, '#0a0a0a');
-                    trackGrad.addColorStop(0.2, '#1a1a1a');
-                    trackGrad.addColorStop(0.4, '#2a2a2a');
-                    trackGrad.addColorStop(0.5, '#333');
-                    trackGrad.addColorStop(0.6, '#2a2a2a');
-                    trackGrad.addColorStop(0.8, '#1a1a1a');
-                    trackGrad.addColorStop(1, '#0a0a0a');
-                    ctx.fillStyle = trackGrad;
-
-                    ctx.beginPath();
-                    ctx.roundRect(x - trackW / 2, trackY - trackH / 2, trackW, trackH, 10);
-                    ctx.fill();
-                    ctx.stroke();
-
-                    // Блик на гусенице
-                    ctx.save();
-                    ctx.globalAlpha = 0.15;
-                    ctx.fillStyle = '#fff';
-                    ctx.fillRect(x - trackW / 2 + 3, trackY - trackH / 2 + 5, 4, trackH - 10);
-                    ctx.restore();
-
-                    // Track treads
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.roundRect(x - trackW / 2, trackY - trackH / 2, trackW, trackH, 10);
-                    ctx.clip();
-                    const speed = spinning ? (heat > 90 ? 0 : 4) : 0;
-                    const offset = (tick * speed) % 20;
-
-                    for (let i = -20; i < trackH + 20; i += 20) {
-                        const y = (trackY - trackH / 2) + i - offset;
-                        // Тень гребня
-                        ctx.strokeStyle = '#222';
-                        ctx.lineWidth = 5;
-                        ctx.beginPath();
-                        ctx.moveTo(x - trackW / 2 + 2, y + 2);
-                        ctx.lineTo(x + trackW / 2 - 2, y + 2);
-                        ctx.stroke();
-                        // Гребень
-                        ctx.strokeStyle = '#555';
-                        ctx.lineWidth = 4;
-                        ctx.beginPath();
-                        ctx.moveTo(x - trackW / 2 + 2, y);
-                        ctx.lineTo(x + trackW / 2 - 2, y);
-                        ctx.stroke();
-                    }
-                    ctx.restore();
-
-                    // Wheels с 3D-эффектом
-                    const drawWheel = (wheelY: number) => {
-                        const wheelR = trackW / 3;
-                        // Тень
-                        ctx.fillStyle = '#0a0a0a';
-                        ctx.beginPath(); ctx.arc(x + 2, wheelY + 2, wheelR, 0, Math.PI * 2); ctx.fill();
-                        // Основа
-                        const wheelGrad = ctx.createRadialGradient(x - wheelR / 3, wheelY - wheelR / 3, 0, x, wheelY, wheelR);
-                        wheelGrad.addColorStop(0, '#444');
-                        wheelGrad.addColorStop(0.5, '#2a2a2a');
-                        wheelGrad.addColorStop(1, '#111');
-                        ctx.fillStyle = wheelGrad;
-                        ctx.beginPath(); ctx.arc(x, wheelY, wheelR, 0, Math.PI * 2); ctx.fill();
-                        // Блик
-                        ctx.fillStyle = 'rgba(255,255,255,0.1)';
-                        ctx.beginPath(); ctx.arc(x - wheelR / 4, wheelY - wheelR / 4, wheelR / 4, 0, Math.PI * 2); ctx.fill();
-                    };
-                    drawWheel(trackY - trackH / 2 + trackW / 2);
-                    drawWheel(trackY + trackH / 2 - trackW / 2);
-                };
-
-                drawOneTrack(-trackX_Offset);
-                drawOneTrack(trackX_Offset);
-
-                // Axles с 3D-градиентом
-                const axleGrad = ctx.createLinearGradient(0, trackY - 50, 0, trackY - 30);
-                axleGrad.addColorStop(0, '#333');
-                axleGrad.addColorStop(0.5, '#444');
-                axleGrad.addColorStop(1, '#222');
-                ctx.fillStyle = axleGrad;
-                ctx.fillRect(-trackX_Offset, trackY - 50, trackX_Offset * 2, 20);
-                ctx.fillRect(-trackX_Offset, trackY + 50, trackX_Offset * 2, 20);
             };
-            drawTracks();
 
-            // COOLING TANKS
-            const drawCooling = () => {
-                const tankW = 30;
-                const tankH = 80;
-                const tankX_Offset = 65;
-                const tankY = 50;
+            const drawRivets = (pts: { x: number, y: number }[]) => {
+                ctx.fillStyle = '#111';
+                pts.forEach(p => {
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                    ctx.beginPath(); ctx.arc(p.x - 0.5, p.y - 0.5, 0.8, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#111';
+                });
+            };
 
-                const drawTank = (x: number) => {
-                    ctx.fillStyle = 'rgba(0, 20, 40, 0.8)';
-                    ctx.strokeStyle = getRarityColor(drill.cooling.rarity);
-                    ctx.lineWidth = 2;
+            // 2.0 CHASSIS / MAIN FRAME (Connects all modules - Tiered)
+            const drawChassis = () => {
+                const tier = drill.hull.tier;
+                const theme = getThemeForTier(tier);
+                const fw = 140; const fh = 600;
 
-                    ctx.beginPath();
-                    ctx.roundRect(x - tankW / 2, tankY, tankW, tankH, 5);
-                    ctx.fill();
-                    ctx.stroke();
+                const gFrame = ctx.createLinearGradient(-fw / 2, 0, fw / 2, 0);
+                gFrame.addColorStop(0, theme.darkMetal);
+                gFrame.addColorStop(0.5, theme.metal);
+                gFrame.addColorStop(1, theme.darkMetal);
 
-                    const fillLevel = Math.max(0.1, 1 - (heat / 120));
-                    const liquidH = tankH * fillLevel;
-                    const liquidY = tankY + (tankH - liquidH);
+                ctx.fillStyle = gFrame;
+                ctx.beginPath(); ctx.roundRect(-fw / 2, -350, fw, fh + 150, 10); ctx.fill();
 
-                    const isFrozen = activeBuffIds.includes('cold');
-                    ctx.fillStyle = isFrozen ? '#e0f2fe' : (activeVisualEffects.includes('FROST_BLUE') ? '#a5f3fc' : '#06b6d4');
+                // Vertical structure lines - more detailed for high tiers
+                const lines = tier <= 5 ? 1 : (tier <= 12 ? 2 : 3);
+                ctx.strokeStyle = tier >= 6 ? theme.highlight : 'rgba(255,255,255,0.03)';
+                ctx.lineWidth = 1;
 
-                    // Liquid
-                    ctx.beginPath();
-                    ctx.roundRect(x - tankW / 2 + 2, liquidY, tankW - 4, liquidH - 2, 2);
-                    ctx.fill();
+                for (let i = 0; i < lines; i++) {
+                    const offset = (i + 1) * (fw / (lines + 1)) - fw / 2;
+                    ctx.beginPath(); ctx.moveTo(offset, -350); ctx.lineTo(offset, fh); ctx.stroke();
+                }
+            };
+            drawChassis();
 
-                    // Bubbles (if hot)
-                    if (heat > 50 || isFrozen) {
-                        ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                        for (let i = 0; i < 3; i++) {
-                            // Deterministic bubbles based on tick
-                            const bx = x - tankW / 4 + Math.sin(tick * 0.1 + i) * 5;
-                            const by = liquidY + ((tick * 2 + i * 20) % liquidH);
-                            ctx.beginPath(); ctx.arc(bx, by, 2, 0, Math.PI * 2); ctx.fill();
+            // 2.1 TREADS (Dual Track System - Tiered)
+            const drawTreads = () => {
+                const tier = drill.engine.tier;
+                const theme = getThemeForTier(tier);
+
+                const trackWidth = tier >= 13 ? 40 : 80;
+                const trackGap = tier >= 13 ? 160 : 120;
+                const th = 600;
+                const treadSpeed = spinning ? (10 + tier * 2) : 0;
+                const offset = (tick * treadSpeed) % 40;
+
+                const drawTrack = (x: number) => {
+                    ctx.save();
+                    ctx.translate(x, 0);
+
+                    if (tier >= 13) {
+                        // Anti-gravity pods for Divine tier
+                        ctx.fillStyle = theme.metal;
+                        ctx.shadowBlur = 15; ctx.shadowColor = theme.glow;
+                        ctx.beginPath(); ctx.roundRect(-trackWidth / 2, -th / 2 + 100, trackWidth, th - 200, 20); ctx.fill();
+                        ctx.shadowBlur = 0;
+
+                        // Pulsing core
+                        const pulse = Math.sin(tick * 0.1) * 0.5 + 0.5;
+                        ctx.fillStyle = theme.highlight;
+                        ctx.globalAlpha = pulse;
+                        ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fill();
+                        ctx.globalAlpha = 1;
+                    } else {
+                        ctx.fillStyle = theme.darkMetal; ctx.strokeStyle = theme.highlight; ctx.lineWidth = 1;
+                        ctx.beginPath(); ctx.roundRect(-trackWidth / 2, -th / 2, trackWidth, th, 15); ctx.fill(); ctx.stroke();
+
+                        // Tread Detail (Links)
+                        ctx.save(); ctx.beginPath(); ctx.roundRect(-trackWidth / 2, -th / 2, trackWidth, th, 15); ctx.clip();
+                        for (let i = -40; i < th + 40; i += 40) {
+                            const y = -th / 2 + i - offset;
+                            ctx.fillStyle = theme.metal; ctx.fillRect(-trackWidth / 2, y, trackWidth, 12);
+                            if (tier >= 6) {
+                                ctx.fillStyle = theme.highlight; ctx.fillRect(-trackWidth / 2, y + 12, trackWidth, 2);
+                            }
                         }
+                        ctx.restore();
                     }
+                    ctx.restore();
                 };
 
-                drawTank(-tankX_Offset);
-                drawTank(tankX_Offset);
+                drawTrack(-(trackGap + trackWidth) / 2);
+                drawTrack((trackGap + trackWidth) / 2);
             };
-            drawCooling();
+            drawTreads();
 
-            // MAIN BODY
-            const drawBody = () => {
-                const hullW = 100;
-                const hullH = 180;
-                const hullY = -50;
+            // 2.2 TOP ENGINE & COOLING (Tiered)
+            const drawEngine = () => {
+                const tier = drill.engine.tier;
+                const theme = getThemeForTier(tier);
+                const ey = -290;
 
-                // 3D-градиент с освещением сверху
-                const bodyGrad = ctx.createLinearGradient(0, hullY - hullH / 2, 0, hullY + hullH / 2);
-                bodyGrad.addColorStop(0, '#2a2a2e');   // Светлее сверху
-                bodyGrad.addColorStop(0.15, '#222226');
-                bodyGrad.addColorStop(0.5, '#18181b'); // Основной цвет
-                bodyGrad.addColorStop(0.85, '#121214');
-                bodyGrad.addColorStop(1, '#0a0a0b');   // Тень снизу
-                ctx.fillStyle = bodyGrad;
-                ctx.strokeStyle = getRarityColor(drill.hull.rarity);
-                ctx.lineWidth = 3;
+                // Radiator Box
+                ctx.fillStyle = theme.metal; ctx.strokeStyle = theme.highlight; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.roundRect(-70, ey - 60, 140, 70, 5); ctx.fill(); ctx.stroke();
 
-                // Hexagonal Shape
-                ctx.beginPath();
-                ctx.moveTo(-hullW / 2, hullY - hullH / 2 + 20);
-                ctx.lineTo(-hullW / 2 + 20, hullY - hullH / 2);
-                ctx.lineTo(hullW / 2 - 20, hullY - hullH / 2);
-                ctx.lineTo(hullW / 2, hullY - hullH / 2 + 20);
-                ctx.lineTo(hullW / 2, hullY + hullH / 2 - 20);
-                ctx.lineTo(hullW / 2 - 10, hullY + hullH / 2);
-                ctx.lineTo(-hullW / 2 + 10, hullY + hullH / 2);
-                ctx.lineTo(-hullW / 2, hullY + hullH / 2 - 20);
-                ctx.closePath();
+                // Tiered Details: Exhausts
+                const numPipes = tier <= 1 ? 2 : (tier <= 5 ? 4 : (tier <= 9 ? 6 : 8));
+                const pipeStep = 140 / (numPipes + 1);
 
-                ctx.fill();
-                ctx.stroke();
+                for (let i = 0; i < numPipes; i++) {
+                    const px = -70 + (i + 1) * pipeStep;
+                    const py = ey - 30;
+                    ctx.fillStyle = theme.darkMetal; ctx.fillRect(px - 6, py - 55, 12, 65);
 
-                // Металлические блики на гранях
-                ctx.save();
-                ctx.globalAlpha = 0.12;
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                // Левая грань
-                ctx.beginPath();
-                ctx.moveTo(-hullW / 2 + 3, hullY - hullH / 2 + 25);
-                ctx.lineTo(-hullW / 2 + 3, hullY + hullH / 2 - 25);
-                ctx.stroke();
-                // Верхняя грань
-                ctx.beginPath();
-                ctx.moveTo(-hullW / 2 + 25, hullY - hullH / 2 + 3);
-                ctx.lineTo(hullW / 2 - 25, hullY - hullH / 2 + 3);
-                ctx.stroke();
-                ctx.restore();
-
-                // Тень снизу корпуса
-                ctx.save();
-                ctx.globalAlpha = 0.3;
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.moveTo(-hullW / 2 + 10, hullY + hullH / 2);
-                ctx.lineTo(hullW / 2 - 10, hullY + hullH / 2);
-                ctx.lineTo(hullW / 2 - 10, hullY + hullH / 2 + 8);
-                ctx.lineTo(-hullW / 2 + 10, hullY + hullH / 2 + 8);
-                ctx.closePath();
-                ctx.fill();
-                ctx.restore();
-
-                // Regen Effect
-                if (activeBuffIds.includes('regen')) {
-                    ctx.save();
-                    ctx.fillStyle = '#4ade80';
-                    ctx.globalAlpha = 0.6;
-                    const yOffset = (tick * 2) % hullH;
-                    ctx.font = '10px monospace';
-                    ctx.fillText('+', 20, hullY + hullH / 2 - yOffset);
-                    ctx.fillText('+', -20, hullY + hullH / 2 - ((yOffset + 50) % hullH));
-                    ctx.restore();
-                }
-
-                // Vents
-                const engineTier = drill.engine.tier;
-                const isOverdrive = activeBuffIds.includes('power');
-                const ventColor = isOverdrive ? '#fff' : (heat > 80 ? '#ef4444' : '#f59e0b');
-
-                for (let i = 0; i < 3 + Math.floor(engineTier / 5); i++) {
-                    const vy = hullY - hullH / 2 + 30 + (i * 15);
-                    // Тень вентиляции
-                    ctx.fillStyle = '#050505';
-                    ctx.fillRect(-hullW / 2 + 10, vy + 1, hullW - 20, 8);
-                    // Основа вентиляции
-                    ctx.fillStyle = '#0a0a0a';
-                    ctx.fillRect(-hullW / 2 + 10, vy, hullW - 20, 8);
+                    const gPipe = ctx.createLinearGradient(px - 6, py, px + 6, py);
+                    gPipe.addColorStop(0, '#000');
+                    gPipe.addColorStop(0.5, theme.rust || theme.accent);
+                    gPipe.addColorStop(1, '#000');
+                    ctx.fillStyle = gPipe; ctx.fillRect(px - 5, py - 53, 10, 61);
 
                     if (spinning) {
-                        ctx.fillStyle = ventColor;
-                        ctx.globalAlpha = 0.5 + Math.sin(tick * 0.5 + i) * 0.5;
-                        ctx.fillRect(-hullW / 2 + 12, vy + 2, hullW - 24, 4);
-                        ctx.globalAlpha = 1.0;
+                        ctx.save();
+                        ctx.globalAlpha = 0.3;
+                        const smokeColor = tier >= 6 ? theme.glow : 'rgba(50,50,50,0.4)';
+                        ctx.fillStyle = smokeColor;
+                        for (let k = 0; k < 2; k++) {
+                            const sy = py - 70 - (tick * 3 + k * 15) % 80;
+                            const sx = px + Math.sin(tick * 0.1 + k) * 5;
+                            ctx.beginPath(); ctx.arc(sx, sy, 5 + (py - sy) * 0.1, 0, Math.PI * 2); ctx.fill();
+                        }
+                        ctx.restore();
                     }
                 }
-            };
-            drawBody();
 
-            // POWER CORE
-            const drawCore = () => {
-                const cx = 0;
-                const cy = 20;
-                const radius = 25 + (drill.power.tier * 2);
-                const color = getRarityColor(drill.power.rarity);
-
-                ctx.fillStyle = '#000';
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius + 5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-
-                const pulse = Math.sin(tick * 0.1) * 0.2 + 0.8;
-                ctx.fillStyle = color;
-
-                // Glow hack: Draw multiple semi-transparent circles instead of expensive shadowBlur
-                if (heat > 0) {
-                    ctx.globalAlpha = 0.3;
-                    ctx.beginPath(); ctx.arc(cx, cy, radius * 1.2 * pulse, 0, Math.PI * 2); ctx.fill();
-                    ctx.globalAlpha = 1.0;
+                // Tiered Cooling Fans
+                const numFans = tier < 10 ? 2 : 4;
+                for (let i = 0; i < numFans; i++) {
+                    const fx = numFans === 2 ? (i === 0 ? -35 : 35) : (-50 + i * 33);
+                    ctx.fillStyle = '#050505'; ctx.beginPath(); ctx.arc(fx, ey - 45, 20, 0, Math.PI * 2); ctx.fill();
+                    ctx.save(); ctx.translate(fx, ey - 45); ctx.rotate(tick * (0.1 + tier * 0.02));
+                    ctx.strokeStyle = theme.highlight; ctx.lineWidth = 3;
+                    const blades = tier <= 3 ? 3 : (tier <= 7 ? 4 : 6);
+                    for (let f = 0; f < blades; f++) {
+                        ctx.rotate((Math.PI * 2) / blades);
+                        ctx.moveTo(0, 0); ctx.lineTo(0, 18); ctx.stroke();
+                    }
+                    ctx.restore();
                 }
 
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.save();
-                ctx.translate(cx, cy);
-                if (spinning) ctx.rotate(tick * 0.1);
-                ctx.beginPath();
-                ctx.arc(0, 0, radius * 0.6, 0, Math.PI * 1.5);
-                ctx.stroke();
-                ctx.restore();
+                // Add Energy Rings for T10+
+                if (tier >= 10) {
+                    ctx.strokeStyle = theme.highlight;
+                    const pulse = Math.sin(tick * 0.1) * 5;
+                    ctx.beginPath(); ctx.ellipse(0, ey - 20, 80 + pulse, 15 + pulse / 2, 0, 0, Math.PI * 2); ctx.stroke();
+                }
             };
-            drawCore();
+            drawEngine();
 
-            // COCKPIT / LOGIC
-            const drawCockpit = () => {
-                const cpY = -140;
-                const cpW = 80;
-                const cpH = 40;
-                const color = getRarityColor(drill.logic.rarity);
+            // 2.2.1 CARGO BAY (Between Engine and Cabin)
+            const drawCargoBay = () => {
+                const by = -180;
+                const bw = 150; const bh = 160;
+                const gCargo = ctx.createLinearGradient(-bw / 2, 0, bw / 2, 0);
+                gCargo.addColorStop(0, cDarkMetal); gCargo.addColorStop(0.5, cMetal); gCargo.addColorStop(1, cDarkMetal);
+                ctx.fillStyle = gCargo; ctx.strokeStyle = '#111';
+                ctx.beginPath(); ctx.roundRect(-bw / 2, by - bh / 2, bw, bh, 5); ctx.fill(); ctx.stroke();
 
-                ctx.fillStyle = '#0f172a';
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 2;
+                // --- RENDER CARGO CONTENTS ---
+                const maxCap = stats.totalCargoCapacity || 5000;
+                const innerX = -bw / 2 + 5;
+                const innerW = bw - 10;
+                const innerH = bh - 10;
+                const floorY = by + bh / 2 - 5;
 
-                ctx.beginPath();
-                ctx.moveTo(-cpW / 2 + 10, cpY);
-                ctx.lineTo(cpW / 2 - 10, cpY);
-                ctx.lineTo(cpW / 2, cpY + cpH);
-                ctx.lineTo(-cpW / 2, cpY + cpH);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
+                let currentYOffset = 0;
 
-                // Windows
-                ctx.fillStyle = 'rgba(6, 182, 212, 0.3)';
-                ctx.fillRect(-cpW / 2 + 15, cpY + 5, 20, 15);
-                ctx.fillRect(cpW / 2 - 35, cpY + 5, 20, 15);
-                ctx.fillRect(-5, cpY + 5, 10, 15);
+                // Sort resources to always draw them in same order (important for visual stability)
+                const resourceTypes = Object.keys(resources).sort() as ResourceType[];
 
-                // Dish (Logic Scanner)
-                const drawDish = (x: number, scale: number) => {
+                resourceTypes.forEach(resType => {
+                    const amount = resources[resType] || 0;
+                    const unitWeight = RESOURCE_WEIGHTS[resType] || 0;
+                    if (amount <= 0 || unitWeight <= 0) return;
+
+                    const resWeight = amount * unitWeight;
+                    const layerHeight = (resWeight / maxCap) * innerH;
+
+                    if (layerHeight < 0.5) return; // Don't draw tiny slivers
+
+                    const color = RESOURCE_COLORS[resType] || '#fff';
+
+                    ctx.fillStyle = color;
+                    // Layer with slight gradient for depth
+                    const layerGrad = ctx.createLinearGradient(innerX, 0, innerX + innerW, 0);
+                    layerGrad.addColorStop(0, 'rgba(0,0,0,0.2)');
+                    layerGrad.addColorStop(0.2, color);
+                    layerGrad.addColorStop(0.8, color);
+                    layerGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+                    ctx.fillStyle = layerGrad;
+
+                    ctx.fillRect(innerX, floorY - currentYOffset - layerHeight, innerW, layerHeight);
+
+                    // Top edge of layer
+                    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                    ctx.fillRect(innerX, floorY - currentYOffset - layerHeight, innerW, 1);
+
+                    currentYOffset += layerHeight;
+                });
+
+                // Add "pile" effect at the very top if there is any cargo
+                if (currentYOffset > 0) {
                     ctx.save();
-                    ctx.translate(x, cpY);
-                    if (spinning) ctx.rotate(Math.sin(tick * 0.05) * 0.2);
-
-                    ctx.strokeStyle = '#888';
+                    ctx.translate(0, floorY - currentYOffset);
                     ctx.beginPath();
-                    ctx.moveTo(0, 0); ctx.lineTo(0, -10 * scale);
-                    ctx.stroke();
-
-                    ctx.fillStyle = '#222';
-                    ctx.beginPath();
-                    ctx.arc(0, -10 * scale, 8 * scale, 0, Math.PI, true);
+                    ctx.moveTo(-innerW / 2 + 10, 0);
+                    ctx.quadraticCurveTo(0, -10, innerW / 2 - 10, 0);
+                    ctx.fillStyle = 'rgba(0,0,0,0.2)'; // Shadow of the top of the pile
                     ctx.fill();
-                    ctx.stroke();
                     ctx.restore();
-                };
+                }
 
-                drawDish(-30, 1);
-                if (drill.logic.tier > 5) drawDish(30, 0.8);
+                drawWeathering(-bw / 2, by - bh / 2, bw, bh, 40);
+
+                // Ribs/Details (drawn over cargo for depth)
+                ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+                for (let i = 1; i < 4; i++) {
+                    const ry = by - bh / 2 + (i * bh / 4);
+                    ctx.beginPath(); ctx.moveTo(-bw / 2 + 15, ry); ctx.lineTo(bw / 2 - 15, ry); ctx.stroke();
+                }
+                drawRivets([{ x: -bw / 2 + 10, y: by }, { x: bw / 2 - 10, y: by }]);
             };
-            drawCockpit();
+            drawCargoBay();
 
-            // DRILL BIT
-            const drawDrillBit = () => {
-                const gearY = 60;
-                const bitY = 100;
-                const bitLen = 120 + (drill.bit.tier * 5);
-                const bitW = 70 + (drill.bit.tier * 2);
-                const color = getRarityColor(drill.bit.rarity);
+            // 2.3 MAIN CABIN (HULL - Tiered)
+            const drawCabin = () => {
+                const tier = drill.hull.tier;
+                const theme = getThemeForTier(tier);
+                const cy = 10;
+                const cw = 160; const ch = 180;
 
-                // Gearbox housing с 3D-эффектом
-                const gearGrad = ctx.createLinearGradient(-25, gearY, 25, gearY);
-                gearGrad.addColorStop(0, '#1a1a1a');
-                gearGrad.addColorStop(0.3, '#333');
-                gearGrad.addColorStop(0.5, '#444');
-                gearGrad.addColorStop(0.7, '#333');
-                gearGrad.addColorStop(1, '#1a1a1a');
-                ctx.fillStyle = gearGrad;
-                ctx.fillRect(-25, gearY, 50, 40);
-                // Блик на редукторе
-                ctx.fillStyle = 'rgba(255,255,255,0.08)';
-                ctx.fillRect(-22, gearY + 3, 44, 3);
+                const gHull = ctx.createLinearGradient(-cw / 2, 0, cw / 2, 0);
+                gHull.addColorStop(0, theme.darkMetal);
+                gHull.addColorStop(0.5, theme.metal);
+                gHull.addColorStop(1, theme.darkMetal);
 
-                ctx.save();
-                ctx.translate(0, bitY);
+                ctx.fillStyle = gHull; ctx.strokeStyle = theme.highlight; ctx.lineWidth = 2;
 
-                if (spinning) ctx.translate((Math.random() - 0.5) * 2, 0);
-
-                const isSharpened = activeBuffIds.includes('sharp');
-
-                // Bit Gradient с улучшенным 3D-эффектом
-                const grad = ctx.createLinearGradient(-bitW / 2, 0, bitW / 2, 0);
-                if (isSharpened) {
-                    grad.addColorStop(0, '#e0f2fe');
-                    grad.addColorStop(0.3, '#67e8f9');
-                    grad.addColorStop(0.5, '#0ea5e9');
-                    grad.addColorStop(0.7, '#67e8f9');
-                    grad.addColorStop(1, '#e0f2fe');
+                if (tier <= 5) {
+                    // Blocky / Industrial
+                    ctx.beginPath(); ctx.roundRect(-cw / 2, cy - ch / 2, cw, ch, 8); ctx.fill(); ctx.stroke();
+                } else if (tier <= 12) {
+                    // Sleek / Aerodynamic
+                    ctx.beginPath();
+                    ctx.moveTo(-cw / 2, cy + ch / 2);
+                    ctx.lineTo(-cw * 0.4, cy - ch / 2);
+                    ctx.lineTo(cw * 0.4, cy - ch / 2);
+                    ctx.lineTo(cw / 2, cy + ch / 2);
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
                 } else {
-                    grad.addColorStop(0, '#0a0a0a');
-                    grad.addColorStop(0.2, '#222');
-                    grad.addColorStop(0.4, '#444');
-                    grad.addColorStop(0.5, '#555');
-                    grad.addColorStop(0.6, '#444');
-                    grad.addColorStop(0.8, '#222');
-                    grad.addColorStop(1, '#0a0a0a');
-                }
-                ctx.fillStyle = grad;
-
-                ctx.beginPath();
-                ctx.moveTo(-bitW / 2, 0);
-
-                // Draw jagged edges
-                const steps = 6;
-                for (let i = 0; i < steps; i++) {
-                    const y = (bitLen / steps) * (i + 1);
-                    const x = (bitW / 2) * (1 - (i + 1) / steps);
-                    ctx.lineTo(-x - 5, y - 10);
-                    ctx.lineTo(-x, y);
-                }
-                ctx.lineTo(0, bitLen);
-
-                for (let i = steps - 1; i >= 0; i--) {
-                    const y = (bitLen / steps) * (i + 1);
-                    const x = (bitW / 2) * (1 - (i + 1) / steps);
-                    ctx.lineTo(x, y);
-                    ctx.lineTo(x + 5, y - 10);
-                }
-                ctx.lineTo(bitW / 2, 0);
-                ctx.closePath();
-                ctx.fill();
-
-                // Спиральные канавки с затенением
-                ctx.save();
-                ctx.globalAlpha = 0.4;
-                for (let i = 0; i < 5; i++) {
-                    const startY = 15 + (i * 20);
-                    const curveX = bitW / 2 * (1 - startY / bitLen) * 0.7;
-                    // Тень
-                    ctx.strokeStyle = '#000';
-                    ctx.lineWidth = 3;
+                    // Celestial / Artifact
                     ctx.beginPath();
-                    ctx.moveTo(-curveX, startY + 2);
-                    ctx.quadraticCurveTo(0, startY + 12, curveX, startY + 2);
-                    ctx.stroke();
-                    // Канавка
-                    ctx.strokeStyle = '#666';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(-curveX, startY);
-                    ctx.quadraticCurveTo(0, startY + 10, curveX, startY);
-                    ctx.stroke();
-                }
-                ctx.restore();
-
-                // [DEV_CONTEXT: THERMAL GRADIENT - DYNAMIC HEAT VISUALIZATION]
-                // Градиент нагрева: кончик (красный → жёлтый → белый) → юбка
-                // Работает при бурении И при остывании (heat > 5)
-                if (heat > 5) {
-                    ctx.save();
-                    ctx.globalCompositeOperation = 'lighter';
-
-                    // Нормализованный процент нагрева (0-1) с плавным переходом
-                    const rawHeatPct = Math.min(1, heat / 100);
-                    // Применяем easing для более плавного перехода (ease-in-out)
-                    const heatPct = rawHeatPct < 0.5
-                        ? 2 * rawHeatPct * rawHeatPct
-                        : 1 - Math.pow(-2 * rawHeatPct + 2, 2) / 2;
-
-                    // Высота прогрева от кончика вверх (от 5% до 100% длины бура)
-                    const heatHeight = bitLen * (0.05 + heatPct * 0.95);
-
-                    // Создаём вертикальный градиент от кончика вверх
-                    const heatGrad = ctx.createLinearGradient(0, bitLen, 0, bitLen - heatHeight);
-
-                    // Уменьшаем интенсивность при остывании (когда не spinning)
-                    const intensityMult = spinning ? 1 : 0.7;
-
-                    // Более плавные цветовые переходы
-                    if (heatPct < 0.25) {
-                        // Очень низкий нагрев: тусклый красный
-                        const alpha = heatPct * 3 * intensityMult;
-                        heatGrad.addColorStop(0, `rgba(255, 60, 0, ${alpha})`);
-                        heatGrad.addColorStop(0.6, `rgba(255, 80, 0, ${alpha * 0.5})`);
-                        heatGrad.addColorStop(1, 'rgba(255, 80, 0, 0)');
-                    } else if (heatPct < 0.5) {
-                        // Низкий-средний нагрев: красный → оранжевый
-                        const t = (heatPct - 0.25) / 0.25;
-                        heatGrad.addColorStop(0, `rgba(255, ${60 + t * 80}, 0, ${(0.5 + t * 0.3) * intensityMult})`);
-                        heatGrad.addColorStop(0.4, `rgba(255, ${50 + t * 60}, 0, ${(0.35 + t * 0.2) * intensityMult})`);
-                        heatGrad.addColorStop(0.75, `rgba(255, 50, 0, ${0.15 * intensityMult})`);
-                        heatGrad.addColorStop(1, 'rgba(255, 50, 0, 0)');
-                    } else if (heatPct < 0.75) {
-                        // Средний-высокий нагрев: оранжевый → жёлтый
-                        const t = (heatPct - 0.5) / 0.25;
-                        heatGrad.addColorStop(0, `rgba(255, ${140 + t * 80}, ${t * 50}, ${(0.75 + t * 0.15) * intensityMult})`);
-                        heatGrad.addColorStop(0.25, `rgba(255, ${110 + t * 60}, 0, ${(0.6 + t * 0.1) * intensityMult})`);
-                        heatGrad.addColorStop(0.55, `rgba(255, ${70 + t * 30}, 0, ${(0.4 + t * 0.05) * intensityMult})`);
-                        heatGrad.addColorStop(0.8, `rgba(255, 50, 0, ${0.2 * intensityMult})`);
-                        heatGrad.addColorStop(1, 'rgba(255, 50, 0, 0)');
-                    } else if (heatPct < 0.9) {
-                        // Высокий нагрев: жёлтый → почти белый
-                        const t = (heatPct - 0.75) / 0.15;
-                        heatGrad.addColorStop(0, `rgba(255, ${220 + t * 35}, ${50 + t * 120}, ${(0.85 + t * 0.1) * intensityMult})`);
-                        heatGrad.addColorStop(0.2, `rgba(255, ${180 + t * 40}, ${t * 80}, ${(0.7 + t * 0.1) * intensityMult})`);
-                        heatGrad.addColorStop(0.45, `rgba(255, ${120 + t * 40}, 0, ${(0.5 + t * 0.1) * intensityMult})`);
-                        heatGrad.addColorStop(0.7, `rgba(255, ${60 + t * 20}, 0, ${(0.3 + t * 0.05) * intensityMult})`);
-                        heatGrad.addColorStop(0.9, `rgba(255, 50, 0, ${0.15 * intensityMult})`);
-                        heatGrad.addColorStop(1, 'rgba(255, 40, 0, 0)');
-                    } else {
-                        // Критический нагрев (90-100%): белый кончик → жёлтый → красная юбка
-                        const t = (heatPct - 0.9) / 0.1;
-                        heatGrad.addColorStop(0, `rgba(255, 255, ${200 + t * 55}, ${(0.95 + t * 0.05) * intensityMult})`);
-                        heatGrad.addColorStop(0.12, `rgba(255, 255, ${150 + t * 50}, ${0.9 * intensityMult})`);
-                        heatGrad.addColorStop(0.28, `rgba(255, ${240 - t * 20}, ${80 + t * 40}, ${0.8 * intensityMult})`);
-                        heatGrad.addColorStop(0.45, `rgba(255, ${180 - t * 30}, ${20 + t * 20}, ${0.65 * intensityMult})`);
-                        heatGrad.addColorStop(0.65, `rgba(255, ${100 - t * 30}, 0, ${0.5 * intensityMult})`);
-                        heatGrad.addColorStop(0.82, `rgba(255, 50, 0, ${0.35 * intensityMult})`);
-                        heatGrad.addColorStop(1, `rgba(200, 30, 0, ${(0.15 + t * 0.1) * intensityMult})`);
-                    }
-
-                    ctx.fillStyle = heatGrad;
-
-                    // Рисуем форму бура для эффекта нагрева (внутри границ)
-                    ctx.beginPath();
-                    ctx.moveTo(-bitW / 2, 0);
-                    for (let i = 0; i < steps; i++) {
-                        const y = (bitLen / steps) * (i + 1);
-                        const x = (bitW / 2) * (1 - (i + 1) / steps);
-                        ctx.lineTo(-x - 5, y - 10);
-                        ctx.lineTo(-x, y);
-                    }
-                    ctx.lineTo(0, bitLen);
-                    for (let i = steps - 1; i >= 0; i--) {
-                        const y = (bitLen / steps) * (i + 1);
-                        const x = (bitW / 2) * (1 - (i + 1) / steps);
-                        ctx.lineTo(x, y);
-                        ctx.lineTo(x + 5, y - 10);
-                    }
-                    ctx.lineTo(bitW / 2, 0);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    ctx.restore();
+                    ctx.moveTo(0, cy - ch / 2 - 20);
+                    ctx.lineTo(cw / 2 + 10, cy);
+                    ctx.lineTo(0, cy + ch / 2 + 20);
+                    ctx.lineTo(-cw / 2 - 10, cy);
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
                 }
 
+                if (theme.rust) drawWeathering(-cw / 2, cy - ch / 2, cw, ch, 10);
 
+                // Tiered Hatch/Window
+                const hSize = tier >= 13 ? 10 : 45;
+                ctx.fillStyle = theme.darkMetal; ctx.beginPath(); ctx.arc(0, cy - 30, hSize, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = theme.accent; ctx.lineWidth = tier >= 6 ? 2 : 4; ctx.stroke();
 
-                ctx.strokeStyle = isSharpened ? '#fff' : color;
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // Блик на буре (левая грань)
-                ctx.save();
-                ctx.globalAlpha = 0.15;
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(-bitW / 2 + 5, 5);
-                ctx.lineTo(-bitW / 4, bitLen * 0.4);
-                ctx.stroke();
-                ctx.restore();
-
-                // Spiral Animation
-                const spinOffset = spinning ? (tick * 5) % 60 : 0;
-                ctx.beginPath();
-                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-                for (let i = 0; i < 3; i++) {
-                    const startX = -bitW / 3 + (i * bitW / 3);
-                    ctx.moveTo(startX, 0);
-                    ctx.quadraticCurveTo(startX + spinOffset - 30, bitLen / 2, 0, bitLen);
+                if (tier >= 6) {
+                    // Glow effect for advanced tech
+                    ctx.shadowBlur = 10; ctx.shadowColor = theme.highlight;
+                    ctx.fillStyle = theme.highlight; ctx.beginPath(); ctx.arc(0, cy - 30, hSize * 0.8, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = 0;
                 }
-                ctx.stroke();
 
-                ctx.restore();
+                // Armor Plates / Rivets Detail
+                if (tier >= 3 && tier <= 5) {
+                    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                    ctx.strokeRect(-cw / 2 + 10, cy - ch / 2 + 10, cw - 20, ch - 20);
+                    drawRivets([{ x: -cw / 2 + 15, y: cy + 40 }, { x: cw / 2 - 15, y: cy + 40 }]);
+                }
             };
-            drawDrillBit();
+            drawCabin();
+
+            // 2.4 MECHANICAL CORE (Tiered)
+            const drawMechanicals = () => {
+                const tier = drill.power.tier; // Use power tier for the core
+                const theme = getThemeForTier(tier);
+                const my = 130;
+                const mw = 140; const mh = 110;
+
+                // Background
+                ctx.fillStyle = theme.darkMetal; ctx.fillRect(-mw / 2, my - mh / 2, mw, mh);
+                ctx.strokeStyle = theme.highlight; ctx.strokeRect(-mw / 2, my - mh / 2, mw, mh);
+
+                if (tier >= 10) {
+                    // Quantum Reactor for high tiers
+                    const pulse = Math.sin(tick * 0.05) * 10;
+                    ctx.shadowBlur = 20; ctx.shadowColor = theme.glow;
+                    ctx.fillStyle = theme.highlight;
+                    ctx.beginPath(); ctx.arc(0, my, 30 + pulse, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    // Rotating rings
+                    ctx.strokeStyle = theme.accent; ctx.lineWidth = 2;
+                    ctx.save(); ctx.translate(0, my); ctx.rotate(tick * 0.1);
+                    ctx.beginPath(); ctx.ellipse(0, 0, 50, 20, 0, 0, Math.PI * 2); ctx.stroke();
+                    ctx.rotate(Math.PI / 2);
+                    ctx.beginPath(); ctx.ellipse(0, 0, 50, 20, 0, 0, Math.PI * 2); ctx.stroke();
+                    ctx.restore();
+                } else {
+                    // Mechanical Gears
+                    const numGears = tier >= 6 ? 2 : 1;
+                    for (let g = 0; g < numGears; g++) {
+                        const gx = numGears === 1 ? -35 : (g === 0 ? -40 : 30);
+                        const gy = numGears === 1 ? my : (g === 0 ? my - 20 : my + 20);
+                        const size = numGears === 1 ? 35 : 25;
+
+                        ctx.save(); ctx.translate(gx, gy); if (spinning) ctx.rotate(tick * (g === 0 ? 0.05 : -0.07));
+                        ctx.fillStyle = theme.metal; ctx.strokeStyle = theme.highlight; ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                        for (let i = 0; i < 8; i++) {
+                            ctx.rotate(Math.PI / 4);
+                            ctx.fillRect(size - 5, -4, 10, 8);
+                        }
+                        ctx.restore();
+                    }
+
+                    // Pistons
+                    const pistonOffset = spinning ? Math.sin(tick * 0.2) * 15 : 0;
+                    ctx.fillStyle = theme.darkMetal; ctx.fillRect(20, my - 40, 25, 80);
+                    ctx.fillStyle = theme.highlight; ctx.fillRect(25, my - 35 + pistonOffset, 15, 30);
+                }
+            };
+            drawMechanicals();
+
+            // 2.5 SHROUD (Skirt - Tiered)
+            const drawShroud = () => {
+                const tier = drill.hull.tier;
+                const theme = getThemeForTier(tier);
+                const sy = 185;
+                const sw1 = 160; const sw2 = 220; const sh = 80;
+
+                const gShroud = ctx.createLinearGradient(0, sy, 0, sy + sh);
+                gShroud.addColorStop(0, theme.metal);
+                gShroud.addColorStop(1, theme.rust || theme.darkMetal);
+
+                ctx.fillStyle = gShroud; ctx.strokeStyle = theme.darkMetal;
+                ctx.beginPath(); ctx.moveTo(-sw1 / 2, sy); ctx.lineTo(sw1 / 2, sy);
+                ctx.lineTo(sw2 / 2, sy + sh); ctx.lineTo(-sw2 / 2, sy + sh); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                // Tiered Ribs / Energy Lines
+                const numRibs = tier <= 5 ? 7 : (tier <= 12 ? 11 : 15);
+                ctx.strokeStyle = tier >= 10 ? theme.highlight : 'rgba(0,0,0,0.3)';
+                ctx.lineWidth = tier >= 10 ? 2 : 1;
+
+                for (let i = 0; i < numRibs; i++) {
+                    const t = i / (numRibs - 1);
+                    const xTop = -sw1 / 2 + t * sw1;
+                    const xBot = -sw2 / 2 + t * sw2;
+                    ctx.beginPath(); ctx.moveTo(xTop, sy); ctx.lineTo(xBot, sy + sh); ctx.stroke();
+                }
+            };
+            drawShroud();
+
+            // 2.6 HEAVY BIT (Tiered)
+            const drawBitRef = () => {
+                const tier = drill.bit.tier;
+                const theme = getThemeForTier(tier);
+                const by = 265;
+
+                // Define layers based on tier theme
+                let layers = [
+                    { w: 200, h: 40, teeth: 12 },
+                    { w: 150, h: 50, teeth: 10 },
+                    { w: 100, h: 60, teeth: 8 },
+                    { w: 50, h: 70, teeth: 4 }
+                ];
+
+                if (tier >= 10) {
+                    // More complex layers for high tier
+                    layers.push({ w: 30, h: 40, teeth: 2 });
+                }
+
+                let currY = by;
+                layers.forEach((l, idx) => {
+                    ctx.save(); ctx.translate(0, currY);
+                    if (spinning) ctx.translate((Math.random() - 0.5) * 3, 0);
+
+                    const bGrad = ctx.createLinearGradient(-l.w / 2, 0, l.w / 2, 0);
+                    bGrad.addColorStop(0, theme.darkMetal);
+                    bGrad.addColorStop(0.5, theme.metal);
+                    bGrad.addColorStop(1, theme.darkMetal);
+
+                    ctx.fillStyle = bGrad; ctx.strokeStyle = tier >= 6 ? theme.highlight : '#111';
+                    ctx.lineWidth = tier >= 6 ? 2 : 1;
+
+                    // Layer Body
+                    ctx.beginPath(); ctx.moveTo(-l.w / 2, 0); ctx.lineTo(l.w / 2, 0);
+                    ctx.lineTo(l.w / 2 * (0.7 - idx * 0.1), l.h); ctx.lineTo(-l.w / 2 * (0.7 - idx * 0.1), l.h); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                    // Teeth Logic
+                    ctx.fillStyle = tier >= 13 ? theme.highlight : '#111';
+                    const bottomW = l.w * (0.7 - idx * 0.1);
+                    const toothW = bottomW / l.teeth;
+                    const spinPhase = spinning ? (tick * 0.3) % toothW : 0;
+
+                    ctx.save();
+                    ctx.beginPath(); ctx.rect(-bottomW / 2, l.h, bottomW, 20); ctx.clip();
+
+                    for (let i = -1; i <= l.teeth; i++) {
+                        const tx = -bottomW / 2 + i * toothW + spinPhase;
+                        ctx.beginPath();
+                        ctx.moveTo(tx, l.h);
+                        ctx.lineTo(tx + toothW / 2, l.h + 12 + theme.detallLevel * 2);
+                        ctx.lineTo(tx + toothW, l.h);
+                        ctx.closePath(); ctx.fill();
+
+                        if (tier >= 6) {
+                            ctx.strokeStyle = theme.highlight;
+                            ctx.beginPath(); ctx.moveTo(tx + 2, l.h + 2); ctx.lineTo(tx + toothW / 2, l.h + 8); ctx.stroke();
+                        }
+                    }
+                    ctx.restore();
+                    ctx.restore();
+                    currY += l.h;
+                });
+
+                // Final Tip (Laser/Plasma for High Tiers)
+                if (tier >= 13) {
+                    ctx.shadowBlur = 20; ctx.shadowColor = theme.glow;
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath(); ctx.moveTo(-5, currY); ctx.lineTo(5, currY); ctx.lineTo(0, currY + 120); ctx.closePath(); ctx.fill();
+                    ctx.shadowBlur = 0;
+                } else {
+                    ctx.fillStyle = theme.darkMetal; ctx.beginPath();
+                    ctx.moveTo(-15, currY); ctx.lineTo(15, currY); ctx.lineTo(0, currY + 40); ctx.closePath(); ctx.fill();
+                }
+
+                // Heat (Tip) - Enhanced for tiers
+                if (heat > 5 || tier >= 8) {
+                    const heatVal = Math.max(heat, tier >= 8 ? 20 : 0);
+                    ctx.globalCompositeOperation = 'lighter';
+                    const hGrad = ctx.createRadialGradient(0, currY + 20, 0, 0, currY + 20, (60 + theme.detallLevel * 20) * (heatVal / 100));
+                    hGrad.addColorStop(0, heatVal > 80 ? '#fff' : theme.highlight); hGrad.addColorStop(1, 'transparent');
+                    ctx.fillStyle = hGrad; ctx.beginPath(); ctx.arc(0, currY + 20, 100, 0, Math.PI * 2); ctx.fill();
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+            };
+            drawBitRef();
+
+            // 2.7 LIGHTS (Lamps - Tiered)
+            const drawLights = () => {
+                const tier = drill.control.tier;
+                const theme = getThemeForTier(tier);
+                const ly = 20;
+                const lx = 65;
+                const numLights = tier <= 9 ? 2 : 4;
+
+                for (let i = 0; i < numLights; i++) {
+                    const x = numLights === 2 ? (i === 0 ? -lx : lx) : (-lx - 15 + i * 45);
+                    const y = ly;
+
+                    // Lamp Body
+                    ctx.fillStyle = theme.darkMetal; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
+
+                    // Glow / Beam
+                    const gLight = ctx.createRadialGradient(x, y, 0, x, y + 120, 250);
+                    const beamColor = tier <= 5 ? '255, 247, 173' : (tier <= 9 ? '0, 245, 212' : '255, 0, 110');
+                    gLight.addColorStop(0, `rgba(${beamColor}, 0.5)`);
+                    gLight.addColorStop(1, `rgba(${beamColor}, 0)`);
+
+                    ctx.fillStyle = gLight;
+                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 80, y + 300); ctx.lineTo(x + 80, y + 300); ctx.closePath(); ctx.fill();
+
+                    // Bulb
+                    ctx.fillStyle = theme.highlight; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+                }
+            };
+            drawLights();
 
             ctx.restore();
         };

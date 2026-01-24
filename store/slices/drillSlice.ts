@@ -21,7 +21,7 @@ export const createDrillSlice: SliceCreator<DrillActions> = (set, get) => ({
         const s = get();
         const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
         const energyLoad = stats.energyProd > 0 ? (stats.energyCons / stats.energyProd) * 100 : 100;
-        const isOverloaded = (s.currentCargoWeight > stats.totalCargoCapacity && !s.isZeroWeight) || energyLoad > 100;
+        const isOverloaded = (s.currentCargoWeight > stats.totalCargoCapacity && !s.isZeroWeight) || (energyLoad > 100 && !s.isInfiniteEnergy);
 
         if (s.isOverheated || s.isBroken || s.currentBoss?.isInvulnerable || isOverloaded) {
             if (isOverloaded) audioEngine.playError();

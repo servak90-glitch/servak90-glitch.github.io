@@ -5,6 +5,21 @@ import { BASE_COSTS, BASE_BUILD_TIMES, BASE_STORAGE_CAPACITY } from '../constant
 import { RegionId, BaseType } from '../types';
 import { t, TL } from '../services/localization';
 import { formatCompactNumber } from '../services/gameMath';
+import {
+    X,
+    Construction,
+    Zap,
+    Package,
+    Hammer,
+    Lock,
+    AlertTriangle,
+    CheckCircle2,
+    Database,
+    Cpu,
+    MonitorDot,
+    Compass,
+    Factory
+} from 'lucide-react';
 
 interface BuildBaseModalProps {
     regionId: RegionId;
@@ -20,181 +35,174 @@ export const BuildBaseModal: React.FC<BuildBaseModalProps> = ({ regionId, onClos
 
     const canAfford = (baseType: BaseType): boolean => {
         const cost = BASE_COSTS[baseType];
-
-        // Проверка credits (rubies)
-        if (resources.rubies < cost.credits) return false;
-
-        // Проверка материалов
+        if (resources.credits < cost.credits) return false;
         for (const [resource, amount] of Object.entries(cost.materials)) {
             if ((resources[resource as keyof typeof resources] || 0) < (amount || 0)) {
                 return false;
             }
         }
-
         return true;
     };
 
     const formatBuildTime = (ms: number): string => {
         if (ms === 0) return lang === 'RU' ? 'Мгновенно' : 'Instant';
         const minutes = Math.floor(ms / 60000);
-        if (minutes < 60) return `${minutes} ${lang === 'RU' ? 'мин' : 'min'}`;
+        if (minutes < 60) return `${minutes} ${lang === 'RU' ? 'МИН' : 'MIN'}`;
         const hours = Math.floor(minutes / 60);
-        return `${hours} ${lang === 'RU' ? 'ч' : 'h'}`;
+        return `${hours} ${lang === 'RU' ? 'Ч' : 'H'}`;
     };
 
     const getBaseFeatures = (baseType: BaseType): string[] => {
         const features: string[] = [];
-
         if (baseType === 'outpost') {
-            features.push(lang === 'RU' ? '📦 Только хранилище' : '📦 Storage only');
+            features.push(lang === 'RU' ? '📦 Базовое хранилище' : '📦 Base Storage');
         }
-
         if (baseType === 'camp') {
             features.push(lang === 'RU' ? '🔧 Мастерская (Тир 1-5)' : '🔧 Workshop (Tier 1-5)');
             features.push(lang === 'RU' ? '📦 Среднее хранилище' : '📦 Medium storage');
         }
-
         if (baseType === 'station') {
             features.push(lang === 'RU' ? '🔧 Мастерская (Тир 1-10)' : '🔧 Workshop (Tier 1-10)');
             features.push(lang === 'RU' ? '💰 Доступ к рынку' : '💰 Market access');
             features.push(lang === 'RU' ? '⛽ Заправка' : '⛽ Fuel facilities');
             features.push(lang === 'RU' ? '📦 Большое хранилище' : '📦 Large storage');
         }
-
         return features;
     };
 
     return (
         <AnimatePresence>
             <motion.div
-                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[120] flex items-center justify-center bg-void/80 backdrop-blur-xl p-6"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={onClose}
             >
+                <div className="absolute inset-0 mesh-bg opacity-20 pointer-events-none" />
+
                 <motion.div
-                    className="w-full max-w-4xl bg-gray-900 border-2 border-cyan-500 rounded-lg p-4 md:p-6 max-h-[90vh] overflow-y-auto"
-                    initial={{ scale: 0.9, y: 20 }}
-                    animate={{ scale: 1, y: 0 }}
-                    exit={{ scale: 0.9, opacity: 0 }}
+                    className="w-full max-w-4xl glass-panel border-cyan-500/30 bg-black/60 overflow-hidden relative font-technical flex flex-col shadow-[0_0_100px_rgba(34,211,238,0.1)]"
+                    initial={{ scale: 0.95, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* Header */}
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl md:text-3xl font-black text-cyan-400 pixel-text">
-                            🏗️ {t(TL.ui.build_base_title, lang)}
-                        </h2>
-                        <button
-                            onClick={onClose}
-                            className="text-gray-400 hover:text-white text-2xl font-bold transition-colors"
-                        >
-                            ✕
+                    {/* Header Hub */}
+                    <div className="p-8 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
+                        <div className="flex items-center gap-6">
+                            <div className="p-3 glass-panel border-cyan-500/40 bg-cyan-500/10 text-cyan-400">
+                                <Construction className="w-8 h-8" />
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter leading-none mb-1">
+                                    {t(TL.ui.build_base_title, lang)}
+                                </h2>
+                                <div className="flex items-center gap-3">
+                                    <Compass className="w-3.5 h-3.5 text-cyan-400" />
+                                    <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">Sector_Deployment // {t(TL.regions[regionId], lang)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={onClose} className="p-3 glass-panel border-white/10 hover:border-white/40 text-white/40 hover:text-white transition-all group">
+                            <X className="w-6 h-6 group-hover:rotate-90 transition-transform" />
                         </button>
                     </div>
 
-                    {/* Region info */}
-                    <div className="mb-6 p-3 bg-gray-800/50 border border-gray-700 rounded">
-                        <p className="text-sm text-gray-400">{t(TL.ui.region_label, lang)}:</p>
-                        <p className="text-lg font-bold text-white">{t(TL.regions[regionId], lang)}</p>
-                    </div>
+                    <div className="p-10 flex flex-col gap-10">
+                        {/* Blueprint Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {baseTypes.map(baseType => {
+                                const cost = BASE_COSTS[baseType];
+                                const canBuild = canAfford(baseType);
+                                const buildTime = BASE_BUILD_TIMES[baseType];
+                                const storage = BASE_STORAGE_CAPACITY[baseType];
+                                const features = getBaseFeatures(baseType);
 
-                    {/* Base type cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {baseTypes.map(baseType => {
-                            const cost = BASE_COSTS[baseType];
-                            const canBuild = canAfford(baseType);
-                            const buildTime = BASE_BUILD_TIMES[baseType];
-                            const storage = BASE_STORAGE_CAPACITY[baseType];
-                            const features = getBaseFeatures(baseType);
-
-                            return (
-                                <div
-                                    key={baseType}
-                                    className={`border-2 rounded-lg p-4 transition-all ${canBuild
-                                        ? 'border-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20'
-                                        : 'border-gray-700 bg-gray-800/50 opacity-60'
-                                        }`}
-                                >
-                                    {/* Title */}
-                                    <h3 className="text-xl font-bold text-white mb-2 capitalize">
-                                        {baseType === 'outpost' && '🏕️ Outpost'}
-                                        {baseType === 'camp' && '⛺ Camp'}
-                                        {baseType === 'station' && '🏙️ Station'}
-                                    </h3>
-
-                                    {/* Build time */}
-                                    <div className="mb-3 p-2 bg-black/30 rounded">
-                                        <p className="text-xs text-gray-400">{t(TL.ui.build_time, lang)}:</p>
-                                        <p className="text-sm font-bold text-cyan-400">{formatBuildTime(buildTime)}</p>
-                                    </div>
-
-                                    {/* Storage */}
-                                    <div className="mb-3 p-2 bg-black/30 rounded">
-                                        <p className="text-xs text-gray-400">{t(TL.ui.storage_capacity, lang)}:</p>
-                                        <p className="text-sm font-bold text-green-400">{formatCompactNumber(storage)} kg</p>
-                                    </div>
-
-                                    {/* Features */}
-                                    <div className="mb-4">
-                                        <p className="text-xs text-gray-400 mb-1">{t(TL.ui.features, lang)}:</p>
-                                        <ul className="space-y-1">
-                                            {features.map((feature, idx) => (
-                                                <li key={idx} className="text-xs text-gray-300">
-                                                    {feature}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-
-                                    {/* Cost */}
-                                    <div className="mb-4 border-t border-gray-700 pt-3">
-                                        <p className="text-xs text-gray-400 mb-2">Cost:</p>
-
-                                        {/* Credits */}
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="text-xs text-gray-300">💎 Rubies</span>
-                                            <span className={`text-sm font-bold ${resources.rubies >= cost.credits ? 'text-green-400' : 'text-red-400'
-                                                }`}>
-                                                {formatCompactNumber(resources.rubies)} / {formatCompactNumber(cost.credits)}
-                                            </span>
+                                return (
+                                    <div
+                                        key={baseType}
+                                        className={`glass-panel p-8 border-2 transition-all flex flex-col gap-6 relative group overflow-hidden
+                                            ${canBuild ? 'border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-400' : 'border-white/5 bg-white/5 opacity-40grayscale'}
+                                        `}
+                                    >
+                                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                                            <Factory className="w-24 h-24" />
                                         </div>
 
-                                        {/* Materials */}
-                                        {Object.entries(cost.materials).map(([resource, amount]) => (
-                                            <div key={resource} className="flex justify-between items-center mb-1">
-                                                <span className="text-xs text-gray-300 capitalize">{resource}</span>
-                                                <span className={`text-sm font-bold ${(resources[resource as keyof typeof resources] || 0) >= (amount || 0)
-                                                    ? 'text-green-400'
-                                                    : 'text-red-400'
-                                                    }`}>
-                                                    {formatCompactNumber(resources[resource as keyof typeof resources] || 0)} / {formatCompactNumber(amount || 0)}
-                                                </span>
+                                        <div className="space-y-1 relative z-10">
+                                            <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none">
+                                                {baseType.toUpperCase()}
+                                            </h3>
+                                            <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">CLASS_01_DEPLOYMENT</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3 relative z-10">
+                                            <div className="p-3 glass-panel border-white/5 bg-black/40 space-y-1">
+                                                <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">Build_Cycle</span>
+                                                <div className="text-xs font-black text-cyan-400">{formatBuildTime(buildTime)}</div>
                                             </div>
-                                        ))}
+                                            <div className="p-3 glass-panel border-white/5 bg-black/40 space-y-1">
+                                                <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">Payload_Cap</span>
+                                                <div className="text-xs font-black text-emerald-400">{formatCompactNumber(storage)} KG</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3 relative z-10">
+                                            <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.3em] italic">Authorized_Modules</span>
+                                            <div className="space-y-2">
+                                                {features.map((feature, idx) => (
+                                                    <div key={idx} className="flex items-center gap-2 text-[9px] font-black uppercase text-white/60 tracking-wider">
+                                                        <CheckCircle2 className="w-3 h-3 text-cyan-400" />
+                                                        {feature.replace(/📦|🔧|💰|⛽/, '').trim()}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4 pt-4 border-t border-white/5 relative z-10">
+                                            <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.3em] italic">Req_Resources</span>
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between items-center px-1">
+                                                    <span className="text-[9px] font-black text-white/40 uppercase tracking-widest leading-none">Credits (CR)</span>
+                                                    <span className={`text-[10px] font-black ${resources.credits >= cost.credits ? 'text-white' : 'text-rose-500'}`}>
+                                                        {cost.credits.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                {Object.entries(cost.materials).map(([resource, amount]) => (
+                                                    <div key={resource} className="flex justify-between items-center px-1">
+                                                        <span className="text-[9px] font-black text-white/40 uppercase tracking-widest leading-none">{t(resource, lang)}</span>
+                                                        <span className={`text-[10px] font-black ${(resources[resource as keyof typeof resources] || 0) >= (amount || 0) ? 'text-white' : 'text-rose-500'}`}>
+                                                            {amount}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => canBuild && onBuild(baseType)}
+                                            disabled={!canBuild}
+                                            className={`w-full py-5 font-black uppercase text-xs tracking-[0.4em] italic shadow-[0_0_30px_rgba(34,211,238,0.1)] transition-all relative overflow-hidden group/btn
+                                                ${canBuild ? 'bg-cyan-500 text-black hover:bg-cyan-400' : 'bg-white/5 text-white/10 cursor-not-allowed border border-white/5'}
+                                            `}
+                                        >
+                                            {canBuild ? 'Establish_Sector' : 'Insufficient_Payload'}
+                                        </button>
                                     </div>
+                                );
+                            })}
+                        </div>
 
-                                    {/* Build button */}
-                                    <button
-                                        onClick={() => canBuild && onBuild(baseType)}
-                                        disabled={!canBuild}
-                                        className={`w-full py-3 rounded-lg font-bold text-sm transition-all ${canBuild
-                                            ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
-                                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                                            }`}
-                                    >
-                                        {canBuild ? `🏗️ ${lang === 'RU' ? 'ПОСТРОИТЬ' : 'BUILD'} ${baseType.toUpperCase()}` : (lang === 'RU' ? '❌ НЕДОСТАТОЧНО РЕСУРСОВ' : '❌ INSUFFICIENT RESOURCES')}
-                                    </button>
+                        {/* Telemetry Log */}
+                        <div className="bg-black/40 border border-white/5 p-6 rounded-2xl flex items-center justify-between">
+                            <div className="flex items-center gap-6">
+                                <div className="p-3 glass-panel border-cyan-500/20 bg-cyan-500/5 text-cyan-400">
+                                    <MonitorDot className="w-5 h-5 animate-pulse" />
                                 </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Help text */}
-                    <div className="mt-6 p-3 bg-blue-900/20 border border-blue-700 rounded">
-                        <p className="text-xs text-blue-300">
-                            💡 <strong>{t(TL.ui.tip_label, lang)}:</strong> {t(TL.ui.one_base_per_region, lang)}
-                        </p>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">Sector_Guidelines</span>
+                                    <p className="text-[10px] font-black text-white/60 uppercase tracking-widest italic">{t(TL.ui.one_base_per_region, lang)}</p>
+                                </div>
+                            </div>
+                            <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.5em]">Auth_Status: Ready_For_Payload</div>
+                        </div>
                     </div>
                 </motion.div>
             </motion.div>

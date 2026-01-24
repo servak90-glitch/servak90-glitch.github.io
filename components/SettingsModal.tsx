@@ -1,11 +1,28 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { GameSettings, Language } from '../types';
 import { t, TEXT_IDS } from '../services/localization';
 import { useGameStore } from '../store/gameStore';
 import { GAME_VERSION } from '../constants';
 import { audioEngine } from '../services/audioEngine';
-import { useEffect } from 'react';
+import {
+    Settings,
+    X,
+    Save,
+    Upload,
+    Download,
+    Copy,
+    Music,
+    Volume2,
+    Globe,
+    AlertTriangle,
+    RotateCcw,
+    ShieldCheck,
+    Cpu,
+    Database,
+    Binary,
+    Terminal
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SettingsModalProps {
     settings: GameSettings;
@@ -46,8 +63,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
     const exportSaveString = useGameStore(s => s.exportSaveString);
     const importSaveString = useGameStore(s => s.importSaveString);
-
-    // Manual Actions
     const manualSave = useGameStore(s => s.manualSave);
     const manualLoad = useGameStore(s => s.manualLoad);
 
@@ -58,9 +73,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         } else {
             const newCount = secretClicks + 1;
             setSecretClicks(newCount);
-            if (newCount === 7) {
-                setShowDebugLogin(true);
-            }
+            if (newCount === 7) setShowDebugLogin(true);
         }
         lastClickTimeRef.current = now;
     };
@@ -88,10 +101,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 setExportMessage(t(TEXT_IDS.MSG_COPIED, language));
                 setTimeout(() => setExportMessage(""), 2000);
             });
-        } else {
-            setExportMessage(t(TEXT_IDS.MSG_EXPORT_ERROR, language));
         }
-
     };
 
     const handleImport = () => {
@@ -101,7 +111,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             setImportError(t(TEXT_IDS.MSG_IMPORT_ERROR, language));
             setTimeout(() => setImportError(""), 3000);
         }
-
     };
 
     const handleManualSave = () => {
@@ -110,256 +119,256 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         setTimeout(() => setSaveMessage(""), 2000);
     };
 
-
     const handleManualLoad = () => {
         const success = manualLoad();
         if (success) {
             setSaveMessage(t(TEXT_IDS.MSG_DATA_LOADED, language));
-            setTimeout(() => onClose(), 500); // Close to show game
+            setTimeout(() => onClose(), 500);
         } else {
             setSaveMessage(t(TEXT_IDS.MSG_NO_DATA, language));
             setTimeout(() => setSaveMessage(""), 2000);
         }
     };
 
-
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-            <div className="relative w-full max-w-md bg-zinc-950 border-2 border-zinc-700 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col p-6 overflow-hidden max-h-[90vh] overflow-y-auto scrollbar-hide">
-
-                {/* CRT Scanline */}
-                <div className="absolute inset-0 pointer-events-none opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] z-0" />
-
-                <div className="relative z-10">
-                    <div className="flex justify-between items-center mb-6 border-b border-zinc-800 pb-2">
-                        <h2
-                            onClick={handleTitleClick}
-                            className="pixel-text text-xl text-cyan-400 tracking-widest select-none cursor-default"
-                        >
-                            {t(TEXT_IDS.SETTINGS_TITLE, language)}
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-void/60 backdrop-blur-3xl p-0 md:p-4">
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="relative w-full h-full md:h-auto md:max-w-xl glass-panel border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col p-0 overflow-hidden md:max-h-[90vh]"
+            >
+                {/* Header Bento */}
+                <div className="bg-white/[0.03] border-b border-white/5 p-6 flex justify-between items-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent pointer-events-none" />
+                    <div className="flex items-center gap-3 z-10 shrink-0">
+                        <div className="p-2 glass-panel border-white/10 bg-white/5">
+                            <Settings className="w-5 h-5 text-cyan-400" />
+                        </div>
+                        <h2 onClick={handleTitleClick} className="text-xl font-black font-technical uppercase tracking-tighter text-white select-none cursor-default italic">
+                            System_Config_V{GAME_VERSION}
                         </h2>
-                        <button onClick={() => { audioEngine.playUIPanelClose(); onClose(); }} className="text-zinc-500 hover:text-white text-xl">✕</button>
                     </div>
+                    <button onClick={() => { audioEngine.playUIPanelClose(); onClose(); }} className="p-2 glass-panel hover:bg-rose-500/20 hover:text-rose-400 text-white/40 transition-all z-10">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
 
-                    <div className="space-y-6">
-                        {/* MANUAL SAVE STATION */}
-                        <div className="border border-green-900 bg-green-950/20 p-4">
-                            <div className="flex justify-between items-start mb-2">
+                <div className="p-6 overflow-y-auto scrollbar-hide space-y-8 bg-black/20">
+
+                    {/* BLACK BOX - DATA CONTROL */}
+                    <section className="glass-panel p-5 border-emerald-500/20 bg-emerald-500/5">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="flex items-center gap-3">
+                                <ShieldCheck className="w-4 h-4 text-emerald-400" />
                                 <div>
-                                    <h3 className="text-green-500 font-black text-sm pixel-text">{t(TEXT_IDS.SETTINGS_BLACK_BOX, language)}</h3>
-                                    <p className="text-[9px] text-zinc-500 font-mono leading-tight">{t(TEXT_IDS.SETTINGS_MANUAL_MEM, language)}</p>
+                                    <h3 className="text-xs font-black font-technical text-emerald-400 uppercase tracking-widest">{t(TEXT_IDS.SETTINGS_BLACK_BOX, language)}</h3>
+                                    <p className="text-[9px] text-white/30 font-technical uppercase mt-0.5">{t(TEXT_IDS.SETTINGS_MANUAL_MEM, language)}</p>
                                 </div>
-
-                                {saveMessage && <span className="text-[10px] text-green-300 font-mono animate-pulse bg-green-900/50 px-2 py-1">{saveMessage}</span>}
                             </div>
-
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                                <button
-                                    onClick={handleManualSave}
-                                    className="py-3 bg-zinc-900 border border-green-700 hover:bg-green-900/50 text-green-400 font-bold font-mono text-xs flex flex-col items-center justify-center"
-                                >
-                                    <span>{t(TEXT_IDS.SETTINGS_SAVE_BTN, language)}</span>
-                                    <span className="text-[8px] opacity-50 mt-1">{t(TEXT_IDS.SETTINGS_SAVE_SUB, language)}</span>
-                                </button>
-
-                                <button
-                                    onClick={handleManualLoad}
-                                    className="py-3 bg-zinc-900 border border-zinc-600 hover:bg-zinc-800 text-zinc-300 font-bold font-mono text-xs flex flex-col items-center justify-center"
-                                >
-                                    <span>{t(TEXT_IDS.SETTINGS_LOAD_BTN, language)}</span>
-                                    <span className="text-[8px] opacity-50 mt-1">{t(TEXT_IDS.SETTINGS_LOAD_SUB, language)}</span>
-                                </button>
-
-                            </div>
-                            <p className="text-[8px] text-red-500/80 mt-2 text-center font-mono">
-                                {t(TEXT_IDS.SETTINGS_SAVE_WARNING, language)}
-                            </p>
-
+                            {saveMessage && (
+                                <span className="text-[9px] font-black font-technical text-emerald-400 px-3 py-1 glass-panel border-emerald-500/30 bg-emerald-500/10 animate-pulse">
+                                    {saveMessage}
+                                </span>
+                            )}
                         </div>
 
-                        {/* LANGUAGE */}
-                        <div className="flex justify-between items-center bg-zinc-900/50 p-3 border border-zinc-800">
-                            <span className="font-mono text-zinc-300 text-sm font-bold">LANGUAGE</span>
+                        <div className="grid grid-cols-2 gap-4">
+                            <button onClick={handleManualSave} className="flex items-center justify-center gap-3 py-4 glass-panel border-white/10 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 group transition-all">
+                                <Save className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                                <div className="text-left">
+                                    <div className="text-[10px] font-black font-technical text-white uppercase">{t(TEXT_IDS.SETTINGS_SAVE_BTN, language)}</div>
+                                    <div className="text-[7px] text-white/30 font-technical uppercase">{t(TEXT_IDS.SETTINGS_SAVE_SUB, language)}</div>
+                                </div>
+                            </button>
+                            <button onClick={handleManualLoad} className="flex items-center justify-center gap-3 py-4 glass-panel border-white/10 bg-white/5 hover:bg-white/10 group transition-all">
+                                <RotateCcw className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+                                <div className="text-left">
+                                    <div className="text-[10px] font-black font-technical text-white uppercase">{t(TEXT_IDS.SETTINGS_LOAD_BTN, language)}</div>
+                                    <div className="text-[7px] text-white/30 font-technical uppercase">{t(TEXT_IDS.SETTINGS_LOAD_SUB, language)}</div>
+                                </div>
+                            </button>
+                        </div>
+                    </section>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* LANGUAGE HUB */}
+                        <section className="glass-panel p-5 bg-white/[0.03] border-white/10">
+                            <div className="flex items-center gap-3 mb-6">
+                                <Globe className="w-4 h-4 text-cyan-400" />
+                                <h3 className="text-[10px] font-black font-technical text-white/60 uppercase tracking-widest">Localization_Bus</h3>
+                            </div>
                             <div className="flex gap-2">
                                 {(['RU', 'EN'] as Language[]).map(lang => (
                                     <button
                                         key={lang}
                                         onClick={() => onSetLanguage(lang)}
-                                        className={`px-3 py-1 font-bold text-xs border ${language === lang ? 'bg-cyan-900 border-cyan-500 text-cyan-400' : 'bg-black border-zinc-700 text-zinc-500 hover:text-white'}`}
+                                        className={`flex-1 py-3 text-sm font-black font-technical border transition-all
+                                            ${language === lang ? 'bg-cyan-400 text-black border-cyan-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/20'}`}
                                     >
                                         {lang}
                                     </button>
                                 ))}
                             </div>
+                        </section>
+
+                        {/* DEBUG MODULE */}
+                        <section className="glass-panel p-5 bg-white/[0.03] border-white/10 flex flex-col justify-center">
+                            <div className="flex items-center gap-3 mb-4">
+                                <Binary className="w-4 h-4 text-white/30" />
+                                <h3 className="text-[10px] font-black font-technical text-white/30 uppercase tracking-widest">Internal_Bypass</h3>
+                            </div>
+                            {(showDebugLogin || isDebugUnlocked) && (
+                                <div className="space-y-3">
+                                    {isDebugUnlocked ? (
+                                        <button onClick={() => { toggleDebugUI(true); onClose(); }} className="w-full py-2.5 glass-panel border-cyan-500/30 bg-cyan-500/5 text-[9px] font-black font-technical text-cyan-400 uppercase tracking-widest hover:bg-cyan-500 hover:text-black transition-all">
+                                            Open_Dev_Console
+                                        </button>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="password"
+                                                placeholder="ACCESS_CODE"
+                                                className="flex-1 bg-black/40 border border-white/10 text-cyan-400 font-technical text-[10px] px-3 outline-none focus:border-cyan-400"
+                                                value={debugPassword}
+                                                onChange={(e) => setDebugPassword(e.target.value)}
+                                            />
+                                            <button onClick={handleDebugLogin} className="px-4 py-2 glass-panel border-white/10 bg-white/5 text-[9px] font-black font-technical text-white hover:bg-white hover:text-black">
+                                                VERIFY
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </section>
+                    </div>
+
+                    {/* AUDIO MASTER BUS */}
+                    <section className="glass-panel p-5 bg-white/[0.02] border-white/5">
+                        <div className="flex items-center gap-3 mb-8">
+                            <Music className="w-4 h-4 text-cyan-400" />
+                            <h3 className="text-xs font-black font-technical text-white uppercase tracking-widest">Audio_Mixer_Subsystem</h3>
+                            <div className="h-px bg-white/5 flex-1" />
                         </div>
 
-                        {/* AUDIO */}
-                        <div className="space-y-4 bg-zinc-900/50 p-3 border border-zinc-800">
-                            {/* MUSIC */}
-                            <div className="flex flex-col gap-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="font-mono text-zinc-300 text-xs font-bold">{t(TEXT_IDS.MUSIC_VOLUME, language)}</span>
-                                    <button
-                                        onClick={() => onUpdateSettings({ musicMuted: !settings.musicMuted })}
-                                        className={`text-[10px] px-2 py-0.5 border ${settings.musicMuted ? 'border-red-500 text-red-500' : 'border-green-500 text-green-500'}`}
-                                    >
-                                        {settings.musicMuted ? 'OFF' : 'ON'}
-                                    </button>
+                        <div className="space-y-8">
+                            {[
+                                { id: 'music', label: TEXT_IDS.MUSIC_VOLUME, val: settings.musicVolume, muted: settings.musicMuted },
+                                { id: 'sfx', label: TEXT_IDS.SFX_VOLUME, val: settings.sfxVolume, muted: settings.sfxMuted },
+                                { id: 'drill', label: TEXT_IDS.DRILL_VOLUME, val: settings.drillVolume, muted: settings.drillMuted }
+                            ].map(bus => (
+                                <div key={bus.id} className="group">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <Volume2 className={`w-3.5 h-3.5 ${bus.muted ? 'text-rose-500' : 'text-cyan-400'}`} />
+                                            <span className="text-[10px] font-black font-technical text-white/50 uppercase tracking-widest">{t(bus.label, language)}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => onUpdateSettings({ [`${bus.id}Muted`]: !bus.muted })}
+                                            className={`px-3 py-1 rounded-full text-[8px] font-black font-technical transition-all
+                                                ${bus.muted ? 'bg-rose-500 text-black' : 'bg-white/10 text-cyan-400 hover:bg-cyan-500/20'}`}
+                                        >
+                                            {bus.muted ? 'MUTED' : 'ONLINE'}
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0" max="1" step="0.05"
+                                        value={bus.val}
+                                        onChange={(e) => onUpdateSettings({ [`${bus.id}Volume`]: parseFloat(e.target.value) })}
+                                        className="w-full h-1 bg-white/5 appearance-none cursor-pointer accent-cyan-400"
+                                    />
                                 </div>
-                                <input
-                                    type="range"
-                                    min="0" max="1" step="0.05"
-                                    value={settings.musicVolume}
-                                    onChange={(e) => onUpdateSettings({ musicVolume: parseFloat(e.target.value) })}
-                                    className="w-full accent-cyan-500 h-1 bg-zinc-800 appearance-none cursor-pointer"
-                                />
-                            </div>
-
-                            {/* SFX */}
-                            <div className="flex flex-col gap-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="font-mono text-zinc-300 text-xs font-bold">{t(TEXT_IDS.SFX_VOLUME, language)}</span>
-                                    <button
-                                        onClick={() => onUpdateSettings({ sfxMuted: !settings.sfxMuted })}
-                                        className={`text-[10px] px-2 py-0.5 border ${settings.sfxMuted ? 'border-red-500 text-red-500' : 'border-green-500 text-green-500'}`}
-                                    >
-                                        {settings.sfxMuted ? 'OFF' : 'ON'}
-                                    </button>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0" max="1" step="0.05"
-                                    value={settings.sfxVolume}
-                                    onChange={(e) => onUpdateSettings({ sfxVolume: parseFloat(e.target.value) })}
-                                    className="w-full accent-cyan-500 h-1 bg-zinc-800 appearance-none cursor-pointer"
-                                />
-                            </div>
-
-                            {/* DRILL SFX */}
-                            <div className="flex flex-col gap-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="font-mono text-zinc-300 text-xs font-bold">{t(TEXT_IDS.DRILL_VOLUME, language)}</span>
-                                    <button
-                                        onClick={() => onUpdateSettings({ drillMuted: !settings.drillMuted })}
-                                        className={`text-[10px] px-2 py-0.5 border ${settings.drillMuted ? 'border-red-500 text-red-500' : 'border-green-500 text-green-500'}`}
-                                    >
-                                        {settings.drillMuted ? 'OFF' : 'ON'}
-                                    </button>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0" max="1" step="0.05"
-                                    value={settings.drillVolume}
-                                    onChange={(e) => onUpdateSettings({ drillVolume: parseFloat(e.target.value) })}
-                                    className="w-full accent-cyan-500 h-1 bg-zinc-800 appearance-none cursor-pointer"
-                                />
-                            </div>
+                            ))}
                         </div>
+                    </section>
 
-                        {/* DATA MANAGEMENT */}
-                        <div className="border border-zinc-800 bg-zinc-900/30">
-                            <button
-                                onClick={() => setShowDataSection(!showDataSection)}
-                                className="w-full p-3 flex justify-between items-center text-xs font-bold text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
-                            >
-                                <span>{t(TEXT_IDS.SETTINGS_BACKUP_TITLE, language)}</span>
-                                <span>{showDataSection ? '▲' : '▼'}</span>
-                            </button>
+                    {/* DATA RECOVERY - COLLAPSIBLE */}
+                    <section className="glass-panel border-white/5 overflow-hidden">
+                        <button
+                            onClick={() => setShowDataSection(!showDataSection)}
+                            className="w-full p-4 flex justify-between items-center group hover:bg-white/5 transition-all"
+                        >
+                            <div className="flex items-center gap-3">
+                                <Database className="w-4 h-4 text-white/30 group-hover:text-white" />
+                                <span className="text-[10px] font-black font-technical text-white/40 group-hover:text-white uppercase tracking-widest">{t(TEXT_IDS.SETTINGS_BACKUP_TITLE, language)}</span>
+                            </div>
+                            <Terminal className={`w-4 h-4 text-white/20 transition-transform ${showDataSection ? 'rotate-90' : ''}`} />
+                        </button>
 
-
+                        <AnimatePresence>
                             {showDataSection && (
-                                <div className="p-3 border-t border-zinc-800 space-y-4 animate-in slide-in-from-top-2">
-                                    {/* EXPORT */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-[10px] text-zinc-500">{t(TEXT_IDS.SETTINGS_CODE_LABEL, language)}</span>
-                                            {exportMessage && <span className="text-[10px] text-green-400 animate-pulse">{exportMessage}</span>}
-                                        </div>
-                                        <button onClick={handleExport} className="w-full py-2 bg-zinc-800 hover:bg-cyan-900/50 border border-zinc-600 text-cyan-400 text-xs font-mono">
-                                            {t(TEXT_IDS.SETTINGS_COPY_CLIPBOARD, language)}
-                                        </button>
-                                    </div>
-
-
-                                    {/* IMPORT */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-[10px] text-zinc-500">{t(TEXT_IDS.SETTINGS_RESTORE_LABEL, language)}</span>
-                                            {importError && <span className="text-[10px] text-red-500 animate-pulse">{importError}</span>}
-                                        </div>
-                                        <textarea
-                                            value={importString}
-                                            onChange={(e) => setImportString(e.target.value)}
-                                            placeholder={t(TEXT_IDS.SETTINGS_IMPORT_PLACEHOLDER, language)}
-                                            className="w-full h-16 bg-black border border-zinc-700 text-green-500 font-mono text-[9px] p-2 outline-none focus:border-green-500 resize-none mb-2"
-                                        />
-                                        <button onClick={handleImport} className="w-full py-2 bg-zinc-800 hover:bg-green-900/50 border border-zinc-600 text-green-400 text-xs font-mono">
-                                            {t(TEXT_IDS.SETTINGS_APPLY_CODE, language)}
-                                        </button>
-                                    </div>
-
-                                </div>
-                            )}
-                        </div>
-
-                        {/* RESET */}
-                        <div className="pt-4 border-t border-zinc-800">
-                            {!showResetConfirm ? (
-                                <button
-                                    onClick={() => setShowResetConfirm(true)}
-                                    className="w-full py-3 border border-red-900 text-red-500 hover:bg-red-900/20 hover:text-red-400 font-bold font-mono text-xs transition-colors"
+                                <motion.div
+                                    initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
+                                    className="px-4 pb-6 border-t border-white/5"
                                 >
-                                    {t(TEXT_IDS.RESET_PROGRESS, language)}
-                                </button>
-                            ) : (
-                                <div className="bg-red-950/30 border border-red-600 p-4 text-center animate-in fade-in zoom-in-95">
-                                    <h3 className="text-red-500 font-black mb-2 text-sm">{t(TEXT_IDS.RESET_CONFIRM_TITLE, language)}</h3>
-                                    <p className="text-zinc-300 text-[10px] mb-4 leading-tight">
-                                        {t(TEXT_IDS.RESET_CONFIRM_BODY, language)}
-                                    </p>
-                                    <div className="flex gap-2">
-                                        <button onClick={handleReset} className="flex-1 bg-red-600 hover:bg-red-500 text-black font-bold py-2 text-xs">
-                                            {t(TEXT_IDS.BTN_OK, language)}
-                                        </button>
-                                        <button onClick={() => { audioEngine.playUIPanelClose(); setShowResetConfirm(false); }} className="flex-1 border border-zinc-500 hover:border-white text-white font-bold py-2 text-xs">
-                                            {t(TEXT_IDS.BTN_CANCEL, language)}
-                                        </button>
+                                    <div className="mt-6 space-y-6">
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center text-[8px] font-black font-technical uppercase">
+                                                <span className="text-white/20">{t(TEXT_IDS.SETTINGS_CODE_LABEL, language)}</span>
+                                                {exportMessage && <span className="text-emerald-400 animate-pulse">{exportMessage}</span>}
+                                            </div>
+                                            <button onClick={handleExport} className="w-full py-4 glass-panel border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center gap-3 group">
+                                                <Copy className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                                                <span className="text-[10px] font-black font-technical text-white uppercase">{t(TEXT_IDS.SETTINGS_COPY_CLIPBOARD, language)}</span>
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center text-[8px] font-black font-technical uppercase">
+                                                <span className="text-white/20">{t(TEXT_IDS.SETTINGS_RESTORE_LABEL, language)}</span>
+                                                {importError && <span className="text-rose-500 animate-pulse">{importError}</span>}
+                                            </div>
+                                            <textarea
+                                                value={importString}
+                                                onChange={(e) => setImportString(e.target.value)}
+                                                placeholder={t(TEXT_IDS.SETTINGS_IMPORT_PLACEHOLDER, language)}
+                                                className="w-full h-24 bg-black/40 border border-white/10 rounded-sm text-cyan-400 font-mono text-[9px] p-3 outline-none focus:border-cyan-400/50 resize-none"
+                                            />
+                                            <button onClick={handleImport} className="w-full py-4 glass-panel border-white/10 bg-white/5 hover:bg-emerald-500/20 text-emerald-400 flex items-center justify-center gap-3">
+                                                <Download className="w-4 h-4" />
+                                                <span className="text-[10px] font-black font-technical uppercase">{t(TEXT_IDS.SETTINGS_APPLY_CODE, language)}</span>
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             )}
-                        </div>
+                        </AnimatePresence>
+                    </section>
 
-                        {/* SECRET DEBUG LOGIN */}
-                        {(showDebugLogin || isDebugUnlocked) && (
-                            <div className="mt-4 border-t border-zinc-800 pt-2 animate-in fade-in">
-                                {isDebugUnlocked ? (
-                                    <button onClick={() => { toggleDebugUI(true); onClose(); }} className="w-full text-center text-xs font-mono text-green-500 hover:underline">
-                                        [OPEN DEBUG CONSOLE]
+                    {/* SYSTEM PURGE - RESET */}
+                    <section className="pt-8 border-t border-white/5">
+                        {!showResetConfirm ? (
+                            <button
+                                onClick={() => setShowResetConfirm(true)}
+                                className="w-full py-4 glass-panel border-rose-500/20 hover:border-rose-500 text-rose-500 text-[10px] font-black font-technical uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-rose-500/5 transition-all"
+                            >
+                                <RotateCcw className="w-4 h-4" />
+                                {t(TEXT_IDS.RESET_PROGRESS, language)}
+                            </button>
+                        ) : (
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-panel border-rose-600 bg-rose-500/5 p-6 text-center">
+                                <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto mb-4" />
+                                <h3 className="text-rose-500 font-black text-sm uppercase font-technical mb-2 tracking-widest">{t(TEXT_IDS.RESET_CONFIRM_TITLE, language)}</h3>
+                                <p className="text-white/50 text-[10px] font-technical uppercase mb-6 leading-relaxed px-4">
+                                    {t(TEXT_IDS.RESET_CONFIRM_BODY, language)}
+                                </p>
+                                <div className="flex gap-4">
+                                    <button onClick={handleReset} className="flex-1 py-4 bg-rose-600 text-white font-black font-technical text-[10px] uppercase hover:bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.3)]">
+                                        {t(TEXT_IDS.BTN_OK, language)}
                                     </button>
-                                ) : (
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="password"
-                                            placeholder="ACCESS CODE"
-                                            className="flex-1 bg-black border border-zinc-700 text-green-500 font-mono text-xs px-2 outline-none focus:border-green-500"
-                                            value={debugPassword}
-                                            onChange={(e) => setDebugPassword(e.target.value)}
-                                        />
-                                        <button onClick={handleDebugLogin} className="bg-zinc-800 text-white px-3 text-xs font-bold border border-zinc-700 hover:bg-green-900">
-                                            ENTER
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                                    <button onClick={() => { audioEngine.playUIPanelClose(); setShowResetConfirm(false); }} className="flex-1 py-4 glass-panel border-white/10 text-white font-black font-technical text-[10px] uppercase hover:bg-white hover:text-black">
+                                        {t(TEXT_IDS.BTN_CANCEL, language)}
+                                    </button>
+                                </div>
+                            </motion.div>
                         )}
+                    </section>
 
-                        {/* VERSION */}
-                        <div className="mt-4 text-center">
-                            <span className="text-[10px] text-zinc-600 font-mono select-none">v{GAME_VERSION}</span>
-                        </div>
+                    <div className="pt-4 text-center">
+                        <span className="text-[9px] text-white/10 font-technical font-black tracking-[0.5em] select-none">BUILD_REVISION_V{GAME_VERSION}</span>
                     </div>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 };

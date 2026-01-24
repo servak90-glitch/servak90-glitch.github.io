@@ -1,46 +1,52 @@
-/**
- * index.css
- * Глобальные стили и CSS переменные для адаптивной верстки
- * Создано: 2026-01-20
- */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
 
 /* ===== CSS ПЕРЕМЕННЫЕ ===== */
 :root {
-    /* Spacing (базовые отступы) */
-    --spacing-xxs: 0.125rem;
-    /* 2px */
-    --spacing-xs: 0.25rem;
-    /* 4px */
-    --spacing-sm: 0.5rem;
-    /* 8px */
-    --spacing-md: 1rem;
-    /* 16px */
-    --spacing-lg: 1.5rem;
-    /* 24px */
-    --spacing-xl: 2rem;
-    /* 32px */
-    --spacing-2xl: 3rem;
-    /* 48px */
+    /* Base Void Palette */
+    --color-void: #02040a;
+    --color-crust: #0a0c14;
+    --color-mantle: #12141d;
+
+    /* Neon Spectrum */
+    --color-neon-cyan: #22d3ee;
+    --color-neon-blue: #3b82f6;
+    --color-neon-purple: #a855f7;
+    --color-neon-orange: #fb923c;
+    --color-neon-red: #ef4444;
+    --color-neon-emerald: #10b981;
+    --color-neon-amber: #f59e0b;
+
+    /* Semantic Colors */
+    --color-success: var(--color-neon-emerald);
+    --color-warning: var(--color-neon-amber);
+    --color-danger: var(--color-neon-red);
+    --color-info: var(--color-neon-cyan);
+
+    /* Glass System 2.0 */
+    --glass-bg: rgba(5, 5, 5, 0.4);
+    --glass-bg-hover: rgba(5, 5, 5, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-blur: blur(20px);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+
+    /* Spacing */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
 
     /* Font sizes (fluid typography) */
     --font-xxs: clamp(0.5rem, 0.45rem + 0.25vw, 0.625rem);
-    /* 8-10px */
     --font-xs: clamp(0.625rem, 0.55rem + 0.375vw, 0.75rem);
-    /* 10-12px */
     --font-sm: clamp(0.75rem, 0.675rem + 0.375vw, 0.875rem);
-    /* 12-14px */
     --font-base: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
-    /* 14-16px */
     --font-lg: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
-    /* 16-20px */
     --font-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
-    /* 20-24px */
-    --font-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
-    /* 24-32px */
+    --font-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2.5rem);
 
     /* Touch target sizes */
     --touch-target-min: 44px;
-    /* Минимальный размер touch-элемента (Apple HIG) */
     --touch-target-comfortable: 48px;
 
     /* Safe area insets (fallback) */
@@ -57,6 +63,62 @@
     --z-overlay: 300;
     --z-toast: 400;
     --z-tooltip: 500;
+}
+
+body {
+    font-family: 'Fira Sans', sans-serif;
+    color: white;
+    background-color: var(--color-void);
+}
+
+.font-technical {
+    font-family: 'Fira Code', monospace;
+}
+
+/* Glass Panels 2.0 */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel:hover {
+    background: var(--glass-bg-hover);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.glass-panel-light {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.neon-border-cyan {
+    border-color: var(--color-neon-cyan);
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.2);
+}
+
+.neon-border-red {
+    border-color: var(--color-neon-red);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+}
+
+.neon-border-orange {
+    border-color: var(--color-neon-orange);
+    box-shadow: 0 0 10px rgba(251, 146, 60, 0.2);
+}
+
+.neon-text-cyan {
+    color: var(--color-neon-cyan);
+    text-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
+}
+
+.neon-text-red {
+    color: var(--color-neon-red);
+    text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
 }
 
 /* ===== MOBILE-FIRST MEDIA QUERIES ===== */

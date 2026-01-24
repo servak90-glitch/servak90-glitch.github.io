@@ -6,18 +6,11 @@
 
 import React from 'react';
 import { useGameStore } from '../../store/gameStore';
-import { calculateStats } from '../../services/gameMath';
+import { useDrillStats } from '../../store/selectors';
 import { calculateTotalMass } from '../../services/mathEngine';
 
 export const WeightBar: React.FC = () => {
-    const drill = useGameStore(s => s.drill);
-    const resources = useGameStore(s => s.resources);
-    const inventory = useGameStore(s => s.equipmentInventory);
-    const skillLevels = useGameStore(s => s.skillLevels);
-    const equippedArtifacts = useGameStore(s => s.equippedArtifacts);
-    const depth = useGameStore(s => s.depth);
-
-    const stats = calculateStats(drill, skillLevels, equippedArtifacts, useGameStore(s => s.inventory), depth);
+    const { stats, resources, drill, equipmentInventory: inventory } = useDrillStats();
 
     // Используем mathEngine для расчёта M_total
     const { grossWeight, payload } = calculateTotalMass(drill, resources, inventory);

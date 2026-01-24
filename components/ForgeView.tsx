@@ -1,22 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { audioEngine } from '../services/audioEngine';
-import { DrillSlot } from '../types';
+import { TL, t, TEXT_IDS } from '../services/localization';
+import { DrillSlot, LocalizedString } from '../types';
 import { BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS } from '../constants';
-import { calculateStats } from '../services/gameMath';
+import { useDrillStats, useForgeState, useCraftActions } from '../store/selectors';
 import { UpgradeCard, FusionTab, DronesTab } from './forge';
 import { ConsumablesTab } from './forge/ConsumablesTab';
-import { CraftingJobCard } from './forge/CraftingJobCard';  // NEW: Phase 2.1
+import { CraftingJobCard } from './forge/CraftingJobCard';
+import {
+    Hammer,
+    Cpu,
+    Shield,
+    Boxes,
+    GitBranch,
+    Bot,
+    Zap,
+    AlertTriangle,
+    LayoutGrid,
+    Timer
+} from 'lucide-react';
 
 type ForgeTab = 'DRILL' | 'SYSTEMS' | 'HULL' | 'FUSION' | 'DRONES' | 'SUPPLY';
 
-const TABS: { id: ForgeTab; label: string }[] = [
-    { id: 'DRILL', label: 'БУР' },
-    { id: 'SYSTEMS', label: 'СИСТЕМЫ' },
-    { id: 'HULL', label: 'КОРПУС' },
-    { id: 'SUPPLY', label: 'СНАБЖЕНИЕ' },
-    { id: 'FUSION', label: 'СИНТЕЗ' },
-    { id: 'DRONES', label: 'ДРОНЫ' },
+const TABS: { id: ForgeTab; label: LocalizedString; icon: React.ReactNode }[] = [
+    { id: 'DRILL', label: TL.ui.tabDrill, icon: <Hammer className="w-4 h-4" /> },
+    { id: 'SYSTEMS', label: TL.ui.tabSystems, icon: <Cpu className="w-4 h-4" /> },
+    { id: 'HULL', label: TL.ui.tabHull, icon: <Shield className="w-4 h-4" /> },
+    { id: 'SUPPLY', label: TL.ui.tabSupply, icon: <Boxes className="w-4 h-4" /> },
+    { id: 'FUSION', label: TL.ui.tabFusion, icon: <GitBranch className="w-4 h-4" /> },
+    { id: 'DRONES', label: TL.ui.tabDrones, icon: <Bot className="w-4 h-4" /> },
 ];
 
 const ForgeView: React.FC = () => {
@@ -35,93 +48,57 @@ const ForgeView: React.FC = () => {
         audioEngine.playUITabSwitch();
     }, [forgeTab]);
 
-    // Connect to store
-    const drill = useGameStore(s => s.drill);
-    const resources = useGameStore(s => s.resources);
-    const buyUpgrade = useGameStore(s => s.buyUpgrade);
-    const inventory = useGameStore(s => s.inventory);
-    const droneLevels = useGameStore(s => s.droneLevels);
-    const skillLevels = useGameStore(s => s.skillLevels);
-    const equippedArtifacts = useGameStore(s => s.equippedArtifacts);
-    const depth = useGameStore(s => s.depth);
-    const heatStabilityTimer = useGameStore(s => s.heatStabilityTimer);
-    const integrity = useGameStore(s => s.integrity);
+    const { drill, resources, inventory, stats, equipmentInventory } = useDrillStats();
+    const { droneLevels, depth, heatStabilityTimer, integrity, craftingQueue } = useForgeState();
+    const { startCraft, collectCraftedItem, cancelCraft } = useCraftActions();
     const lang = useGameStore(s => s.settings.language);
 
-    // NEW: Phase 2.1 - Crafting Queue
-    const craftingQueue = useGameStore(s => s.craftingQueue);
-    const startCraft = useGameStore(s => s.startCraft);
-    const collectCraftedItem = useGameStore(s => s.collectCraftedItem);
-    const cancelCraft = useGameStore(s => s.cancelCraft);
-    const equipmentInventory = useGameStore(s => s.equipmentInventory);
+    const forgeStats = useMemo(() => ({
+        prod: drill.power.baseStats.energyOutput,
+        cons: stats.energyCons
+    }), [drill.power.baseStats.energyOutput, stats.energyCons]);
 
-    const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth);
-    const forgeStats = { prod: drill.power.baseStats.energyOutput, cons: stats.energyCons };
-
-    /**
-     * Helper: Определить следующий доступный тир для крафта
-     * Логика: следующий тир = max(текущий на буре, максимальный в инвентаре) + 1
-     */
-    const getNextAvailablePart = (
-        partType: DrillSlot,
-        currentPart: any,
-        allParts: any[]
-    ) => {
-        // Найти максимальный тир в инвентаре для этого типа
+    const getNextAvailablePart = (partType: DrillSlot, currentPart: any, allParts: any[]) => {
         const maxTierInInventory = Math.max(
-            currentPart.tier, // Текущий на буре
-            ...equipmentInventory
-                .filter(item => item.slotType === partType)
-                .map(item => item.tier)
+            currentPart.tier,
+            ...equipmentInventory.filter(item => item.slotType === partType).map(item => item.tier)
         );
-
-        // Следующий тир = maxTier + 1
         const nextTier = maxTierInInventory + 1;
-
-        // Найти деталь с этим тиром
         return allParts.find(p => p.tier === nextTier);
     };
 
     const renderActiveTab = () => {
+        const gridClass = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
         switch (forgeTab) {
             case 'DRILL':
                 return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 space-y-2 md:space-y-0">
-                        <UpgradeCard title="НАКОНЕЧНИК" current={drill.bit} next={getNextAvailablePart(DrillSlot.BIT, drill.bit, BITS)} type={DrillSlot.BIT} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
-                        <UpgradeCard title="ДВИГАТЕЛЬ" current={drill.engine} next={getNextAvailablePart(DrillSlot.ENGINE, drill.engine, ENGINES)} type={DrillSlot.ENGINE} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
-                        <UpgradeCard title="ОХЛАЖДЕНИЕ" current={drill.cooling} next={getNextAvailablePart(DrillSlot.COOLING, drill.cooling, COOLERS)} type={DrillSlot.COOLING} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                    <div className={gridClass}>
+                        <UpgradeCard title={t(TL.ui.drillBit, lang)} current={drill.bit} next={getNextAvailablePart(DrillSlot.BIT, drill.bit, BITS)} type={DrillSlot.BIT} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title={t(TL.ui.engine, lang)} current={drill.engine} next={getNextAvailablePart(DrillSlot.ENGINE, drill.engine, ENGINES)} type={DrillSlot.ENGINE} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title={t(TEXT_IDS.CITY_COOLING_SYSTEM, lang)} current={drill.cooling} next={getNextAvailablePart(DrillSlot.COOLING, drill.cooling, COOLERS)} type={DrillSlot.COOLING} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
                     </div>
                 );
             case 'SYSTEMS':
                 return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-                        <UpgradeCard title="ЛОГИКА" current={drill.logic} next={getNextAvailablePart(DrillSlot.LOGIC, drill.logic, LOGIC_CORES)} type={DrillSlot.LOGIC} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
-                        <UpgradeCard title="УПРАВЛЕНИЕ" current={drill.control} next={getNextAvailablePart(DrillSlot.CONTROL, drill.control, CONTROL_UNITS)} type={DrillSlot.CONTROL} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
-                        <UpgradeCard title="ГРУЗОВОЙ ОТСЕК" current={drill.cargoBay} next={getNextAvailablePart(DrillSlot.CARGO_BAY, drill.cargoBay, CARGO_BAYS)} type={DrillSlot.CARGO_BAY} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
-                        <UpgradeCard title="РЕДУКТОР" current={drill.gearbox} next={getNextAvailablePart(DrillSlot.GEARBOX, drill.gearbox, GEARBOXES)} type={DrillSlot.GEARBOX} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                    <div className={gridClass}>
+                        <UpgradeCard title={t(TL.ui.logicCore, lang)} current={drill.logic} next={getNextAvailablePart(DrillSlot.LOGIC, drill.logic, LOGIC_CORES)} type={DrillSlot.LOGIC} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title={t(TL.ui.controlUnit, lang)} current={drill.control} next={getNextAvailablePart(DrillSlot.CONTROL, drill.control, CONTROL_UNITS)} type={DrillSlot.CONTROL} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title={t(TL.ui.cargoBay, lang)} current={drill.cargoBay} next={getNextAvailablePart(DrillSlot.CARGO_BAY, drill.cargoBay, CARGO_BAYS)} type={DrillSlot.CARGO_BAY} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title={t(TL.ui.gearbox, lang)} current={drill.gearbox} next={getNextAvailablePart(DrillSlot.GEARBOX, drill.gearbox, GEARBOXES)} type={DrillSlot.GEARBOX} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
                     </div>
                 );
             case 'HULL':
                 return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-                        <UpgradeCard title="КАРКАС" current={drill.hull} next={getNextAvailablePart(DrillSlot.HULL, drill.hull, HULLS)} type={DrillSlot.HULL} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
-                        <UpgradeCard title="ПИТАНИЕ" current={drill.power} next={getNextAvailablePart(DrillSlot.POWER, drill.power, POWER_CORES)} type={DrillSlot.POWER} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
-                        <UpgradeCard title="БРОНЯ" current={drill.armor} next={getNextAvailablePart(DrillSlot.ARMOR, drill.armor, ARMORS)} type={DrillSlot.ARMOR} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                    <div className={gridClass}>
+                        <UpgradeCard title={t(TL.ui.structuralHull, lang)} current={drill.hull} next={getNextAvailablePart(DrillSlot.HULL, drill.hull, HULLS)} type={DrillSlot.HULL} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title={t(TL.ui.powerCore, lang)} current={drill.power} next={getNextAvailablePart(DrillSlot.POWER, drill.power, POWER_CORES)} type={DrillSlot.POWER} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title={t(TL.ui.armorPlating, lang)} current={drill.armor} next={getNextAvailablePart(DrillSlot.ARMOR, drill.armor, ARMORS)} type={DrillSlot.ARMOR} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
                     </div>
                 );
             case 'SUPPLY':
                 return <ConsumablesTab resources={resources} onStartCraft={startCraft} lang={lang || 'EN'} />;
             case 'FUSION':
-                return (
-                    <FusionTab
-                        resources={resources}
-                        inventory={inventory}
-                        depth={depth}
-                        heatStabilityTimer={heatStabilityTimer}
-                        integrity={integrity}
-                        drill={drill}
-                    />
-                );
+                return <FusionTab resources={resources} inventory={inventory} depth={depth} heatStabilityTimer={heatStabilityTimer} integrity={integrity} drill={drill} />;
             case 'DRONES':
                 return <DronesTab resources={resources} droneLevels={droneLevels} />;
             default:
@@ -130,38 +107,57 @@ const ForgeView: React.FC = () => {
     };
 
     return (
-        <div className="flex-1 bg-black flex flex-col min-h-0 h-full">
-            {/* TABS */}
-            <div className="flex bg-zinc-950 border-b border-zinc-800 overflow-x-auto scrollbar-hide whitespace-nowrap min-h-[44px] touch-pan-x">
+        <div className="flex-1 flex flex-col min-h-0 h-full bg-void">
+            {/* TABS HUD */}
+            <div className="flex glass-panel border-x-0 border-t-0 rounded-none overflow-x-auto scrollbar-hide whitespace-nowrap min-h-[56px] touch-pan-x bg-black/40">
                 {TABS.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setForgeTab(tab.id)}
-                        className={`flex-none py-3 md:py-4 px-4 md:px-6 text-[10px] md:text-xs font-bold pixel-text transition-colors border-r border-zinc-900 ${forgeTab === tab.id ? 'bg-zinc-900 text-white border-b-2 border-b-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        className={`flex items-center gap-2 py-4 px-6 text-[11px] font-bold font-technical transition-all border-r border-white/5 relative
+                            ${forgeTab === tab.id ? 'bg-white/5 text-white' : 'text-white/40 hover:text-white/70 hover:bg-white/5'}
+                        `}
                     >
-                        {tab.label}
+                        {tab.icon}
+                        <span className="tracking-widest uppercase">{t(tab.label, lang)}</span>
+                        {forgeTab === tab.id && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                        )}
                     </button>
                 ))}
             </div>
 
-            {/* ENERGY STATS */}
-            <div className="bg-zinc-900 border-b border-zinc-800 p-2 px-2 md:px-4 flex justify-between items-center text-[10px] md:text-xs font-mono">
-                <span className="text-zinc-500">БАЛАНС ЭНЕРГИИ:</span>
-                <div className="flex items-center gap-2 md:gap-4">
-                    <span className="text-green-400">ГЕН:{forgeStats.prod}</span>
-                    <span className={forgeStats.cons > forgeStats.prod ? 'text-red-500 animate-pulse' : 'text-amber-400'}>ПОТР:{forgeStats.cons}</span>
+            {/* STATUS BAR (Bento-lite) */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 px-4 bg-white/5 border-b border-white/5">
+                <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                    <span className="text-[10px] text-white/40 font-technical uppercase">{t(TL.ui.powerGrid, lang)}</span>
+                    <span className={`text-[11px] font-bold ${forgeStats.cons > forgeStats.prod ? 'text-red-500 animate-pulse' : 'text-cyan-400'}`}>
+                        {forgeStats.prod - forgeStats.cons}W
+                    </span>
                 </div>
+                <div className="flex items-center gap-2">
+                    <LayoutGrid className="w-3.5 h-3.5 text-zinc-500" />
+                    <span className="text-[10px] text-white/40 font-technical uppercase">{t(TL.ui.module_label, lang)}</span>
+                    <span className="text-[11px] font-bold text-white uppercase">{t(TL.ui.active, lang)}</span>
+                </div>
+                {forgeStats.cons > forgeStats.prod && (
+                    <div className="col-span-2 flex items-center gap-2 text-red-500 animate-pulse">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span className="text-[10px] font-technical font-bold uppercase tracking-tighter">{t(TL.ui.energyShortage, lang)}: {t(TL.ui.efficiency, lang)} -25%</span>
+                    </div>
+                )}
             </div>
 
-            {/* NEW: CRAFTING QUEUE PANEL */}
+            {/* CRAFTING QUEUE (Bento Grid Section) */}
             {craftingQueue.length > 0 && (
-                <div className="bg-gray-800/50 border-b-2 border-cyan-500/30 p-3 md:p-4">
-                    <h3 className="text-cyan-400 font-bold text-sm md:text-base mb-3 flex items-center gap-2">
-                        <span>🛠️</span>
-                        <span>ОЧЕРЕДЬ КРАФТА</span>
-                        <span className="text-[10px] text-gray-500">({craftingQueue.length})</span>
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
+                <div className="p-4 bg-cyan-500/5 border-b border-white/5">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Timer className="w-4 h-4 text-cyan-400" />
+                        <h3 className="text-cyan-400 font-bold text-xs font-technical uppercase tracking-widest">{t(TL.ui.activeAssemblies, lang)}</h3>
+                        <span className="text-[10px] bg-cyan-500/20 px-1.5 rounded-full text-cyan-200">{craftingQueue.length}</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                         {craftingQueue.map(job => (
                             <CraftingJobCard
                                 key={job.id}
@@ -174,8 +170,8 @@ const ForgeView: React.FC = () => {
                 </div>
             )}
 
-            {/* CONTENT */}
-            <div className="flex-1 p-2 md:p-8 overflow-y-auto scrollbar-hide pb-32 overscroll-contain touch-pan-y">
+            {/* MAIN CONTENT AREA */}
+            <div className="flex-1 p-4 md:p-8 overflow-y-auto scrollbar-hide pb-32 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.05)_0%,transparent_50%)]">
                 {renderActiveTab()}
             </div>
         </div>

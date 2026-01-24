@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { Resources } from '../../types';
-import { t } from '../../services/localization';
+import { t, TL } from '../../services/localization';
 
 interface ConsumableDef {
     id: string;
@@ -59,7 +59,7 @@ export const ConsumablesTab: React.FC<Props> = ({ resources, onStartCraft, lang 
                             <div className="space-y-1 mb-4">
                                 {Object.entries(item.cost).map(([res, amt]) => (
                                     <div key={res} className="flex justify-between text-[10px] font-mono border-b border-zinc-800/50 pb-0.5">
-                                        <span className="text-zinc-500 uppercase">{res}</span>
+                                        <span className="text-zinc-500 uppercase">{t(TL.resources[res as any] as any, lang)}</span>
                                         <span className={(resources as any)[res] >= amt ? 'text-green-400' : 'text-red-500'}>
                                             {amt}
                                         </span>
@@ -76,7 +76,7 @@ export const ConsumablesTab: React.FC<Props> = ({ resources, onStartCraft, lang 
                                 ${canAfford ? 'bg-zinc-800 border-zinc-600 hover:bg-white hover:text-black' : 'bg-transparent border-zinc-800 text-zinc-700 cursor-not-allowed'}
                             `}
                         >
-                            CRAFT ITEM
+                            {t(TL.ui.craft_item as any, lang)}
                         </button>
                     </div>
                 );

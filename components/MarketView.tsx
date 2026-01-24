@@ -8,9 +8,30 @@ import { useGameStore } from '../store/gameStore';
 import { audioEngine } from '../services/audioEngine';
 import { getAllMarketPrices } from '../services/marketEngine';
 import { getActivePerkIds } from '../services/factionLogic';
-import { TL, t } from '../services/localization';
+import { TL, t, TEXT_IDS } from '../services/localization';
 import { BLACK_MARKET_ITEMS } from '../constants/blackMarket';
 import type { Resources } from '../types';
+import {
+    ShoppingBag,
+    Activity,
+    ShieldAlert,
+    BarChart3,
+    Fingerprint,
+    RefreshCcw,
+    TrendingUp,
+    TrendingDown,
+    Package,
+    Gem,
+    ChevronRight,
+    Lock,
+    Zap,
+    Scale,
+    ArrowUpRight,
+    ArrowDownLeft,
+    MonitorDot,
+    ScrollText
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const MarketView = () => {
     const currentRegion = useGameStore(s => s.currentRegion);
@@ -38,23 +59,29 @@ export const MarketView = () => {
 
     const activePerks = useMemo(() => getActivePerkIds(reputation), [reputation]);
     const hasBlackMarket = activePerks.includes('BLACK_MARKET');
-
     const marketPrices = useMemo(() => getAllMarketPrices(currentRegion, [], activePerks), [currentRegion, activePerks]);
 
     if (!canAccessMarket) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-6 flex items-center justify-center">
-                <div className="bg-gray-800/80 border-2 border-red-500 rounded-lg p-8 max-w-md">
-                    <h2 className="text-2xl font-bold text-red-400 mb-4">🚫 {t(TL.ui.market_unavailable, lang)}</h2>
-                    <p className="text-gray-400">
+            <div className="flex-1 flex items-center justify-center p-8 backdrop-blur-xl bg-void/40">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                    className="glass-panel p-16 max-w-xl border-rose-500/20 bg-rose-500/5 backdrop-blur-3xl text-center relative overflow-hidden shadow-[0_0_100px_rgba(239,68,68,0.1)]"
+                >
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent" />
+                    <div className="p-6 glass-panel border-rose-500/30 bg-rose-500/5 inline-block mb-8 rounded-full">
+                        <Lock className="w-16 h-16 text-rose-500 opacity-80" />
+                    </div>
+                    <h2 className="text-4xl font-black font-technical text-white uppercase tracking-tighter mb-6 italic">
+                        {t(TL.ui.market_unavailable, lang)}
+                    </h2>
+                    <p className="text-white/40 font-technical text-[10px] leading-loose uppercase tracking-[0.4em] max-w-sm mx-auto">
                         {t(TL.ui.market_station_required, lang)}
                     </p>
-                </div>
+                </motion.div>
             </div>
         );
     }
-
-
 
     const handleBuy = () => {
         if (selectedResource && amount > 0) {
@@ -76,334 +103,404 @@ export const MarketView = () => {
     const totalBuyCost = (selectedPrice?.finalPrice || 0) * amount;
     const totalSellRevenue = Math.floor((selectedPrice?.finalPrice || 0) * 0.8) * amount;
     const availableResource = selectedResource ? (resources[selectedResource] || 0) : 0;
+    const canAfford = (resources.credits || 0) >= totalBuyCost;
 
     return (
-        <div className="p-2 md:p-6">
-            {/* Header */}
-            <div className="max-w-6xl mx-auto mb-6">
-                <h1 className="text-4xl font-bold text-cyan-400 mb-2">💰 {t(TL.ui.market, lang).toUpperCase()}</h1>
-                <p className="text-gray-400">{lang === 'RU' ? 'Региональная торговля • Комиссия продажи: 20%' : 'Regional trade • Sell fee: 20%'}</p>
-            </div>
+        <div className="flex-1 flex flex-col p-6 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 h-full overflow-hidden relative z-10 font-technical">
+            <div className="absolute inset-0 mesh-bg opacity-20 pointer-events-none" />
 
-            {/* Credits Display */}
-            <div className="max-w-6xl mx-auto mb-6 bg-gray-800/50 border-2 border-cyan-500/30 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <p className="text-gray-400 text-sm">{lang === 'RU' ? 'Баланс' : 'Balance'}</p>
-                        <p className="text-yellow-400 font-bold text-2xl">💎 {Math.floor(resources.credits || 0)} Credits</p>
+            {/* Header Hub Dashboard */}
+            <div className="max-w-7xl w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-8 mb-8 md:mb-10 shrink-0">
+                <div className="w-full md:w-auto">
+                    <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-3">
+                        <div className="p-2 md:p-3 glass-panel border-cyan-500/20 bg-cyan-500/5">
+                            <ShoppingBag className="w-6 h-6 md:w-8 md:h-8 text-cyan-400" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl md:text-7xl font-black uppercase tracking-tighter italic text-white leading-none">
+                                {t(TL.ui.market, lang)}
+                            </h1>
+                            <div className="flex items-center gap-2 md:gap-3 mt-1 md:mt-2">
+                                <MonitorDot className="w-2.5 h-2.5 md:w-3 md:h-3 text-cyan-400 animate-pulse" />
+                                <span className="text-[8px] md:text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">
+                                    {t(TL.ui.tradingTerminal, lang)} v.4.2
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="text-right">
-                        <p className="text-gray-400 text-sm">{t(TL.ui.currentRegion, lang)}</p>
-                        <p className="text-cyan-400 font-bold">{t(TL.regions[currentBase.regionId], lang) || currentBase.regionId}</p>
+                </div>
+
+                <div className="w-full md:w-auto flex flex-row gap-3 md:gap-4">
+                    {/* Credits Mini-Bento */}
+                    <div className="flex-1 md:flex-none glass-panel px-4 md:px-8 py-3 md:py-5 border-cyan-500/20 bg-cyan-500/5 flex flex-col group relative overflow-hidden">
+                        <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Gem className="w-12 h-12 md:w-16 md:h-16" />
+                        </div>
+                        <span className="text-[7px] md:text-[9px] font-black text-white/30 uppercase tracking-widest mb-1 leading-none">{t(TL.ui.creditReserve, lang)}</span>
+                        <div className="flex items-center gap-2 md:gap-3">
+                            <div className="text-xl md:text-3xl font-black text-white tracking-tighter italic">
+                                {Math.floor(resources.credits || 0).toLocaleString()}
+                            </div>
+                            <span className="text-[8px] md:text-xs font-black text-cyan-400 px-1.5 py-0.5 glass-panel bg-cyan-500/10 border-cyan-500/20">CR</span>
+                        </div>
+                    </div>
+
+                    {/* Region Info */}
+                    <div className="hidden sm:flex glass-panel px-4 md:px-6 py-3 md:py-5 border-white/5 bg-black/40 flex-col justify-center">
+                        <span className="text-[7px] md:text-[9px] font-black text-white/20 uppercase tracking-widest mb-1 italic">{t(TL.ui.currentRegion, lang)}</span>
+                        <span className="text-xs md:text-base font-black text-cyan-400 uppercase tracking-widest">
+                            {t(TL.regions[currentBase.regionId], lang) || currentBase.regionId}
+                        </span>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto grid lg:grid-cols-3 gap-6">
-                {/* Price List */}
-                <div className="lg:col-span-2">
-                    {/* Tab Selector */}
-                    {hasBlackMarket && (
-                        <div className="flex gap-4 mb-4 border-b border-gray-700 pb-2">
-                            <button
-                                onClick={() => setActiveTab('regular')}
-                                className={`px-4 py-2 rounded font-bold transition-all ${activeTab === 'regular' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-cyan-400'}`}
-                            >
-                                📊 {t(TL.ui.market, lang)}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('black_market')}
-                                className={`px-4 py-2 rounded font-bold transition-all ${activeTab === 'black_market' ? 'bg-purple-900 border border-purple-500 text-purple-200' : 'bg-gray-900 text-gray-500 hover:text-purple-400'}`}
-                            >
-                                👁️ {t(TL.ui.shadow_network, lang)}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('exchange')}
-                                className={`px-4 py-2 rounded font-bold transition-all ${activeTab === 'exchange' ? 'bg-amber-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-amber-400'}`}
-                            >
-                                ♻️ {lang === 'RU' ? 'ОБМЕН' : 'EXCHANGE'}
-                            </button>
-                        </div>
-                    )}
+            <div className="max-w-7xl w-full mx-auto grid lg:grid-cols-12 gap-10 flex-1 min-h-0 relative">
+                {/* MARKET LISTING */}
+                <div className="lg:col-span-8 flex flex-col gap-4 md:gap-6 min-h-0">
+                    {/* Tabs Framework */}
+                    <div className="flex gap-1 md:gap-2 glass-panel p-1 md:p-2 border-white/5 bg-black/60 shrink-0 overflow-x-auto no-scrollbar">
+                        <TabBtn active={activeTab === 'regular'} onClick={() => setActiveTab('regular')} icon={<BarChart3 className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.market} lang={lang} color="cyan" />
+                        {hasBlackMarket && <TabBtn active={activeTab === 'black_market'} onClick={() => setActiveTab('black_market')} icon={<Fingerprint className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.shadow_network} lang={lang} color="purple" />}
+                        <TabBtn active={activeTab === 'exchange'} onClick={() => setActiveTab('exchange')} icon={<RefreshCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.exchange} lang={lang} color="amber" />
+                    </div>
 
-                    {activeTab === 'regular' ? (
-                        <>
-                            <h2 className="text-2xl font-bold text-white mb-4">📊 {t(TL.ui.market, lang)}</h2>
-                            <div className="grid md:grid-cols-2 gap-3">
-                                {marketPrices.map(price => {
-                                    // Perk: Black Market (Science Level 3) - Unlocks illegal goods
-                                    const illegalResources = ['nanoSwarm', 'ancientTech'];
-                                    const isIllegal = illegalResources.includes(price.resource);
-                                    const hasBlackMarket = activePerks.includes('BLACK_MARKET');
+                    <div className="flex-1 overflow-y-auto pr-0 md:pr-4 scrollbar-hide space-y-4 md:space-y-6">
+                        <AnimatePresence mode="wait">
+                            {activeTab === 'regular' && (
+                                <motion.div
+                                    key="regular-market" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+                                    className="grid md:grid-cols-2 gap-5"
+                                >
+                                    {marketPrices.map(price => {
+                                        const illegalResources = ['nanoSwarm', 'ancientTech'];
+                                        const isIllegal = illegalResources.includes(price.resource);
+                                        if (isIllegal) return null;
+                                        if (price.resource === 'rubies') return null;
 
-                                    if (isIllegal && !hasBlackMarket) return null;
-                                    if (price.resource === 'rubies') return null; // Credits are not traded
-
-                                    const isSelected = price.resource === selectedResource;
-                                    const hasResource = (resources[price.resource] || 0) > 0;
-
-                                    return (
-                                        <div
-                                            key={price.resource}
-                                            onClick={() => setSelectedResource(price.resource)}
-                                            className={`
-                                        bg-gray-800/70 border-2 rounded-lg p-4 cursor-pointer transition-all
-                                        ${isSelected ? 'border-cyan-500 ring-2 ring-cyan-500/50' : 'border-gray-700 hover:border-cyan-500/50'}
-                                    `}
-                                        >
-                                            <div className="flex items-center justify-between mb-2">
-                                                <h3 className="font-bold text-white capitalize">{t(TL.resources[price.resource], lang) || price.resource}</h3>
-                                                <span className="text-xl">
-                                                    {hasResource ? '✅' : ''}
-                                                </span>
-                                            </div>
-
-                                            <div className="space-y-1 text-sm">
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-400">{t(TL.ui.buy, lang)}:</span>
-                                                    <span className="text-green-400 font-bold">{Math.floor(price.finalPrice)} 🪙</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-400">{t(TL.ui.sell, lang)}:</span>
-                                                    <span className="text-yellow-400 font-bold">
-                                                        {Math.floor(price.finalPrice * 0.8)} 🪙
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between pt-1 border-t border-gray-700">
-                                                    <span className="text-gray-500 text-xs">{lang === 'RU' ? 'В наличии:' : 'Owned:'}</span>
-                                                    <span className="text-white text-xs">{resources[price.resource] || 0}</span>
-                                                </div>
-
-                                                {/* Regional modifier indicator */}
-                                                {price.regionalModifier !== 1.0 && (
-                                                    <div className="pt-1">
-                                                        <span className={`text-xs px-2 py-0.5 rounded ${price.regionalModifier < 1.0 ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'
-                                                            }`}>
-                                                            {price.regionalModifier < 1.0 ? '🔽' : '🔼'} {Math.round((price.regionalModifier - 1) * 100)}%
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </>
-                    ) : activeTab === 'black_market' ? (
-                        <div className="space-y-4">
-                            <h2 className="text-2xl font-bold text-purple-400 mb-4 tracking-widest glitch-text">👁️ {t(TL.ui.shadow_network, lang)}</h2>
-
-                            <div className="grid gap-4">
-                                {BLACK_MARKET_ITEMS.map(item => {
-                                    const isBlueprint = item.type === 'BLUEPRINT';
-                                    const isUnlocked = isBlueprint && item.targetId && unlockedBlueprints.includes(item.targetId);
-
-                                    const canAfford = item.cost.every(c => (resources[c.resource] || 0) >= c.amount);
-
-                                    // Localized Name/Desc
-                                    const itemName = typeof item.name === 'string' ? item.name : (item.name[lang] || item.name.EN);
-                                    const itemDesc = typeof item.description === 'string' ? item.description : (item.description[lang] || item.description.EN);
-
-                                    return (
-                                        <div key={item.id} className="bg-gray-900/90 border border-purple-600/50 p-4 rounded flex justify-between items-center relative overflow-hidden group">
-                                            <div className="absolute inset-0 bg-purple-500/5 group-hover:bg-purple-500/10 transition-colors pointer-events-none" />
-
-                                            <div>
-                                                <h3 className="text-lg font-bold text-purple-200">
-                                                    {itemName}
-                                                </h3>
-                                                <p className="text-gray-400 text-sm italic">
-                                                    {itemDesc}
-                                                </p>
-
-                                                <div className="flex gap-2 mt-2">
-                                                    {item.cost.map((c, i) => (
-                                                        <span key={i} className={`text-xs px-2 py-1 rounded bg-gray-800 border items-center flex gap-1 ${(resources[c.resource] || 0) >= c.amount ? 'border-gray-600 text-gray-300' : 'border-red-900 text-red-400'
-                                                            }`}>
-                                                            {c.amount} {c.resource}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <button
-                                                onClick={() => {
-                                                    buyBlackMarketItem(item.id);
-                                                    audioEngine.playGlitch(); // Darker sound for black market
-                                                }}
-                                                disabled={!canAfford || (isUnlocked as boolean)}
-                                                className={`
-                                                    px-6 py-2 rounded font-bold border-2 transition-all
-                                                    ${isUnlocked
-                                                        ? 'bg-gray-800 border-gray-700 text-gray-500 cursor-not-allowed'
-                                                        : canAfford
-                                                            ? 'bg-purple-900/50 border-purple-500 hover:bg-purple-800 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.3)]'
-                                                            : 'bg-gray-900 border-red-900/50 text-gray-600 cursor-not-allowed'}
-                                                `}
-                                            >
-                                                {isUnlocked ? (lang === 'RU' ? 'КУПЛЕНО' : 'OWNED') : t(TL.ui.acquire, lang)}
-                                            </button>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            <p className="text-xs text-center text-purple-900 font-mono mt-8">
-                                {t(TL.ui.shadow_warning, lang)}
-                            </p>
-                        </div>
-                    ) : activeTab === 'exchange' ? (
-                        <div className="space-y-4">
-                            <h2 className="text-2xl font-bold text-amber-400 mb-4">♻️ ОБМЕН РЕСУРСОВ НА ТОПЛИВО</h2>
-                            <p className="text-gray-400 text-sm mb-4">
-                                Курс обмена: <span className="text-amber-400 font-bold">10 единиц ресурса = 5 угля</span>
-                            </p>
-
-                            <div className="grid md:grid-cols-2 gap-3">
-                                {Object.keys(resources)
-                                    .filter(res => {
-                                        const excluded = ['coal', 'oil', 'gas', 'rubies', 'emeralds', 'diamonds', 'credits', 'repairKit', 'coolantPaste', 'advancedCoolant'];
-                                        return !excluded.includes(res) && (resources[res as keyof Resources] || 0) > 0;
-                                    })
-                                    .map(res => {
-                                        const resource = res as keyof Resources;
-                                        const available = resources[resource] || 0;
-                                        const coalGain = Math.floor((available / 10) * 5);
+                                        const isSelected = price.resource === selectedResource;
+                                        const hasResource = (resources[price.resource] || 0) > 0;
 
                                         return (
                                             <div
-                                                key={resource}
-                                                className="bg-gray-800/70 border-2 border-gray-700 hover:border-amber-500/50 rounded-lg p-4 transition-all"
+                                                key={price.resource}
+                                                onClick={() => setSelectedResource(price.resource as any)}
+                                                className={`
+                                                glass-panel p-6 cursor-pointer transition-all duration-300 relative overflow-hidden group
+                                                ${isSelected ? 'border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_40px_rgba(34,211,238,0.1)] scale-[1.02]' : 'border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10'}
+                                            `}
                                             >
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <h3 className="font-bold text-white capitalize">{t(TL.resources[resource], lang) || resource}</h3>
-                                                    <span className="text-sm text-gray-400">У вас: {available}</span>
+                                                <div className="flex items-center justify-between mb-5">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`p-2.5 glass-panel rounded-lg border-white/10 ${isSelected ? 'text-cyan-400 bg-cyan-400/5' : 'text-white/20'}`}>
+                                                            <Package className="w-5 h-5 transition-transform group-hover:scale-110" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-black text-sm uppercase tracking-widest text-white leading-none mb-1">
+                                                                {t(TL.resources[price.resource], lang) || price.resource}
+                                                            </h3>
+                                                            <div className="text-[8px] font-black text-white/20 uppercase tracking-widest">{t(TL.ui.rawMaterialType, lang)}</div>
+                                                        </div>
+                                                    </div>
+                                                    {hasResource && (
+                                                        <div className="text-[8px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 uppercase tracking-widest rounded-full flex items-center gap-1.5">
+                                                            {t(TL.ui.inCargo, lang)}
+                                                        </div>
+                                                    )}
                                                 </div>
 
-                                                <div className="space-y-2">
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-gray-400">Максимум угля:</span>
-                                                        <span className="text-amber-400 font-bold">{coalGain} ⛽</span>
+                                                <div className="grid grid-cols-2 gap-6 bg-black/20 p-4 rounded-xl border border-white/5">
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest leading-none italic">{t(TL.ui.buy, lang)}</span>
+                                                        <div className="flex items-baseline gap-1.5">
+                                                            <span className="text-2xl font-black text-white tracking-tighter italic">
+                                                                {Math.floor(price.finalPrice)}
+                                                            </span>
+                                                            <span className="text-[9px] font-bold text-cyan-400 opacity-60">CR</span>
+                                                        </div>
                                                     </div>
+                                                    <div className="flex flex-col gap-1.5 text-right">
+                                                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest leading-none italic">{t(TL.ui.sell, lang)}</span>
+                                                        <div className="flex items-baseline justify-end gap-1.5">
+                                                            <span className="text-2xl font-black text-cyan-400 tracking-tighter italic">
+                                                                {Math.floor(price.finalPrice * 0.8)}
+                                                            </span>
+                                                            <span className="text-[9px] font-bold text-cyan-400 opacity-60">CR</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                                    <button
-                                                        onClick={() => {
-                                                            const exchangeAmount = Math.floor(available / 10) * 10;
-                                                            if (exchangeAmount >= 10) {
-                                                                exchangeResourceForFuel(resource, exchangeAmount);
-                                                            }
-                                                        }}
-                                                        disabled={available < 10}
-                                                        className={`
-                                                            w-full py-2 rounded font-bold transition-all text-sm
-                                                            ${available >= 10
-                                                                ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white'
-                                                                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                                                            }
-                                                        `}
-                                                    >
-                                                        {available >= 10 ? t(TL.ui.exchange_all, lang) : t(TL.ui.minimum_10, lang)}
-                                                    </button>
+                                                <div className="mt-5 pt-4 border-t border-white/5 flex justify-between items-center">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">{t(TL.ui.cargo, lang)}:</span>
+                                                        <span className="text-xs font-black text-white/60">{(resources[price.resource] || 0).toLocaleString()}</span>
+                                                    </div>
+                                                    {price.regionalModifier !== 1.0 && (
+                                                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black border transition-colors ${price.regionalModifier < 1.0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'}`}>
+                                                            {price.regionalModifier < 1.0 ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
+                                                            {Math.round(Math.abs(price.regionalModifier - 1) * 100)}%
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
                                     })}
-                            </div>
+                                </motion.div>
+                            )}
 
-                            {Object.keys(resources).filter(res => {
-                                const excluded = ['coal', 'oil', 'gas', 'rubies', 'emeralds', 'diamonds', 'credits', 'repairKit', 'coolantPaste', 'advancedCoolant'];
-                                return !excluded.includes(res) && (resources[res as keyof Resources] || 0) > 0;
-                            }).length === 0 && (
-                                    <div className="bg-gray-800/50 border-2 border-gray-700 rounded-lg p-8 text-center">
-                                        <p className="text-gray-500">Нет доступных ресурсов для обмена</p>
+                            {activeTab === 'black_market' && (
+                                <motion.div
+                                    key="black-market" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="glass-panel p-8 border-purple-500/20 bg-purple-500/5 relative overflow-hidden flex items-center justify-between group">
+                                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                            <ShieldAlert className="w-32 h-32" />
+                                        </div>
+                                        <div className="relative z-10 flex items-center gap-6">
+                                            <div className="w-16 h-16 glass-panel border-purple-500/30 bg-purple-500/10 flex items-center justify-center rounded-2xl">
+                                                <Fingerprint className="w-8 h-8 text-purple-400" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-2">{t(TL.ui.shadowExchange, lang)}</h3>
+                                                <p className="text-[10px] text-purple-400/60 font-black uppercase tracking-[0.3em]">{t(TL.ui.encryptedChannel, lang)}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                        </div>
-                    ) : (
-                        <></>
-                    )}
+                                    <div className="grid md:grid-cols-2 gap-5">
+                                        {BLACK_MARKET_ITEMS.map((item, idx) => {
+                                            const isOwned = item.type === 'BLUEPRINT' && item.targetId ? unlockedBlueprints.includes(item.targetId) : false;
+                                            const canAffordItem = item.cost.every(c => (resources[c.resource] || 0) >= c.amount);
+
+                                            return (
+                                                <div key={item.id} className={`glass-panel p-6 border-white/5 bg-white/5 relative group transition-all ${isOwned ? 'opacity-40 grayscale pointer-events-none' : 'hover:border-purple-500/40 hover:bg-purple-500/5'}`}>
+                                                    <div className="flex justify-between items-start mb-6">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 glass-panel border-white/10 bg-white/5 flex items-center justify-center rounded-xl text-purple-400">
+                                                                {item.type === 'BLUEPRINT' ? <ScrollText className="w-6 h-6" /> : <MonitorDot className="w-6 h-6" />}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-black text-white uppercase italic tracking-widest leading-none mb-1">{t(item.name, lang)}</h4>
+                                                                <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">{t(TL.ui.status_label, lang)}: {item.type === 'BLUEPRINT' ? (lang === 'RU' ? 'Чертеж' : 'Blueprint') : item.type === 'RESOURCE' ? (lang === 'RU' ? 'Ресурс' : 'Resource') : (lang === 'RU' ? 'Гаджет' : 'Gadget')}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-[10px] text-white/40 font-black uppercase italic tracking-widest leading-relaxed mb-6 h-12 overflow-hidden">
+                                                        {t(item.description, lang)}
+                                                    </p>
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex flex-col gap-1">
+                                                            {item.cost.map(c => (
+                                                                <div key={c.resource} className="flex items-baseline gap-2">
+                                                                    <span className={`text-xl font-black tracking-tighter ${(resources[c.resource] || 0) >= c.amount ? 'text-white' : 'text-rose-500'}`}>
+                                                                        {c.amount.toLocaleString()}
+                                                                    </span>
+                                                                    <span className="text-[8px] font-bold text-purple-400 uppercase">{t(TL.resources[c.resource], lang)}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => buyBlackMarketItem(item.id)}
+                                                            disabled={isOwned || !canAffordItem}
+                                                            className={`px-6 py-2.5 font-black text-[9px] uppercase tracking-widest transition-all rounded-lg
+                                                            ${isOwned ? 'bg-white/5 text-white/20 border border-white/5' :
+                                                                    canAffordItem ? 'bg-purple-600 text-white hover:bg-purple-500 shadow-[0_0_20px_rgba(147,51,234,0.3)]' :
+                                                                        'bg-white/5 text-white/10 border border-white/5 cursor-not-allowed'}
+                                                        `}
+                                                        >
+                                                            {isOwned ? t(TEXT_IDS.CITY_OWNED, lang) : t(TL.ui.acquire, lang)}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {activeTab === 'exchange' && (
+                                <motion.div
+                                    key="exchange-market" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                                    className="glass-panel p-10 border-amber-500/20 bg-amber-500/5 relative overflow-hidden"
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
+                                    <div className="max-w-2xl mx-auto space-y-12 py-8">
+                                        <div className="text-center space-y-4">
+                                            <div className="w-20 h-20 glass-panel border-amber-500/30 bg-amber-500/10 flex items-center justify-center rounded-3xl mx-auto rotate-12 group-hover:rotate-0 transition-transform">
+                                                <RefreshCcw className="w-10 h-10 text-amber-500" />
+                                            </div>
+                                            <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter">{t(TL.ui.resourceConversion, lang)}</h3>
+                                            <p className="text-[10px] text-amber-500/60 font-black uppercase tracking-[0.4em]">{t(TL.ui.directExchangeDesc, lang)}</p>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                            <div className="space-y-6">
+                                                <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] block italic">{t(TL.ui.selectFeedstock, lang)}</label>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    {['iron', 'copper', 'coal', 'gold'].map(res => (
+                                                        <button
+                                                            key={res} onClick={() => setSelectedResource(res as any)}
+                                                            className={`p-4 glass-panel text-left border-white/5 transition-all
+                                                            ${selectedResource === res ? 'bg-amber-500 text-black border-amber-400 scale-[1.05]' : 'bg-white/5 text-white/40 hover:bg-white/10'}
+                                                        `}
+                                                        >
+                                                            <div className="text-[9px] font-black uppercase mb-1">{t(TL.resources[res as keyof Resources], lang)}</div>
+                                                            <div className="text-xs font-black">{(resources[res as keyof Resources] || 0).toLocaleString()}</div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-6 flex flex-col justify-end">
+                                                <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] block italic">{t(TL.ui.finalizeExchange, lang)}</label>
+                                                <div className="glass-panel p-6 border-white/10 bg-black/40 space-y-6">
+                                                    <div className="flex justify-between items-end border-b border-white/5 pb-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">{t(TL.ui.yieldEstimate, lang)}</span>
+                                                            <div className="text-3xl font-black text-amber-500 italic">25.0 {t(TL.ui.units, lang)}</div>
+                                                        </div>
+                                                        <div className="flex flex-col text-right">
+                                                            <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">{t(TL.ui.efficiency, lang)}</span>
+                                                            <div className="text-lg font-black text-white">94.2%</div>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        disabled={!selectedResource || (resources[selectedResource] || 0) < 100}
+                                                        onClick={() => exchangeResourceForFuel && exchangeResourceForFuel(selectedResource, 100)}
+                                                        className="w-full py-5 bg-amber-500 text-black font-black uppercase text-xs tracking-[0.4em] italic shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:bg-amber-400 transition-all active:scale-95 disabled:grayscale disabled:opacity-20"
+                                                    >
+                                                        {t(TL.ui.processConversion, lang)}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
 
-                {/* Trading Panel */}
-                <div>
-                    <h2 className="text-2xl font-bold text-white mb-4">🛒 Торговля</h2>
+                {/* TRADE OPERATIONS PANEL (RIGHT) */}
+                <div className="lg:col-span-4 min-h-0">
+                    <div className="glass-panel border-white/10 bg-black/60 sticky top-0 flex flex-col p-8 overflow-hidden bento-glow min-h-[600px]">
+                        <div className="absolute -top-32 -right-32 w-64 h-64 bg-cyan-500/5 rounded-full blur-[100px]" />
 
-                    {selectedResource ? (
-                        <div className="bg-gray-800/80 border-2 border-cyan-500 rounded-lg p-6 space-y-4">
-                            <div>
-                                <h3 className="text-xl font-bold text-cyan-400 capitalize mb-2">
-                                    {t(TL.resources[selectedResource], lang) || selectedResource}
-                                </h3>
-                                <p className="text-gray-400 text-sm">
-                                    В наличии: <span className="text-white font-bold">{availableResource}</span>
-                                </p>
-                            </div>
+                        <div className="flex items-center gap-3 mb-10 relative z-10">
+                            <Scale className="w-5 h-5 text-cyan-400" />
+                            <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">{t(TL.ui.transaction, lang)}</h2>
+                        </div>
 
-                            {/* Amount Input */}
-                            <div>
-                                <label className="block text-gray-400 mb-2 text-sm">Количество:</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={amount}
-                                    onChange={(e) => setAmount(Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-full bg-gray-700 border-2 border-gray-600 rounded px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
-                                />
-                                <div className="flex gap-2 mt-2">
-                                    <button onClick={() => setAmount(10)} className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300">×10</button>
-                                    <button onClick={() => setAmount(100)} className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300">×100</button>
-                                    <button onClick={() => setAmount(1000)} className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300">×1000</button>
+                        <div className="flex-1 space-y-10 relative z-10">
+                            {selectedResource ? (
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-10">
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center px-1">
+                                            <label className="text-[9px] font-black text-white/40 uppercase tracking-widest italic">{t(TL.ui.quantity, lang)}</label>
+                                            <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest">{t(TL.ui.stock, lang)}: {(resources[selectedResource] || 0).toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                value={amount}
+                                                onChange={(e) => setAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                                                className="flex-1 glass-panel bg-white/5 border-white/10 p-5 font-black text-white text-3xl italic tracking-tighter text-center focus:border-cyan-500 transition-all outline-none"
+                                            />
+                                            <div className="flex flex-col gap-1">
+                                                <button onClick={() => setAmount(prev => prev + 10)} className="glass-panel px-3 py-2 bg-white/5 hover:bg-white/10 font-bold text-[10px]">+</button>
+                                                <button onClick={() => setAmount(prev => Math.max(1, prev - 10))} className="glass-panel px-3 py-2 bg-white/5 hover:bg-white/10 font-bold text-[10px]">-</button>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {[1, 10, 50, 100].map(val => (
+                                                <button
+                                                    key={val} onClick={() => setAmount(val)}
+                                                    className={`py-2 glass-panel font-black text-[9px] uppercase tracking-widest transition-all ${amount === val ? 'bg-cyan-500 text-black border-cyan-400' : 'bg-white/5 text-white/40'}`}
+                                                >
+                                                    {val}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center p-5 glass-panel border-white/5 bg-white/[0.02]">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[9px] font-black text-white/20 uppercase tracking-widest leading-none">{t(TL.ui.totalExpense, lang)}</span>
+                                                <div className="text-2xl font-black text-white italic">{totalBuyCost.toLocaleString()} <span className="text-xs text-cyan-400">CR</span></div>
+                                            </div>
+                                            <ArrowUpRight className="w-6 h-6 text-rose-500/40" />
+                                        </div>
+                                        <div className="flex justify-between items-center p-5 glass-panel border-white/5 bg-white/[0.02]">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[9px] font-black text-white/20 uppercase tracking-widest leading-none">{t(TL.ui.netRevenue, lang)}</span>
+                                                <div className="text-2xl font-black text-cyan-400 italic">{totalSellRevenue.toLocaleString()} <span className="text-xs">CR</span></div>
+                                            </div>
+                                            <ArrowDownLeft className="w-6 h-6 text-emerald-500/40" />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            onClick={handleBuy}
+                                            disabled={!canAfford}
+                                            className={`py-6 font-black text-sm uppercase tracking-[0.3em] flex flex-col items-center gap-2 group transition-all rounded-xl relative overflow-hidden
+                                                ${canAfford ? 'bg-white text-black hover:bg-cyan-400 shadow-[0_0_40px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-white/10 cursor-not-allowed border border-white/5'}
+                                            `}
+                                        >
+                                            {t(TL.ui.buy, lang)}
+                                        </button>
+                                        <button
+                                            onClick={handleSell}
+                                            disabled={availableResource < amount}
+                                            className={`py-6 font-black text-sm uppercase tracking-[0.3em] flex flex-col items-center gap-2 group transition-all rounded-xl relative overflow-hidden
+                                                ${availableResource >= amount ? 'bg-cyan-500 text-black hover:bg-cyan-300 shadow-[0_0_40px_rgba(34,211,238,0.2)]' : 'bg-white/5 text-white/10 cursor-not-allowed border border-white/5'}
+                                            `}
+                                        >
+                                            {t(TL.ui.sell, lang)}
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full opacity-10 text-center py-20 grayscale">
+                                    <MonitorDot className="w-24 h-24 mb-6" />
+                                    <p className="text-[10px] font-black uppercase tracking-[0.4em]">{t(TL.ui.awaitingSignal, lang)}</p>
                                 </div>
-                            </div>
+                            )}
+                        </div>
 
-                            {/* Buy Button */}
-                            <div className="pt-2 border-t border-gray-700">
-                                <p className="text-gray-400 text-sm mb-2">
-                                    Стоимость: <span className="text-green-400 font-bold">{totalBuyCost} 💎</span>
-                                </p>
-                                <button
-                                    onClick={handleBuy}
-                                    disabled={resources.rubies < totalBuyCost}
-                                    className={`
-                                        w-full py-3 rounded-lg font-bold transition-all
-                                        ${resources.rubies >= totalBuyCost
-                                            ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white'
-                                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                                        }
-                                    `}
-                                >
-                                    {resources.rubies >= totalBuyCost ? `💵 ${t(TL.ui.buy, lang).toUpperCase()}` : (lang === 'RU' ? '❌ НЕДОСТАТОЧНО СРЕДСТВ' : '❌ INSUFFICIENT FUNDS')}
-                                </button>
-                            </div>
-
-                            {/* Sell Button */}
-                            <div className="pt-2 border-t border-gray-700">
-                                <p className="text-gray-400 text-sm mb-2">
-                                    Выручка: <span className="text-yellow-400 font-bold">{totalSellRevenue} 💎</span>
-                                    <span className="text-xs text-red-400 ml-2">(комиссия 20%)</span>
-                                </p>
-                                <button
-                                    onClick={handleSell}
-                                    disabled={availableResource < amount}
-                                    className={`
-                                        w-full py-3 rounded-lg font-bold transition-all
-                                        ${availableResource >= amount
-                                            ? 'bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 text-white'
-                                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                                        }
-                                    `}
-                                >
-                                    {availableResource >= amount ? `💰 ${t(TL.ui.sell, lang).toUpperCase()}` : (lang === 'RU' ? '❌ НЕДОСТАТОЧНО РЕСУРСОВ' : '❌ INSUFFICIENT RESOURCES')}
-                                </button>
+                        <div className="mt-10 pt-8 border-t border-white/5 relative z-10">
+                            <div className="flex items-center gap-4 text-[9px] font-black text-white/20 uppercase tracking-[0.3em] italic">
+                                <MonitorDot className="w-3 h-3 text-cyan-400" />
+                                {t(TL.ui.terminalStatusOnline, lang)}
                             </div>
                         </div>
-                    ) : (
-                        <div className="bg-gray-800/50 border-2 border-gray-700 rounded-lg p-8 text-center">
-                            <p className="text-gray-500">Выберите ресурс из списка</p>
-                        </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>
+    );
+};
+
+const TabBtn = ({ active, onClick, icon, label, lang, color }: { active: boolean, onClick: () => void, icon: any, label: any, lang: string, color: string }) => {
+    const colorClasses = {
+        cyan: active ? 'text-black bg-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'text-white/40 hover:text-white/60 hover:bg-white/5',
+        purple: active ? 'text-white bg-purple-600 shadow-[0_0_20px_rgba(147,51,234,0.3)]' : 'text-purple-400/40 hover:text-purple-400/60 hover:bg-purple-500/5',
+        amber: active ? 'text-black bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.3)]' : 'text-amber-500/40 hover:text-amber-500/60 hover:bg-amber-500/5'
+    };
+
+    return (
+        <button
+            onClick={onClick}
+            className={`flex items-center gap-2 md:gap-3 px-4 md:px-8 py-2 md:py-4 rounded-lg font-black font-technical text-[8px] md:text-[10px] uppercase tracking-[0.2em] transition-all relative overflow-hidden group shrink-0
+                ${(colorClasses as any)[color]}
+            `}
+        >
+            <span className="transition-transform group-hover:scale-110 [&>svg]:w-3.5 [&>svg]:h-3.5 md:[&>svg]:w-4 md:[&>svg]:h-4">{icon}</span>
+            <span className="whitespace-nowrap">{t(label, lang as any)}</span>
+            {active && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+            )}
+        </button>
     );
 };

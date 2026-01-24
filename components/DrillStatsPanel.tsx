@@ -1,28 +1,41 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from '../store/gameStore';
-import { calculateStats, formatCompactNumber } from '../services/gameMath';
+import { useDrillStats, useDrillDynamic } from '../store/selectors';
+import { formatCompactNumber } from '../services/gameMath';
 import { t } from '../services/localization';
 
 export const DrillStatsPanel: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
 
-    // Store data
-    const s = useGameStore();
-    const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
-    const lang = s.settings.language;
+    // Store data (Optimized with useShallow)
+    const { drill, resources, integrity, currentCargoWeight, activeEffects, stats, lang, recycleResources } = useGameStore(
+        useShallow(s => ({
+            drill: s.drill,
+            resources: s.resources,
+            integrity: s.integrity,
+            currentCargoWeight: s.currentCargoWeight,
+            activeEffects: s.activeEffects,
+            stats: s.stats,
+            lang: s.settings.language,
+            recycleResources: s.recycleResources
+        }))
+    );
 
-    // Derived values for bars
-    const energyLoad = stats.energyProd > 0 ? (stats.energyCons / stats.energyProd) * 100 : 100;
-    const cargoFullness = stats.totalCargoCapacity && stats.totalCargoCapacity > 0 ? (s.currentCargoWeight / stats.totalCargoCapacity) * 100 : 0;
+    const { heat } = useDrillDynamic();
+
+    // Derived values for bars - Memoized to prevent recalculation on every re-render
+    const energyLoad = useMemo(() => stats.energyProd > 0 ? (stats.energyCons / stats.energyProd) * 100 : 100, [stats.energyCons, stats.energyProd]);
+    const cargoFullness = useMemo(() => stats.totalCargoCapacity && stats.totalCargoCapacity > 0 ? (currentCargoWeight / stats.totalCargoCapacity) * 100 : 0, [currentCargoWeight, stats.totalCargoCapacity]);
 
     // Fuel total (coal + oil + gas)
-    const totalFuel = (s.resources.coal || 0) + (s.resources.oil || 0) * 1.5 + (s.resources.gas || 0) * 2;
+    const totalFuel = useMemo(() => (resources.coal || 0) + (resources.oil || 0) * 1.5 + (resources.gas || 0) * 2, [resources.coal, resources.oil, resources.gas]);
     const fuelMax = 1000; // Baseline for visual representation
 
     // Recycling Actions (Task 3)
     const handleRecycle = (type: 'repair' | 'lubricate' | 'lottery' | 'scrap' | 'afterburn') => {
-        (s as any).recycleResources(type);
+        recycleResources(type);
     };
 
     if (!isOpen) {
@@ -37,14 +50,14 @@ export const DrillStatsPanel: React.FC = () => {
     }
 
     return (
-        <div className="fixed right-0 top-[10%] bottom-[10%] w-64 bg-black/95 border-l border-cyan-500/50 z-[60] flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.9)] backdrop-blur-xl animate-slideInRight pointer-events-auto">
+        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-80 md:w-64 bg-black/60 border-l border-cyan-500/50 z-[110] flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.9)] backdrop-blur-2xl animate-slideInRight pointer-events-auto">
             {/* Header */}
-            <div className="p-3 border-b border-zinc-800 flex justify-between items-center bg-cyan-950/20">
-                <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-cyan-500 animate-pulse rounded-full" />
-                    <h3 className="text-xs font-black text-cyan-400 uppercase tracking-tighter">БОРТОВОЙ КОМПЬЮТЕР</h3>
+            <div className="p-4 md:p-3 border-b border-zinc-800 flex justify-between items-center bg-cyan-950/20">
+                <div className="flex items-center gap-3 md:gap-2">
+                    <span className="w-3 h-3 md:w-2 md:h-2 bg-cyan-500 animate-pulse rounded-full" />
+                    <h3 className="text-sm md:text-xs font-black text-cyan-400 uppercase tracking-tighter">БОРТОВОЙ КОМПЬЮТЕР</h3>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="text-zinc-500 hover:text-white p-1">✕</button>
+                <button onClick={() => setIsOpen(false)} className="text-zinc-500 hover:text-white p-2 md:p-1 text-xl md:text-base">✕</button>
             </div>
 
             {/* Stats Content */}
@@ -54,7 +67,7 @@ export const DrillStatsPanel: React.FC = () => {
                 <section className="space-y-3">
                     <ProgressBar
                         label="Целостность корпуса"
-                        current={Math.floor(s.integrity)}
+                        current={Math.floor(integrity)}
                         max={Math.floor(stats.integrity)}
                         color="bg-green-500"
                         bgColor="bg-green-950/30"
@@ -69,15 +82,15 @@ export const DrillStatsPanel: React.FC = () => {
                     />
                     <ProgressBar
                         label="Термическая нагрузка"
-                        current={Math.floor(s.heat)}
+                        current={Math.floor(heat)}
                         max={100}
                         unit="%"
-                        color={s.heat > 90 ? "bg-red-600 animate-pulse" : s.heat > 70 ? "bg-orange-500" : "bg-blue-400"}
+                        color={heat > 90 ? "bg-red-600 animate-pulse" : heat > 70 ? "bg-orange-500" : "bg-blue-400"}
                         bgColor="bg-blue-950/30"
                     />
                     <ProgressBar
                         label="Загрузка отсека"
-                        current={Math.floor(s.currentCargoWeight)}
+                        current={Math.floor(currentCargoWeight)}
                         max={Math.floor(stats.totalCargoCapacity || 0)}
                         unit="кг"
                         color={cargoFullness > 90 ? "bg-red-500" : "bg-zinc-400"}
@@ -117,14 +130,14 @@ export const DrillStatsPanel: React.FC = () => {
                 </section>
 
                 {/* 3.1. TEMPORARY EFFECTS */}
-                {s.activeEffects.length > 0 && (
+                {activeEffects.length > 0 && (
                     <section>
                         <h4 className="text-[9px] text-cyan-500 font-bold mb-2 uppercase tracking-widest">Временные усиления</h4>
                         <div className="space-y-1.5">
-                            {s.activeEffects.map(e => (
+                            {activeEffects.map(e => (
                                 <div key={e.id} className="flex justify-between items-center text-[9px] bg-cyan-950/20 p-1 border border-cyan-900/30">
-                                    <span className="text-cyan-300 font-bold">{e.name}</span>
-                                    <span className="text-zinc-500 font-mono">{e.duration}с</span>
+                                    <span className="text-cyan-300 font-bold">{t(e.name, lang)}</span>
+                                    <span className="text-zinc-500 font-mono">{Math.ceil(e.duration / 10)}с</span>
                                 </div>
                             ))}
                         </div>
@@ -140,40 +153,40 @@ export const DrillStatsPanel: React.FC = () => {
                             title="Полевой ремонт"
                             desc="+5% Integrity прямо в шахте"
                             cost="500 Stone, 50 Scrap"
-                            disabled={s.resources.stone < 500 || s.resources.scrap < 50}
-                            onClick={() => handleRecycle('repair' as any)}
+                            disabled={resources.stone < 500 || resources.scrap < 50}
+                            onClick={() => handleRecycle('repair')}
                         />
                         <ActionButton
                             icon="🧪"
                             title="Смазочный концентрат"
                             desc="-20% нагрева на 2 минуты"
                             cost="300 Clay, 50 Ice"
-                            disabled={s.resources.clay < 300 || s.resources.ice < 50}
-                            onClick={() => handleRecycle('lubricate' as any)}
+                            disabled={resources.clay < 300 || resources.ice < 50}
+                            onClick={() => handleRecycle('lubricate')}
                         />
                         <ActionButton
                             icon="🎰"
                             title="Лотерея старателя"
                             desc="+50% шанс найти расходники"
                             cost="200 Iron, 100 Clay, 100 Stone"
-                            disabled={s.resources.iron < 200 || s.resources.clay < 100 || s.resources.stone < 100 || s.activeEffects.some(e => e.id === 'PROSPECTOR_LUCK')}
-                            onClick={() => handleRecycle('lottery' as any)}
+                            disabled={resources.iron < 200 || resources.clay < 100 || resources.stone < 100 || activeEffects.some(e => e.id === 'PROSPECTOR_LUCK')}
+                            onClick={() => handleRecycle('lottery')}
                         />
                         <ActionButton
                             icon="📦"
                             title="Сдать в утиль"
                             desc="100 Stone/Clay -> 7 Credits"
                             cost="100 Base Resource"
-                            disabled={s.resources.stone < 100 && s.resources.clay < 100}
-                            onClick={() => handleRecycle('scrap' as any)}
+                            disabled={resources.stone < 100 && resources.clay < 100}
+                            onClick={() => handleRecycle('scrap')}
                         />
                         <ActionButton
                             icon="🚀"
                             title="Балластный форсаж"
                             desc="+50% Speed на 30 секунд"
                             cost="1000 Stone"
-                            disabled={s.resources.stone < 1000 || s.activeEffects.some(e => e.id === 'BALLAST_DUMP')}
-                            onClick={() => handleRecycle('afterburn' as any)}
+                            disabled={resources.stone < 1000 || activeEffects.some(e => e.id === 'BALLAST_DUMP')}
+                            onClick={() => handleRecycle('afterburn')}
                         />
                     </div>
                 </section>
@@ -181,7 +194,7 @@ export const DrillStatsPanel: React.FC = () => {
 
             {/* Footer */}
             <div className="p-2 bg-zinc-950 text-[7px] font-mono text-zinc-600 text-center border-t border-zinc-900 uppercase">
-                Hardware: v4.1.3 // Core: DRILL-MK-IV
+                Hardware: v5.1.0 // Core: DRILL-MK-IV
             </div>
         </div>
     );

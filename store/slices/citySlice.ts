@@ -80,7 +80,7 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
 
     repairHull: () => {
         const s = get();
-        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, s.activeEffects);
         const { resource, cost } = calculateRepairCost(s.depth, s.integrity, stats.integrity);
 
         if (cost <= 0) return;
@@ -106,6 +106,7 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
     buyCityBuff: (cost, res, effectId) => {
         const s = get();
         if (s.resources[res] >= cost) {
+            console.log(`[CITY_SERVICE] Activating buff: ${effectId} (Cost: ${cost} ${res})`);
             const newRes = { ...s.resources, [res]: s.resources[res] - cost };
             const effect = createEffect(effectId);
             if (effect) {

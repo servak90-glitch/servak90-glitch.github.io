@@ -1870,6 +1870,30 @@ export class AudioEngine {
     osc.start();
     osc.stop(t + 0.1);
   }
+
+  playLevelUp() {
+    if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
+    const t = this.ctx.currentTime;
+
+    // Arpeggio up
+    [440, 554.37, 659.25, 880].forEach((f, i) => {
+      const osc = this.ctx!.createOscillator();
+      const g = this.ctx!.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, t + i * 0.1);
+
+      g.gain.setValueAtTime(0, t + i * 0.1);
+      g.gain.linearRampToValueAtTime(0.1, t + i * 0.1 + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.1 + 0.5);
+
+      osc.connect(g);
+      g.connect(this.sfxBus!);
+      g.connect(this.sfxReverbBus!);
+
+      osc.start(t + i * 0.1);
+      osc.stop(t + i * 0.1 + 0.6);
+    });
+  }
 }
 
 export const audioEngine = new AudioEngine();

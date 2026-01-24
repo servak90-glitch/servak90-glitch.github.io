@@ -1,12 +1,36 @@
 /**
- * Optimized Store Selectors using useShallow
+ * Optimized Store Selectors
  * 
- * These hooks group related state slices to reduce re-renders.
- * Components will only re-render when the specific state they use changes.
+ * Эти хуки обеспечивают атомарный доступ к состоянию, что предотвращает лишние ререндеры.
+ * Вместо того чтобы возвращать один большой объект, который меняется при каждом тике,
+ * мы используем точечные подписки.
  */
 
 import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from './gameStore';
+import { GameState, DrillState, Stats } from '../types';
+
+// === ATOMIC SELECTORS  ===
+
+/**
+ * Универсальный селектор для любого поля из стора
+ */
+export const useGameSelector = <T>(selector: (state: GameState) => T): T => useGameStore(selector);
+
+/**
+ * Селектор для конкретного стата
+ */
+export const useStatsProperty = <K extends keyof Stats>(key: K): Stats[K] =>
+    useGameStore(s => s.stats[key]);
+
+/**
+ * Селектор для конкретного поля бура
+ */
+export const useDrillProperty = <K extends keyof DrillState>(key: K): DrillState[K] =>
+    useGameStore(s => s.drill[key]);
+
+
+// === COMPOSITE SELECTORS (OPTIMIZED) ===
 
 /**
  * Core game state: game lifecycle and view
@@ -23,19 +47,32 @@ export const useGameCore = () => useGameStore(
 );
 
 /**
- * Drill state and resources
+ * Drill state (slow changing: stats, drill parts)
+ * Рефакторинг: stats теперь вынесен за пределы shallow-объекта, если нужно
  */
-export const useDrillState = () => useGameStore(
+export const useDrillStats = () => useGameStore(
     useShallow(s => ({
-        depth: s.depth,
-        heat: s.heat,
-        shieldCharge: s.shieldCharge,
-        resources: s.resources,
         drill: s.drill,
+        resources: s.resources,
         xp: s.xp,
         integrity: s.integrity,
         currentCargoWeight: s.currentCargoWeight,
         sideTunnel: s.sideTunnel,
+        stats: s.stats,
+        activeEffects: s.activeEffects,
+        equipmentInventory: s.equipmentInventory,
+        inventory: s.inventory
+    }))
+);
+
+/**
+ * Drill movement (fast changing: depth, heat, shield)
+ */
+export const useDrillDynamic = () => useGameStore(
+    useShallow(s => ({
+        depth: s.depth,
+        heat: s.heat,
+        shieldCharge: s.shieldCharge,
     }))
 );
 
@@ -75,6 +112,17 @@ export const useCombatActions = () => useGameStore(
         setCoolingGame: s.setCoolingGame,
         forceVentHeat: s.forceVentHeat,
         triggerOverheat: s.triggerOverheat,
+        damageWeakPoint: s.damageWeakPoint, // Перенесено в боевые действия
+    }))
+);
+
+/**
+ * Abilities state and actions
+ */
+export const useAbilities = () => useGameStore(
+    useShallow(s => ({
+        activeAbilities: s.activeAbilities || [],
+        activateAbility: s.activateAbility,
     }))
 );
 
@@ -135,3 +183,45 @@ export const useViewActions = () => useGameStore(
     }))
 );
 
+/**
+ * Forge and Crafting state/actions
+ */
+export const useForgeState = () => useGameStore(
+    useShallow(s => ({
+        droneLevels: s.droneLevels,
+        depth: s.depth,
+        heatStabilityTimer: s.heatStabilityTimer,
+        integrity: s.integrity,
+        craftingQueue: s.craftingQueue,
+    }))
+);
+
+export const useCraftActions = () => useGameStore(
+    useShallow(s => ({
+        startCraft: s.startCraft,
+        collectCraftedItem: s.collectCraftedItem,
+        cancelCraft: s.cancelCraft,
+    }))
+);
+
+/**
+ * Global Map and Travel state/actions
+ */
+export const useMapState = () => useGameStore(
+    useShallow(s => ({
+        level: s.level,
+        unlockedLicenses: s.unlockedLicenses,
+        travel: s.travel,
+        currentRegion: s.currentRegion,
+        playerBases: s.playerBases,
+        caravans: s.caravans,
+        currentCargoWeight: s.currentCargoWeight,
+    }))
+);
+
+export const useMapActions = () => useGameStore(
+    useShallow(s => ({
+        travelToRegion: s.travelToRegion,
+        buildBase: s.buildBase,
+    }))
+);

@@ -98,10 +98,6 @@ export const RESOURCE_WEIGHTS: Record<keyof Resources, number> = {
  * @returns Общий вес в единицах
  */
 export function calculateCargoWeight(resources: Partial<Resources>): number {
-    // [DEV_CONTEXT: CHEAT] Zero Weight
-    const s = (globalThis as any).gameStore?.getState?.();
-    if (s?.isZeroWeight) return 0;
-
     let totalWeight = 0;
 
     for (const [resource, amount] of Object.entries(resources)) {
@@ -152,105 +148,68 @@ export const formatCompactNumber = (num: number): string => {
 
 // === КЭШИРОВАНИЕ calculateStats ===
 // Кэш предотвращает повторные вычисления при неизменных входных данных
-
-interface StatsCache {
-    key: string;
-    result: ReturnType<typeof calculateStatsInternal>;
-    timestamp: number;
-}
-
-let statsCache: StatsCache | null = null;
 const CACHE_TTL = 100; // Время жизни кэша в мс (10 тиков)
 
 /**
- * Генерация ключа кэша на основе входных данных
+ * Генерация ключа кэша БАЗОВЫХ статов (только детали и скиллы)
+ * Эти данные меняются редко.
  */
-function generateCacheKey(
+function generateBaseCacheKey(
     drill: DrillState,
     skillLevels: GameState['skillLevels'],
-    equippedArtifacts: string[],
-    currentDepth: number
+    equippedArtifacts: string[]
 ): string {
-    // Ключевые данные, влияющие на результат
-    return JSON.stringify({
-        bit: drill.bit?.id,
-        engine: drill.engine?.id,
-        cooling: drill.cooling?.id,
-        hull: drill.hull?.id,
-        logic: drill.logic?.id,
-        control: drill.control?.id,
-        gearbox: drill.gearbox?.id,
-        power: drill.power?.id,
-        armor: drill.armor?.id,
-        skills: Object.keys(skillLevels).sort().map(k => `${k}:${skillLevels[k]}`).join(','),
-        artifacts: equippedArtifacts.filter(Boolean).sort().join(','),
-        depthTier: Math.floor(currentDepth / 100) // Округляем глубину до 100м
-    });
+    // Используем простой конкатенированный ключ вместо JSON.stringify
+    const drillKey = `${drill.bit.id}|${drill.engine.id}|${drill.cooling.id}|${drill.hull.id}|${drill.logic.id}|${drill.control.id}|${drill.gearbox.id}|${drill.power.id}|${drill.armor.id}`;
+    const skillsKey = Object.values(skillLevels).join(',');
+    const artifactsKey = equippedArtifacts.join(',');
+    return `${drillKey}#${skillsKey}#${artifactsKey}`;
 }
 
+interface BaseStatsCache {
+    key: string;
+    result: any;
+}
+
+let baseStatsCache: BaseStatsCache | null = null;
+
 /**
- * Обёртка с кэшированием
+ * Обёртка с оптимизированным двухслойным кэшированием
  */
 export const calculateStats = (
     drill: DrillState,
     skillLevels: GameState['skillLevels'],
     equippedArtifacts: string[],
     inventory: GameState['inventory'],
-    currentDepth: number = 0
+    currentDepth: number = 0,
+    activeEffects: GameState['activeEffects'] = []
 ) => {
-    const now = Date.now();
-    const cacheKey = generateCacheKey(drill, skillLevels, equippedArtifacts, currentDepth);
+    const baseKey = generateBaseCacheKey(drill, skillLevels, equippedArtifacts);
 
-    // Проверяем кэш
-    if (statsCache && statsCache.key === cacheKey && (now - statsCache.timestamp) < CACHE_TTL) {
-        return statsCache.result;
+    let baseResult;
+    if (baseStatsCache && baseStatsCache.key === baseKey) {
+        baseResult = baseStatsCache.result;
+    } else {
+        baseResult = calculateBaseStatsInternal(drill, skillLevels, equippedArtifacts, inventory);
+        baseStatsCache = { key: baseKey, result: baseResult };
     }
 
-    // Вычисляем новый результат
-    const result = calculateStatsInternal(drill, skillLevels, equippedArtifacts, inventory, currentDepth);
-
-    // Обновляем кэш
-    statsCache = { key: cacheKey, result, timestamp: now };
-
-    return result;
+    // Применяем динамические модификаторы (глубина, эффекты), которые меняются часто
+    return applyDynamicModifiers(baseResult, currentDepth, activeEffects);
 };
 
-const calculateStatsInternal = (
+/**
+ * Расчет базовых характеристик, не зависящих от глубины
+ */
+const calculateBaseStatsInternal = (
     drill: DrillState,
     skillLevels: GameState['skillLevels'],
     equippedArtifacts: string[],
-    inventory: GameState['inventory'],
-    currentDepth: number = 0
+    inventory: GameState['inventory']
 ) => {
-
-    // Defensive check for corrupted state
+    // Defensive check
     if (!drill || !drill.bit || !drill.power || !drill.engine || !drill.cooling || !drill.hull || !drill.logic || !drill.control || !drill.gearbox || !drill.armor) {
-        console.warn("Invalid drill state in calculateStats, using safe defaults", drill);
-        return {
-            energyProd: 0,
-            energyCons: 0,
-            energyEfficiency: 1,
-            totalDamage: 0,
-            totalSpeed: 0,
-            totalCooling: 0,
-            torque: 0,
-            critChance: 0,
-            luck: 0,
-            predictionTime: 0,
-            clickMult: 1,
-            ventSpeed: 1,
-            defense: 0,
-            evasion: 0,
-            hazardResist: 0,
-            integrity: 100,
-            regen: 0,
-            droneEfficiency: 1,
-            drillingEfficiency: 1,
-            ambientHeat: 0,
-            requiredTier: 1,
-            skillMods: { clickPowerPct: 0, autoSpeedPct: 0, heatGenReductionPct: 0, resourceMultPct: 0, residueEffPct: 0, xpGainPct: 0, buffDurationPct: 0, critChance: 0, coolingPowerPct: 0, globalSpeedPct: 0, analysisSpeedPct: 0 },
-            artifactMods: { clickPowerPct: 0, drillSpeedPct: 0, heatGenPct: 0, resourceMultPct: 0, luckPct: 0, shopDiscountPct: 0 }
-        };
+        return getFallbackStats();
     }
 
     const energyProd = drill.power.baseStats.energyOutput;
@@ -258,78 +217,40 @@ const calculateStatsInternal = (
         drill.logic.baseStats.energyCost + drill.control.baseStats.energyCost + drill.gearbox.baseStats.energyCost +
         drill.armor.baseStats.energyCost + (drill.cargoBay?.baseStats?.energyCost || 0);
 
-    // [NEW v4.0.1] Глубинный коэффициент сложности
-    const depthScale = calculateDepthScale(currentDepth);
-    const energyCons = baseEnergyCons * depthScale;
-
-    // [DEV_CONTEXT: CHEAT] Infinite Energy
-    const storeState = (globalThis as any).gameStore?.getState?.();
-    const energyEfficiency = storeState?.isInfiniteEnergy ? 1.0 : (energyProd >= energyCons ? 1.0 : (energyProd / Math.max(1, energyCons)));
-
     const totalCargoCapacity = BASE_CARGO_CAPACITY +
         (drill.hull.baseStats.cargoCapacity || 0) +
         (drill.cargoBay?.baseStats?.cargoCapacity || 0);
 
-    // Calculate Artifact Modifiers
+    // Пре-расчет модификаторов артефактов
     const artifactMods = {
-        clickPowerPct: 0,
-        drillSpeedPct: 0,
-        heatGenPct: 0,
-        resourceMultPct: 0,
-        luckPct: 0,
-        shopDiscountPct: 0
+        clickPowerPct: 0, drillSpeedPct: 0, heatGenPct: 0, resourceMultPct: 0, luckPct: 0, shopDiscountPct: 0
     };
 
     equippedArtifacts.forEach(id => {
         const item = inventory[id];
         if (item) {
             const def = ARTIFACTS.find(a => a.id === item.defId);
-            if (def && def.modifiers) {
-                if (def.modifiers.clickPowerPct) artifactMods.clickPowerPct += def.modifiers.clickPowerPct;
-                if (def.modifiers.drillSpeedPct) artifactMods.drillSpeedPct += def.modifiers.drillSpeedPct;
-                if (def.modifiers.heatGenPct) artifactMods.heatGenPct += def.modifiers.heatGenPct;
-                if (def.modifiers.resourceMultPct) artifactMods.resourceMultPct += def.modifiers.resourceMultPct;
-                if (def.modifiers.luckPct) artifactMods.luckPct += def.modifiers.luckPct;
-                if (def.modifiers.shopDiscountPct) artifactMods.shopDiscountPct += def.modifiers.shopDiscountPct;
+            if (def?.modifiers) {
+                Object.entries(def.modifiers).forEach(([key, val]) => {
+                    if (key in artifactMods) (artifactMods as any)[key] += val;
+                });
             }
         }
     });
 
     const skillMods = calculateSkillModifiers(skillLevels);
 
-    // --- HARDCORE MECHANICS ---
-
-    // 1. Density Penalty
-    const requiredTier = getRockDensity(currentDepth);
-    const tierDiff = drill.bit.tier - requiredTier;
-    let drillingEfficiency = 1.0;
-
-    if (tierDiff < 0) {
-        // Exponential penalty: 0.5x per missing tier
-        drillingEfficiency = Math.pow(0.5, Math.abs(tierDiff));
-        // Hard cap minimum speed to avoid total softlock (1%)
-        drillingEfficiency = Math.max(0.01, drillingEfficiency);
-    }
-
-    // 2. Ambient Heat
-    const ambientHeat = getAmbientTemp(currentDepth);
-    // Cooling becomes harder deep underground (air is hot)
-    const coolingEfficiencyEnv = Math.max(0.1, 1.0 - (currentDepth / 100000));
-
-    // [DEV_CONTEXT: EVASION PROTOCOL]
-    // Base formula: 0.5% per tier of Engine + Logic
+    // Базовое уклонение
     const baseEvasion = (drill.engine.tier * 0.5) + (drill.logic.tier * 0.5);
-    // Hard Cap 60%
     const totalEvasion = Math.min(60, baseEvasion);
 
     return {
         energyProd,
-        energyCons,
-        energyEfficiency,
-        totalDamage: drill.bit.baseStats.damage * (1 + (skillMods.clickPowerPct + artifactMods.clickPowerPct) / 100) * energyEfficiency * drillingEfficiency,
-        totalSpeed: drill.engine.baseStats.speed * (1 + (skillMods.autoSpeedPct + artifactMods.drillSpeedPct) / 100) * energyEfficiency * drillingEfficiency,
-        totalCooling: drill.cooling.baseStats.cooling * (1 + (skillMods.coolingPowerPct) / 100) * energyEfficiency * coolingEfficiencyEnv,
-        totalCargoCapacity: totalCargoCapacity,
+        baseEnergyCons,
+        drillDamageBase: drill.bit.baseStats.damage,
+        drillSpeedBase: drill.engine.baseStats.speed,
+        coolingBase: drill.cooling.baseStats.cooling,
+        totalCargoCapacity,
         torque: drill.gearbox.baseStats.torque || 0,
         critChance: drill.logic.baseStats.critChance + skillMods.critChance,
         luck: (drill.logic.baseStats.luck || 0) + artifactMods.luckPct,
@@ -342,16 +263,75 @@ const calculateStatsInternal = (
         integrity: drill.hull.baseStats.maxIntegrity,
         regen: drill.hull.baseStats.regen || 0,
         droneEfficiency: drill.power.baseStats.droneEfficiency || 1.0,
-        travelSpeed: 50 + (drill.engine.tier * 25), // км/ч
+        travelSpeed: 50 + (drill.engine.tier * 25),
+        bitTier: drill.bit.tier,
         skillMods,
-        artifactMods,
-        // Exposed for UI/Logic
+        artifactMods
+    };
+};
+
+/**
+ * Применение динамических модификаторов (глубина, эффекты) к базовым статам
+ */
+function applyDynamicModifiers(base: any, depth: number, activeEffects: any[] = []) {
+    const depthScale = calculateDepthScale(depth);
+    const energyCons = base.baseEnergyCons * depthScale;
+
+    const energyEfficiency = base.energyProd >= energyCons ? 1.0 : (base.energyProd / Math.max(1, energyCons));
+
+    const requiredTier = getRockDensity(depth);
+    const tierDiff = base.bitTier - requiredTier;
+    let drillingEfficiency = tierDiff < 0 ? Math.max(0.01, Math.pow(0.5, Math.abs(tierDiff))) : 1.0;
+
+    const ambientHeat = getAmbientTemp(depth);
+    const coolingEfficiencyEnv = Math.max(0.1, 1.0 - (depth / 100000));
+
+    // Извлечение множителей из активных эффектов
+    let drillSpeedMultiplier = 1;
+    let clickPowerMultiplier = 1;
+    let heatGenMultiplier = 1;
+    let coolingMultiplier = 1;
+    let resourceMultiplier = 1;
+    let luckPctBoost = 0;
+    let defenseMultiplier = 1;
+
+    activeEffects.forEach(e => {
+        const m = e.modifiers || {};
+        if (m.drillSpeedMultiplier) drillSpeedMultiplier *= m.drillSpeedMultiplier;
+        if (m.clickPowerMultiplier) clickPowerMultiplier *= m.clickPowerMultiplier;
+        if (m.heatGenMultiplier !== undefined) heatGenMultiplier *= m.heatGenMultiplier;
+        if (m.coolingMultiplier) coolingMultiplier *= m.coolingMultiplier;
+        if (m.resourceMultiplier) resourceMultiplier *= m.resourceMultiplier;
+        if (m.luckPctBoost) luckPctBoost += m.luckPctBoost;
+        if (m.defenseMultiplier) defenseMultiplier *= m.defenseMultiplier;
+    });
+
+    return {
+        ...base,
+        energyCons,
+        energyEfficiency,
+        luck: base.luck + luckPctBoost,
+        defense: base.defense * defenseMultiplier,
+        totalDamage: base.drillDamageBase * (1 + (base.skillMods.clickPowerPct + base.artifactMods.clickPowerPct) / 100) * energyEfficiency * drillingEfficiency * clickPowerMultiplier,
+        totalSpeed: base.drillSpeedBase * (1 + (base.skillMods.autoSpeedPct + base.artifactMods.drillSpeedPct) / 100) * energyEfficiency * drillingEfficiency * drillSpeedMultiplier,
+        totalCooling: base.coolingBase * (1 + (base.skillMods.coolingPowerPct) / 100) * energyEfficiency * coolingEfficiencyEnv * coolingMultiplier,
         drillingEfficiency,
         ambientHeat,
         requiredTier,
-        depthScale // [NEW] Коэффициент сложности на текущей глубине
+        depthScale,
+        heatGenMultiplier, // Пробрасываем для HeatSystem
+        resourceMultiplier // Пробрасываем для DrillSystem
     };
-};
+}
+
+function getFallbackStats() {
+    return {
+        energyProd: 0, energyCons: 0, energyEfficiency: 1, totalDamage: 0, totalSpeed: 0, totalCooling: 0, torque: 0,
+        critChance: 0, luck: 0, predictionTime: 0, clickMult: 1, ventSpeed: 1, defense: 0, evasion: 0,
+        hazardResist: 0, integrity: 100, regen: 0, droneEfficiency: 1, drillingEfficiency: 1, ambientHeat: 0,
+        requiredTier: 1, skillMods: {}, artifactMods: {}, totalCargoCapacity: 5000
+    };
+}
 
 import { TL } from './localization';
 

@@ -1,26 +1,39 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { Quest, QuestStatus, QuestObjective, QuestReward, FactionId } from '../types';
+import { Quest, FactionId, QuestReward } from '../types';
 import { getAvailableQuests, getQuestById, generateQuestBatch } from '../services/questRegistry';
 import { TL, t } from '../services/localization';
+import { getResourceLabel } from '../services/gameMath';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    ScrollText,
+    Target,
+    CheckCircle2,
+    Clock,
+    RefreshCcw,
+    ShieldAlert,
+    Trophy,
+    Zap,
+    Briefcase,
+    Beaker,
+    Users,
+    Navigation,
+    Search,
+    MonitorDot
+} from 'lucide-react';
 
-
-const FACTION_COLORS: Record<FactionId, string> = {
-    'CORPORATE': 'border-blue-500/50 text-blue-300',
-    'SCIENCE': 'border-cyan-500/50 text-cyan-300',
-    'REBELS': 'border-red-500/50 text-red-300'
+const FACTION_ICONS: Record<FactionId, React.ReactNode> = {
+    'CORPORATE': <Briefcase className="w-4 h-4" />,
+    'SCIENCE': <Beaker className="w-4 h-4" />,
+    'REBELS': <Users className="w-4 h-4" />
 };
 
-const FACTION_BADGES: Record<FactionId, string> = {
-    'CORPORATE': '🏢 CORP',
-    'SCIENCE': '🔬 SCI',
-    'REBELS': '✊ REBEL'
+const FACTION_CHIP: Record<FactionId, string> = {
+    'CORPORATE': 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
+    'SCIENCE': 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+    'REBELS': 'bg-orange-500/10 text-orange-400 border-orange-500/30'
 };
 
-/**
- * QuestPanel - UI компонент для отображения и управления квестами
- * Phase 3.1: Foundation + Factions
- */
 const QuestPanel: React.FC = () => {
     const {
         activeQuests,
@@ -33,223 +46,274 @@ const QuestPanel: React.FC = () => {
         settings
     } = useGameStore();
 
-    const lang = settings.language;
-
-
+    const lang = settings.language as 'RU' | 'EN';
     const [activeTab, setActiveTab] = useState<'available' | 'active' | 'completed'>('active');
     const [dynamicQuests, setDynamicQuests] = useState<Quest[]>([]);
 
-    // Получаем статические (сюжетные) квесты
     const availableStoryQuests = getAvailableQuests(completedQuestIds)
         .filter(q => !activeQuests.some(aq => aq.id === q.id) && !completedQuestIds.includes(q.id));
 
-    // Функция обновления динамических контрактов
     const handleRefresh = () => {
-        refreshQuests(100); // Тратим 100 глины через стор
+        refreshQuests(100);
         const batch = generateQuestBatch(depth, level || 1);
         setDynamicQuests(batch);
     };
 
-    // Все доступные задания (сюжетные + динамические)
     const allAvailable = [...availableStoryQuests, ...dynamicQuests];
 
-    // === RENDER HELPERS ===
-
-    const renderObjectives = (quest: Quest) => (
-        <div className="mt-2 space-y-1">
-            {quest.objectives.map(obj => (
-                <div key={obj.id} className="text-xs flex justify-between items-center bg-black/20 p-1 rounded">
-                    <span>{t(obj.description, lang)}</span>
-
-                    <span className={obj.current >= obj.required ? 'text-green-400' : 'text-gray-400'}>
-                        {obj.current} / {obj.required}
-                    </span>
-                </div>
-            ))}
-        </div>
-    );
-
-    const renderRewards = (rewards: QuestReward[]) => (
-        <div className="mt-2 flex flex-wrap gap-2">
-            {rewards.map((r, idx) => (
-                <span key={idx} className="text-xs px-2 py-0.5 bg-yellow-900/40 text-yellow-200 border border-yellow-700/50 rounded flex items-center gap-1">
-                    <span>🎁</span>
-                    {r.type}: <span className="text-white">{r.target}</span> {r.amount ? `x${r.amount}` : ''}
-                </span>
-            ))}
-        </div>
-    );
-
-    const renderFactionBadge = (factionId?: FactionId) => {
-        if (!factionId) return null;
-        return (
-            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${FACTION_COLORS[factionId]} bg-black/40 uppercase tracking-wider`}>
-                {FACTION_BADGES[factionId]}
-            </span>
-        );
-    };
-
     return (
-        <div className="flex flex-col bg-slate-900/95 border border-slate-700 rounded-lg relative shadow-2xl backdrop-blur-md">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-700 bg-slate-800/80 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                    <span>📜</span> {t(TL.quests.title, lang)}
-                </h2>
+        <div className="flex flex-col flex-1 h-full min-h-0 relative font-technical overflow-hidden pb-12">
+            {/* HEADER HUB: GLASSMOPHISM 2.0 */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 md:gap-8 mb-6 md:mb-10 shrink-0 relative z-10 p-4 md:p-0">
+                <div className="group">
+                    <div className="flex items-center gap-4 mb-2 md:mb-3">
+                        <div className="p-2 md:p-3 bg-cyan-500/10 border border-cyan-500/20 backdrop-blur-md">
+                            <ScrollText className="w-6 h-6 md:w-10 md:h-10 text-cyan-400 group-hover:scale-110 transition-transform duration-500" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-3 mb-1">
+                                <MonitorDot className="w-2 h-2 text-cyan-400 animate-pulse" />
+                                <span className="text-[8px] md:text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">{t(TL.ui.subNetFeed, lang)}</span>
+                            </div>
+                            <h1 className="text-2xl md:text-6xl font-[1000] uppercase tracking-tighter italic text-white leading-none">
+                                {t(TL.quests.title, lang)}
+                            </h1>
+                        </div>
+                    </div>
+                </div>
 
-
-                {/* Tabs */}
-                <div className="flex bg-slate-900 rounded p-1">
-                    {(['available', 'active', 'completed'] as const).map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-3 py-1 text-sm rounded transition-colors ${activeTab === tab
-                                ? 'bg-blue-600 text-white shadow-md'
-                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                                }`}
-                        >
-                            {t(TL.quests.tabs[tab], lang)} ({
-
-                                tab === 'available' ? allAvailable.length :
-                                    tab === 'active' ? activeQuests.length :
-                                        completedQuestIds.length
-                            })
-                        </button>
-                    ))}
+                <div className="flex w-full lg:w-auto bg-black/60 backdrop-blur-xl p-1 border border-white/5 rounded-sm shrink-0 overflow-x-auto no-scrollbar">
+                    {(['available', 'active', 'completed'] as const).map(tab => {
+                        const count = tab === 'available' ? allAvailable.length : tab === 'active' ? activeQuests.length : completedQuestIds.length;
+                        return (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 transition-all relative overflow-hidden group shrink-0
+                                    ${activeTab === tab ? 'text-black bg-white' : 'text-zinc-500 hover:text-white hover:bg-white/5'}
+                                `}
+                            >
+                                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">{t(TL.quests.tabs[tab], lang)}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-mono border ${activeTab === tab ? 'bg-black/10 border-black/20' : 'bg-white/10 border-white/5'}`}>{count}</span>
+                                {activeTab === tab && <div className="absolute inset-x-0 bottom-0 h-1 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
-            {/* Content */}
-            <div className="p-4 space-y-4">
-
-                {activeTab === 'available' && (
-                    <div className="space-y-4">
-                        <button
-                            onClick={handleRefresh}
-                            className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-sm font-medium border border-slate-600 mb-2 flex items-center justify-center gap-2"
+            {/* CONTENT AREA */}
+            <div className="flex-1 overflow-y-auto no-scrollbar relative z-10">
+                <AnimatePresence mode="wait">
+                    {activeTab === 'available' && (
+                        <motion.div
+                            key="available-quests" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+                            className="space-y-8"
                         >
-                            <span>🔄</span> {allAvailable.length === 0 ? "Найти контракты" : "Обновить контракты"}
-                        </button>
+                            <button
+                                onClick={handleRefresh}
+                                className="w-full py-8 bg-cyan-500/5 hover:bg-cyan-500 border border-cyan-500/20 hover:border-cyan-500 transition-all group flex flex-col items-center justify-center gap-2 overflow-hidden relative"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                <RefreshCcw className="w-6 h-6 group-hover:rotate-180 transition-transform duration-700 mb-2" />
+                                <span className="text-[10px] font-[1000] uppercase tracking-[0.5em] italic">{t(TL.ui.scanHighPriority, lang)}</span>
+                                <span className="text-[8px] text-zinc-500 font-mono uppercase group-hover:text-black/60 tracking-widest">{t(TL.ui.powerUnitsFee, lang)}</span>
+                            </button>
 
-                        {allAvailable.length === 0 ? (
-                            <div className="text-center text-slate-500 mt-10">{t(TL.quests.noAvailable, lang)}</div>
-
-                        ) : (
-                            allAvailable.map(quest => (
-                                <div key={quest.id} className={`bg-slate-800 border p-4 rounded-lg hover:border-opacity-100 transition-colors ${quest.factionId ? FACTION_COLORS[quest.factionId].split(' ')[0] : 'border-slate-600'}`}>
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className={`font-bold text-lg ${quest.factionId ? FACTION_COLORS[quest.factionId].split(' ')[1] : 'text-slate-200'}`}>
-                                                    {t(quest.title, lang)}
-                                                </h3>
-                                                {renderFactionBadge(quest.factionId)}
-                                            </div>
-                                            <p className="text-sm text-slate-400 mt-1">{t(quest.description, lang)}</p>
-
-                                        </div>
-                                        <span className="text-xs px-2 py-1 bg-slate-700 rounded text-slate-300">{quest.type}</span>
-                                    </div>
-
-                                    {renderRewards(quest.rewards)}
-                                    {renderObjectives(quest)}
-
-                                    <button
-                                        onClick={() => {
-                                            acceptQuest(quest.id);
-                                            // Если это динамический квест, убираем его из временного списка после принятия
-                                            if (quest.id.startsWith('rnd_')) {
-                                                setDynamicQuests(prev => prev.filter(q => q.id !== quest.id));
-                                            }
-                                        }}
-                                        className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold transition-all active:scale-95 border border-blue-400/30"
-                                    >
-                                        {t(TL.quests.accept, lang)}
-
-                                    </button>
+                            {allAvailable.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-24 grayscale text-center group">
+                                    <div className="text-8xl mb-8 opacity-10 group-hover:opacity-30 transition-opacity duration-1000">📡</div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">{t(TL.quests.noAvailable, lang)}</p>
                                 </div>
-                            ))
-                        )}
-                    </div>
-                )}
-
-                {activeTab === 'active' && (
-                    activeQuests.length === 0 ? (
-                        <div className="text-center text-slate-500 mt-10">{t(TL.quests.noActive, lang)}</div>
-
-                    ) : (
-                        activeQuests.map(quest => {
-                            const isReady = quest.objectives.every(o => o.current >= o.required);
-                            return (
-                                <div key={quest.id} className={`bg-slate-800 border ${isReady ? 'border-green-500 glow-green' : 'border-slate-600'} p-4 rounded-lg relative overflow-hidden`}>
-                                    {/* Status Bar */}
-                                    <div className={`absolute top-0 left-0 w-1 h-full ${isReady ? 'bg-green-500' : 'bg-blue-500/30'}`}></div>
-
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="font-bold text-lg text-white">{t(quest.title, lang)}</h3>
-
-                                                {renderFactionBadge(quest.factionId)}
-                                            </div>
-                                            <p className="text-sm text-slate-400 mt-1">{t(quest.description, lang)}</p>
-
-                                        </div>
-                                        {isReady && <span className="text-xs px-2 py-1 bg-green-600 text-white rounded animate-pulse font-bold">{t(TL.quests.ready, lang)}</span>}
-
-                                    </div>
-
-                                    {renderObjectives(quest)}
-
-                                    {isReady && (
-                                        <button
-                                            onClick={() => completeQuest(quest.id)}
-                                            className="mt-4 w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold transition-all shadow-lg hover:shadow-green-500/50"
-                                        >
-                                            {t(TL.quests.complete, lang)} (+{t(TL.quests.rewards, lang).toUpperCase()})
-
-                                        </button>
-                                    )}
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    {allAvailable.map(quest => (
+                                        <QuestCard
+                                            key={quest.id}
+                                            quest={quest}
+                                            lang={lang}
+                                            onAction={() => {
+                                                acceptQuest(quest.id);
+                                                if (quest.id.startsWith('rnd_')) {
+                                                    setDynamicQuests(prev => prev.filter(q => q.id !== quest.id));
+                                                }
+                                            }}
+                                            actionLabel={t(TL.quests.accept, lang)}
+                                        />
+                                    ))}
                                 </div>
-                            );
-                        })
-                    )
-                )}
+                            )}
+                        </motion.div>
+                    )}
 
-                {activeTab === 'completed' && (
-                    <div className="space-y-2 opacity-80">
-                        {completedQuestIds.length === 0 ? (
-                            <div className="text-center text-slate-500 mt-10">{t(TL.quests.emptyHistory, lang)}</div>
+                    {activeTab === 'active' && (
+                        <motion.div
+                            key="active-quests" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }}
+                        >
+                            {activeQuests.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-24 grayscale text-center opacity-20">
+                                    <Navigation className="w-20 h-20 mb-6" />
+                                    <p className="text-[10px] font-black uppercase tracking-[0.4em]">{t(TL.quests.noActive, lang)}</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    {activeQuests.map(quest => {
+                                        const isReady = quest.objectives.every(o => o.current >= o.required);
+                                        return (
+                                            <QuestCard
+                                                key={quest.id}
+                                                quest={quest}
+                                                lang={lang}
+                                                onAction={() => completeQuest(quest.id)}
+                                                actionLabel={t(TL.quests.complete, lang)}
+                                                isReady={isReady}
+                                                showObjectives
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
 
-                        ) : (
-                            completedQuestIds.map(id => {
-                                const def = getQuestById(id);
-                                return (
-                                    <div key={id} className="bg-slate-800/50 border border-slate-700 p-3 rounded flex justify-between items-center hover:bg-slate-800 transition-colors">
-                                        <div className="flex flex-col">
-                                            <span className="text-slate-200 font-medium">{def ? t(def.title, lang) : id}</span>
-                                            {def && <span className="text-xs text-slate-500">{t(def.description, lang).slice(0, 50)}...</span>}
-
+                    {activeTab === 'completed' && (
+                        <motion.div
+                            key="completed-quests" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                            className="space-y-4 max-w-5xl mx-auto"
+                        >
+                            {completedQuestIds.length === 0 ? (
+                                <div className="text-center opacity-20 py-24 uppercase font-black tracking-widest text-[10px]">{t(TL.quests.emptyHistory, lang)}</div>
+                            ) : (
+                                completedQuestIds.map(id => {
+                                    const def = getQuestById(id);
+                                    return (
+                                        <div key={id} className="relative group overflow-hidden">
+                                            <div className="absolute inset-0 bg-white/5 transition-transform duration-500 translate-x-[-100%] group-hover:translate-x-0" />
+                                            <div className="relative bg-white/[0.02] border border-white/5 p-6 flex items-center justify-between transition-colors">
+                                                <div className="flex items-center gap-8">
+                                                    <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                                        <CheckCircle2 className="w-6 h-6" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-white uppercase italic tracking-widest leading-none mb-2">{def ? t(def.title, lang) : id}</h4>
+                                                        <div className="text-[8px] font-black text-zinc-600 uppercase tracking-[0.4em]">{t(TL.ui.contractFulfilled, lang)}</div>
+                                                    </div>
+                                                </div>
+                                                {def?.factionId && (
+                                                    <div className={`px-6 py-2 border text-[9px] font-[1000] uppercase tracking-widest flex items-center gap-3 ${FACTION_CHIP[def.factionId]}`}>
+                                                        {FACTION_ICONS[def.factionId]}
+                                                        {t(TL.factions.names[def.factionId], lang)}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            {def && renderFactionBadge(def.factionId)}
-                                            <span className="text-green-500 text-xs font-bold border border-green-900 bg-green-900/20 px-2 py-1 rounded">✔ {t(TL.quests.completedStatus, lang)}</span>
-
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
-                )}
+                                    );
+                                })
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
-
-            {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
         </div>
     );
 };
+
+const QuestCard = ({ quest, lang, onAction, actionLabel, isReady = false, showObjectives = false }: { quest: Quest, lang: 'RU' | 'EN', onAction: () => void, actionLabel: string, isReady?: boolean, showObjectives?: boolean }) => (
+    <div className={`group relative flex flex-col transition-all duration-500
+        ${isReady ? 'hover:scale-[1.02]' : 'hover:scale-[1.01]'}
+    `}>
+        {/* Glow Background */}
+        <div className={`absolute -inset-0.5 blur opacity-20 group-hover:opacity-40 transition duration-500
+            ${isReady ? 'bg-emerald-500' : 'bg-cyan-500'}
+        `} />
+
+        <div className={`relative flex-1 flex flex-col bg-black/60 backdrop-blur-xl border p-6 md:p-8 overflow-hidden
+            ${isReady ? 'border-emerald-500/50' : 'border-white/5'}
+        `}>
+            {/* Sector Decorative Pattern */}
+            <div className="absolute top-[-20%] right-[-20%] w-[50%] h-[50%] bg-white/5 blur-3xl rounded-full pointer-events-none" />
+
+            <div className="relative flex-1 flex flex-col gap-8">
+                <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                        <div className={`p-2 bg-white/5 border border-white/10 ${isReady ? 'text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-cyan-400 border-cyan-500/30'}`}>
+                            {quest.type === 'STORY' ? <Zap className="w-5 h-5" /> : <MonitorDot className="w-5 h-5" />}
+                        </div>
+                        {isReady && <Trophy className="w-6 h-6 text-emerald-500 animate-bounce" />}
+                    </div>
+
+                    <div className="space-y-2">
+                        {quest.factionId && (
+                            <div className={`inline-flex px-3 py-1 border text-[8px] font-black uppercase tracking-widest items-center gap-2 ${FACTION_CHIP[quest.factionId]}`}>
+                                {FACTION_ICONS[quest.factionId]}
+                                {t(TL.factions.names[quest.factionId], lang)}
+                            </div>
+                        )}
+                        <h3 className={`text-xl font-[1000] uppercase italic tracking-tighter leading-[0.9] ${isReady ? 'text-emerald-400' : 'text-white'}`}>
+                            {t(quest.title, lang)}
+                        </h3>
+                        <p className="text-[10px] text-zinc-500 font-black uppercase italic tracking-widest leading-relaxed line-clamp-3">
+                            {t(quest.description, lang)}
+                        </p>
+                    </div>
+                </div>
+
+                {/* REWARDS: SCI-FI DATA BLOCKS */}
+                <div className="space-y-3">
+                    <div className="text-[8px] font-black text-zinc-600 uppercase tracking-[0.4em] mb-1">{t(TL.ui.authorizationReward, lang)}</div>
+                    <div className="flex flex-wrap gap-2">
+                        {quest.rewards.map((r, idx) => (
+                            <div key={idx} className="px-3 py-1.5 bg-white/5 border border-white/10 text-amber-500 text-[9px] font-black uppercase tracking-widest flex items-center gap-2 group/reward hover:bg-amber-500 hover:text-black transition-colors">
+                                <MonitorDot className="w-3 h-3 text-white/20 group-hover/reward:text-black/40" />
+                                {r.type === 'RESOURCE' ? t(getResourceLabel(r.target as any), lang) : r.type}: {r.amount || r.target}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* OBJECTIVES: PRECISION TRACKING */}
+                {(showObjectives || isReady) && (
+                    <div className="space-y-4 mt-auto">
+                        <div className="h-px bg-white/5" />
+                        <div className="space-y-4">
+                            {quest.objectives.map(obj => {
+                                const prog = Math.min(100, (obj.current / obj.required) * 100);
+                                const done = obj.current >= obj.required;
+                                return (
+                                    <div key={obj.id} className="space-y-2">
+                                        <div className="flex justify-between text-[8px] font-black uppercase tracking-widest italic font-mono">
+                                            <span className={done ? 'text-emerald-400' : 'text-zinc-500'}>{t(obj.description, lang)}</span>
+                                            <span className={done ? 'text-emerald-400 shadow-[0_0_8px_#22c55e]' : 'text-white'}>{obj.current} <span className="opacity-20">/</span> {obj.required}</span>
+                                        </div>
+                                        <div className="h-0.5 bg-white/5 relative overflow-hidden">
+                                            <div
+                                                className={`h-full transition-all duration-1000 ease-out
+                                                    ${done ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-cyan-500 shadow-[0_0_10px_#06b6d4]'}`}
+                                                style={{ width: `${prog}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                <button
+                    onClick={onAction}
+                    disabled={!isReady && showObjectives}
+                    className={`w-full py-5 font-[1000] uppercase text-[10px] tracking-[0.4em] transition-all relative overflow-hidden group/btn
+                        ${isReady ? 'bg-emerald-500 text-black hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]' :
+                            showObjectives ? 'bg-white/5 text-zinc-700 border border-white/5 cursor-not-allowed' :
+                                'bg-white text-black hover:bg-cyan-400 hover:shadow-[0_0_25px_rgba(255,255,255,0.1)]'}
+                    `}
+                >
+                    <span className="relative z-10">{actionLabel}</span>
+                    <div className="absolute inset-x-0 bottom-0 h-0 group-hover/btn:h-full bg-white/10 transition-all duration-300" />
+                </button>
+            </div>
+        </div>
+    </div>
+);
 
 export default QuestPanel;
