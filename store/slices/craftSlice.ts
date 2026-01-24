@@ -73,19 +73,19 @@ export function getPartDefinition(partId: string) {
         {
             id: 'repairKit',
             tier: 1,
-            cost: { scrap: 50, ancientTech: 2 },
+            cost: { scrap: 15 }, // Ультра-дешево по запросу
             name: { RU: 'Ремкомплект', EN: 'Repair Kit' }
         },
         {
             id: 'coolantPaste',
             tier: 1,
-            cost: { clay: 100, ice: 20 },
+            cost: { clay: 25, ice: 5 }, // Снижено по запросу
             name: { RU: 'Хладагент-паста', EN: 'Coolant Paste' }
         },
         {
             id: 'advancedCoolant',
             tier: 3,
-            cost: { oil: 50, silver: 10 },
+            cost: { oil: 30, silver: 5 }, // Снижено с 50/10
             name: { RU: 'Продвинутый хладагент', EN: 'Advanced Coolant' }
         }
     ];

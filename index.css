@@ -383,3 +383,7 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #666;
 }
+
+.vertical-text {
+    writing-mode: vertical-rl;
+}

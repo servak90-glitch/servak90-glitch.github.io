@@ -40,7 +40,6 @@ const GameFooter: React.FC<GameFooterProps> = ({ logs }) => {
         ...(cityUnlocked ? [{ id: View.GLOBAL_MAP, label: t(TEXT_IDS.MENU_MAP, lang), icon: '🗺️' }] : []),
         ...(forgeUnlocked ? [{ id: View.FORGE, label: t(TEXT_IDS.MENU_FORGE, lang), icon: '🔧' }] : []),
         ...(skillsUnlocked ? [{ id: View.SKILLS, label: t(TEXT_IDS.MENU_SKILLS, lang), icon: '⚡' }] : []),
-        { id: View.ARTIFACTS, label: t(TEXT_IDS.MENU_ARTIFACTS, lang), icon: '📦' },
         { id: View.CODEX, label: t(TEXT_IDS.MENU_ARCHIVE, lang), icon: '📚' }
     ];
 

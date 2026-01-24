@@ -274,7 +274,7 @@ async function testViewSwitching() {
 
     const store = useGameStore.getState();
 
-    const views = [View.DRILL, View.FORGE, View.CITY, View.SKILLS, View.ARTIFACTS, View.CODEX, View.GLOBAL_MAP];
+    const views = [View.DRILL, View.FORGE, View.CITY, View.SKILLS, View.CODEX, View.GLOBAL_MAP];
 
     for (const view of views) {
         store.setView(view);

@@ -29,11 +29,11 @@ export const calculateRepairCost = (depth: number, currentHp: number, maxHp: num
     else if (depth > 4000) resource = ResourceType.IRON;
 
     // Depth Multiplier
-    const depthMult = 1 + (depth / 2000);
+    const depthMult = 1 + (depth / 1000); // Повышено (было /2000)
     const isCritical = (currentHp / maxHp) < 0.20;
-    const criticalMult = isCritical ? 1.5 : 1.0;
+    const criticalMult = isCritical ? 2.0 : 1.0; // Повышено (было 1.5)
 
-    const cost = Math.ceil(missingHp * depthMult * criticalMult);
+    const cost = Math.ceil(missingHp * 2 * depthMult * criticalMult); // Коэффициент x2 (было x1)
 
     return { resource, cost };
 };
@@ -45,12 +45,12 @@ export const calculateShieldRechargeCost = (depth: number): { resource: Resource
     let resource: ResourceType = ResourceType.STONE;
     let baseCost = 100;
 
-    if (depth > 30000) { resource = ResourceType.URANIUM; baseCost = 50; }
-    else if (depth > 15000) { resource = ResourceType.GOLD; baseCost = 100; }
-    else if (depth > 5000) { resource = ResourceType.IRON; baseCost = 200; }
-    else { resource = ResourceType.COPPER; baseCost = 300; }
+    if (depth > 30000) { resource = ResourceType.URANIUM; baseCost = 100; }
+    else if (depth > 15000) { resource = ResourceType.GOLD; baseCost = 200; }
+    else if (depth > 5000) { resource = ResourceType.IRON; baseCost = 400; }
+    else { resource = ResourceType.COPPER; baseCost = 600; }
 
-    const cost = Math.ceil(baseCost * (1 + depth / 10000));
+    const cost = Math.ceil(baseCost * (1 + depth / 5000)); // Ускоренный рост (было /10000)
     return { resource, cost };
 };
 
@@ -128,8 +128,8 @@ export function recalculateCargoWeight(resources: Resources): number {
 export const formatCompactNumber = (num: number): string => {
     if (num === 0 || isNaN(num)) return '0';
     if (num < 0) return '-' + formatCompactNumber(Math.abs(num));
-    if (num < 10) return num.toFixed(2);
-    if (num < 100) return num.toFixed(1);
+
+    // [UI REBALANCE] Всегда возвращаем целое число до 1000м, чтобы не растягивать UI
     if (num < 1000) return Math.floor(num).toString();
 
     const suffixes = ['', 'k', 'M', 'B', 'T'];
@@ -138,10 +138,9 @@ export const formatCompactNumber = (num: number): string => {
     if (suffixNum >= suffixes.length) return '∞';
 
     let shortValue = parseFloat((suffixNum !== 0 ? (num / Math.pow(1000, suffixNum)) : num).toPrecision(3));
-    if (shortValue % 1 !== 0) {
-        shortValue = parseFloat(shortValue.toFixed(1));
-    }
-    return shortValue + suffixes[suffixNum];
+
+    // [UI REBALANCE] Даже для больших чисел убираем дробную часть если возможно
+    return Math.floor(shortValue) + suffixes[suffixNum];
 };
 
 // === КЭШИРОВАНИЕ calculateStats ===
@@ -243,7 +242,7 @@ const calculateStatsInternal = (
             ambientHeat: 0,
             requiredTier: 1,
             skillMods: { clickPowerPct: 0, autoSpeedPct: 0, heatGenReductionPct: 0, resourceMultPct: 0, residueEffPct: 0, xpGainPct: 0, buffDurationPct: 0, critChance: 0, coolingPowerPct: 0, globalSpeedPct: 0, analysisSpeedPct: 0 },
-            artifactMods: { clickPowerPct: 0, drillSpeedPct: 0, heatGenPct: 0, resourceMultPct: 0, luckPct: 0 }
+            artifactMods: { clickPowerPct: 0, drillSpeedPct: 0, heatGenPct: 0, resourceMultPct: 0, luckPct: 0, shopDiscountPct: 0 }
         };
     }
 
@@ -270,7 +269,8 @@ const calculateStatsInternal = (
         drillSpeedPct: 0,
         heatGenPct: 0,
         resourceMultPct: 0,
-        luckPct: 0
+        luckPct: 0,
+        shopDiscountPct: 0
     };
 
     equippedArtifacts.forEach(id => {
@@ -283,6 +283,7 @@ const calculateStatsInternal = (
                 if (def.modifiers.heatGenPct) artifactMods.heatGenPct += def.modifiers.heatGenPct;
                 if (def.modifiers.resourceMultPct) artifactMods.resourceMultPct += def.modifiers.resourceMultPct;
                 if (def.modifiers.luckPct) artifactMods.luckPct += def.modifiers.luckPct;
+                if (def.modifiers.shopDiscountPct) artifactMods.shopDiscountPct += def.modifiers.shopDiscountPct;
             }
         }
     });
@@ -318,15 +319,15 @@ const calculateStatsInternal = (
         energyProd,
         energyCons,
         energyEfficiency,
-        totalDamage: drill.bit.baseStats.damage * energyEfficiency * drillingEfficiency,
-        totalSpeed: drill.engine.baseStats.speed * energyEfficiency * drillingEfficiency,
-        totalCooling: drill.cooling.baseStats.cooling * energyEfficiency * coolingEfficiencyEnv,
+        totalDamage: drill.bit.baseStats.damage * (1 + (skillMods.clickPowerPct + artifactMods.clickPowerPct) / 100) * energyEfficiency * drillingEfficiency,
+        totalSpeed: drill.engine.baseStats.speed * (1 + (skillMods.autoSpeedPct + artifactMods.drillSpeedPct) / 100) * energyEfficiency * drillingEfficiency,
+        totalCooling: drill.cooling.baseStats.cooling * (1 + (skillMods.coolingPowerPct) / 100) * energyEfficiency * coolingEfficiencyEnv,
         totalCargoCapacity: totalCargoCapacity,
         torque: drill.gearbox.baseStats.torque || 0,
-        critChance: drill.logic.baseStats.critChance,
+        critChance: drill.logic.baseStats.critChance + skillMods.critChance,
         luck: (drill.logic.baseStats.luck || 0) + artifactMods.luckPct,
         predictionTime: drill.logic.baseStats.predictionTime || 0,
-        clickMult: drill.control.baseStats.clickMultiplier,
+        clickMult: drill.control.baseStats.clickMultiplier * (1 + (skillMods.clickPowerPct + artifactMods.clickPowerPct) / 100),
         ventSpeed: drill.control.baseStats.ventSpeed || 1.0,
         defense: drill.armor.baseStats.defense,
         evasion: totalEvasion,

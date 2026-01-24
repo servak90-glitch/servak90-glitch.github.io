@@ -19,21 +19,21 @@ const CONSUMABLES: ConsumableDef[] = [
         id: 'repairKit',
         name: { RU: 'РЕМКОМПЛЕКТ', EN: 'REPAIR KIT' },
         desc: { RU: 'Восстанавливает 20% прочности корпуса бура.', EN: 'Restores 20% of drill integrity.' },
-        cost: { scrap: 50, ancientTech: 2 },
+        cost: { scrap: 15 },
         color: 'border-green-500 text-green-400'
     },
     {
         id: 'coolantPaste',
         name: { RU: 'ХЛАДАГЕНТ-ПАСТА', EN: 'COOLANT PASTE' },
         desc: { RU: 'Мгновенно снижает текущий нагрев на 30%.', EN: 'Instantly reduces heat by 30%.' },
-        cost: { clay: 100, ice: 20 },
+        cost: { clay: 25, ice: 5 },
         color: 'border-blue-500 text-blue-400'
     },
     {
         id: 'advancedCoolant',
         name: { RU: 'ПРОДВИНУТЫЙ ХЛАДАГЕНТ', EN: 'ADVANCED COOLANT' },
         desc: { RU: 'Снижает нагрев на 60% и дает иммунитет к перегреву на 30с.', EN: 'Reduces heat by 60% and gives 30s heat immunity.' },
-        cost: { oil: 50, silver: 10 },
+        cost: { oil: 30, silver: 5 },
         color: 'border-purple-500 text-purple-400'
     }
 ];

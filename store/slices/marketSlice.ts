@@ -6,7 +6,7 @@
 import { SliceCreator } from './types';
 import type { MarketTransaction, Resources } from '../../types';
 import { calculateMarketPrice, calculateSellRevenue } from '../../services/marketEngine';
-import { recalculateCargoWeight } from '../../services/gameMath';
+import { recalculateCargoWeight, calculateStats } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 import { BLACK_MARKET_ITEMS } from '../../constants/blackMarket';
 
@@ -36,13 +36,17 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
         const activePerks = getActivePerkIds(state.reputation);
 
         // Расчёт цены
+        const stats = calculateStats(state.drill, state.skillLevels, state.equippedArtifacts, state.inventory, state.depth);
         const price = calculateMarketPrice(resource, state.currentRegion, [], activePerks);
-        const totalCost = price.finalPrice * amount;
+
+        // Apply Artifact Discount
+        const discountMult = Math.max(0.1, 1 - (stats.artifactMods.shopDiscountPct / 100));
+        const totalCost = price.finalPrice * amount * discountMult;
 
         // Проверки
-        if (state.resources.rubies < totalCost) {
+        if (state.resources.credits < totalCost) {
             audioEngine.playUIError();
-            console.warn(`❌ Недостаточно credits (нужно ${totalCost}, есть ${state.resources.rubies})`);
+            console.warn(`❌ Недостаточно credits (нужно ${totalCost}, есть ${state.resources.credits})`);
             return;
         }
 
@@ -51,7 +55,7 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
         set((state) => {
             const newResources = {
                 ...state.resources,
-                rubies: state.resources.rubies - totalCost,
+                credits: state.resources.credits - totalCost,
                 [resource]: (state.resources[resource] || 0) + amount,
             };
 
@@ -103,7 +107,7 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
         set((state) => {
             const newResources = {
                 ...state.resources,
-                rubies: state.resources.rubies + totalRevenue,
+                credits: state.resources.credits + totalRevenue,
                 [resource]: (state.resources[resource] || 0) - amount,
             };
 

@@ -48,7 +48,43 @@ export const TL = {
     cost: { RU: "Стоимость", EN: "Cost" },
     sell: { RU: "Продать", EN: "Sell" },
     buy: { RU: "Купить", EN: "Buy" },
-    price: { RU: "Цена", EN: "Price" }
+    price: { RU: "Цена", EN: "Price" },
+    status_label: { RU: "СТАТУС", EN: "STATUS" },
+    level_label: { RU: "УРОВЕНЬ", EN: "LEVEL" },
+    features: { RU: "Особенности", EN: "Features" },
+    build_time: { RU: "Время постройки", EN: "Build Time" },
+    storage_capacity: { RU: "Объем хранилища", EN: "Storage Capacity" },
+    requirements: { RU: "Требования", EN: "Requirements" },
+    upgrade_base: { RU: "МОДЕРНИЗАЦИЯ БАЗЫ", EN: "BASE UPGRADE" },
+    start_upgrade: { RU: "НАЧАТЬ УЛУЧШЕНИЕ", EN: "START UPGRADE" },
+    storage_fill: { RU: "Заполнение хранилища", EN: "Storage Fill" },
+    in_base: { RU: "На базе", EN: "In Base" },
+    to_storage_100: { RU: "В ХРАН. (100)", EN: "TO STORAGE (100)" },
+    build_facility: { RU: "ПОСТРОИТЬ МОДУЛЬ", EN: "BUILD FACILITY" },
+    facility_operational: { RU: "МОДУЛЬ ФУНКЦИОНИРУЕТ", EN: "FACILITY OPERATIONAL" },
+    base_integrity: { RU: "Целостность базы", EN: "Base Integrity" },
+    repair_base_btn: { RU: "Отремонтировать", EN: "Repair Base" },
+    shield_power: { RU: "Мощность щита", EN: "Shield Power" },
+    defense_rating: { RU: "Сила Обороны", EN: "Defense Rating" },
+    dp_per_unit: { RU: "DP за единицу", EN: "DP per unit" },
+    in_production: { RU: "В производстве:", EN: "In production:" },
+    start_production: { RU: "ЗАПУСТИТЬ ПРОИЗВОДСТВО", EN: "START PRODUCTION" },
+    sector_access: { RU: "ДОСТУП К СЕКТОРУ", EN: "SECTOR ACCESS" },
+    base_id: { RU: "ID БАЗЫ", EN: "BASE ID" },
+    market_unavailable: { RU: "РЫНОК НЕДОСТУПЕН", EN: "MARKET UNAVAILABLE" },
+    market_station_required: { RU: "Рынок доступен только на Станциях. Постройте Станцию в этом регионе.", EN: "Market only available at Stations. Build a Station in this region." },
+    shadow_network: { RU: "ТЕНЕВАЯ СЕТЬ", EN: "SHADOW NETWORK" },
+    acquire: { RU: "ПРИОБРЕСТИ", EN: "ACQUIRE" },
+    shadow_warning: { RU: "ВНИМАНИЕ: ТРАНЗАКЦИИ НЕОТСЛЕЖИВАЕМЫ. ВОЗВРАТ НЕВОЗМОЖЕН.", EN: "WARNING: TRANSACTIONS ARE UNTRACEABLE. NO REFUNDS." },
+    max_coal: { RU: "Максимум угля", EN: "Max Coal" },
+    exchange_all: { RU: "ОБМЕНЯТЬ ВСЁ", EN: "EXCHANGE ALL" },
+    minimum_10: { RU: "МИНИМУМ 10", EN: "MINIMUM 10" },
+    no_exchange_res: { RU: "Нет доступных ресурсов для обмена", EN: "No resources available for exchange" },
+    select_res_list: { RU: "Выберите ресурс из списка", EN: "Select resource from the list" },
+    build_base_title: { RU: "ПОСТРОЙКА БАЗЫ", EN: "BUILD BASE" },
+    region_label: { RU: "Регион", EN: "Region" },
+    tip_label: { RU: "Подсказка", EN: "Tip" },
+    one_base_per_region: { RU: "В каждом регионе может быть только ОДНА база. Выбирайте с умом!", EN: "Each region can only have ONE base. Choose wisely!" }
   },
   resources: {
     coal: { RU: "Уголь", EN: "Coal" },
@@ -137,6 +173,12 @@ export const TL = {
     noActive: { RU: "Нет активных квестов.", EN: "No active quests." },
     emptyHistory: { RU: "История пуста.", EN: "History is empty." },
     completedStatus: { RU: "ЗАВЕРШЕНО", EN: "COMPLETED" }
+  },
+  weaknesses: {
+    MASH: { RU: "СПАМ КЛИКОВ", EN: "CLICK MASH" },
+    ALIGN: { RU: "ВЫРАВНИВАНИЕ", EN: "ALIGNMENT" },
+    TIMING: { RU: "ТАЙМИНГ", EN: "TIMING" },
+    MEMORY: { RU: "ПАМЯТЬ", EN: "MEMORY" }
   }
 };
 

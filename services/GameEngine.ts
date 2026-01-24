@@ -80,7 +80,7 @@ export class GameEngine {
         const activePerks = getActivePerkIds(state.reputation);
 
         // 1. Эффекты (баффы/дебаффы)
-        const effectsResult = processEffects(state);
+        const effectsResult = processEffects(state, dt);
         visualEvents.push(...effectsResult.events);
         const activeEffects = effectsResult.update.activeEffects;
 
@@ -408,7 +408,7 @@ export class GameEngine {
 
                 // Бурение
                 depth, // Updated from event or drill
-                isDrilling: heatResult.update.isDrilling,
+                isDrilling: (drillResult.update.isDrilling !== undefined ? drillResult.update.isDrilling : heatResult.update.isDrilling),
                 forgeUnlocked: drillResult.update.forgeUnlocked,
                 cityUnlocked: drillResult.update.cityUnlocked,
                 skillsUnlocked: drillResult.update.skillsUnlocked,

@@ -15,6 +15,7 @@ import { audioEngine } from '../../services/audioEngine';
 
 export interface BaseActions {
     buildBase: (regionId: RegionId, baseType: BaseType) => void;
+    upgradeBase: (baseId: string) => void;  // Улучшение до следующего тира
     buildFacility: (baseId: string, facilityId: FacilityId) => void;  // Постройка facility
     transferResources: (baseId: string, resource: keyof Resources, amount: number, direction: 'to_base' | 'to_player') => void;
     refineResource: (baseId: string, recipeId: string, rounds?: number) => void;
@@ -32,7 +33,18 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
     buildBase: (regionId, baseType) => {
         const s = get();
 
-        // Проверка 1: Уже есть база в этом регионе?
+        // Проверка 1: Только Outpost можно строить изначально
+        if (baseType !== 'outpost') {
+            const event: VisualEvent = {
+                type: 'LOG',
+                msg: `СНАЧАЛА НУЖНО ПОСТРОИТЬ АВАНПОСТ!`,
+                color: 'text-red-500'
+            };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        // Проверка 2: Уже есть база в этом регионе?
         const existingBase = s.playerBases?.find(b => b.regionId === regionId);
         if (existingBase) {
             const event: VisualEvent = {
@@ -92,8 +104,8 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
 
             hasWorkshop: baseType !== 'outpost',
             workshopTierRange: workshopRange,
-            hasFuelFacilities: baseType === 'station',
-            hasMarket: baseType === 'station',
+            hasFuelFacilities: (baseType as string) === 'station',
+            hasMarket: (baseType as string) === 'station',
             hasFortification: false,
             hasGuards: false,
 
@@ -128,6 +140,92 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
         });
 
         audioEngine.playBaseBuild();
+    },
+
+    /**
+     * Улучшить существующую базу до следующего тира
+     */
+    upgradeBase: (baseId) => {
+        const s = get();
+        const base = s.playerBases?.find(b => b.id === baseId);
+        if (!base || base.status === 'building') return;
+
+        // Определить целевой тир
+        let nextType: BaseType | null = null;
+        if (base.type === 'outpost') nextType = 'camp';
+        else if (base.type === 'camp') nextType = 'station';
+
+        if (!nextType) {
+            const event: VisualEvent = { type: 'LOG', msg: `БАЗА УЖЕ МАКСИМАЛЬНОГО УРОВНЯ!`, color: 'text-yellow-500' };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        const currentCost = BASE_COSTS[base.type];
+        const nextCost = BASE_COSTS[nextType];
+
+        // Рассчитать разницу в стоимости
+        const creditsDiff = nextCost.credits - (currentCost.credits || 0);
+        const materialsDiff: Partial<Resources> = {};
+        for (const [res, amount] of Object.entries(nextCost.materials)) {
+            const currentAmount = currentCost.materials[res as keyof Resources] || 0;
+            materialsDiff[res as keyof Resources] = Math.max(0, (amount || 0) - currentAmount);
+        }
+
+        // Проверка кредитов
+        if (s.resources.rubies < creditsDiff) {
+            const event: VisualEvent = { type: 'LOG', msg: `💎 НЕДОСТАТОЧНО РУБИНОВ ДЛЯ АПГРЕЙДА!`, color: 'text-red-500' };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        // Проверка материалов
+        for (const [res, amount] of Object.entries(materialsDiff)) {
+            if ((s.resources[res as keyof Resources] || 0) < (amount || 0)) {
+                const event: VisualEvent = { type: 'LOG', msg: `⚠️ НЕДОСТАТОЧНО МАТЕРИАЛОВ ДЛЯ АПГРЕЙДА!`, color: 'text-red-500' };
+                set({ actionLogQueue: pushLog(s, event) });
+                return;
+            }
+        }
+
+        // ✅ Оплата
+        const newResources = { ...s.resources, rubies: s.resources.rubies - creditsDiff };
+        for (const [res, amount] of Object.entries(materialsDiff)) {
+            newResources[res as keyof Resources] -= (amount || 0);
+        }
+
+        // Обновление базы
+        const buildTime = BASE_BUILD_TIMES[nextType];
+        const workshopRange = WORKSHOP_TIER_RANGES[base.regionId][nextType];
+
+        const updatedBases = s.playerBases.map(b => {
+            if (b.id !== baseId) return b;
+            return {
+                ...b,
+                type: nextType!,
+                status: (buildTime === 0 ? 'active' : 'building') as import('../../types').BaseStatus,
+                storageCapacity: BASE_STORAGE_CAPACITY[nextType!],
+                hasWorkshop: nextType !== 'outpost',
+                workshopTierRange: workshopRange,
+                hasFuelFacilities: nextType === 'station',
+                hasMarket: nextType === 'station',
+                constructionCompletionTime: Date.now() + buildTime
+            };
+        });
+
+        const successEvent: VisualEvent = {
+            type: 'LOG',
+            msg: `🚀 МОДЕРНИЗАЦИЯ БАЗЫ ДО ${nextType.toUpperCase()} НАЧАТА!`,
+            color: 'text-cyan-400 font-bold'
+        };
+
+        set({
+            resources: newResources,
+            playerBases: updatedBases,
+            actionLogQueue: pushLog(s, successEvent)
+        });
+
+        audioEngine.playUpgrade ? audioEngine.playUpgrade() : audioEngine.playBaseBuild();
     },
 
     /**

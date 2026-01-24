@@ -23,9 +23,9 @@ const RESOURCE_PRICES: Record<keyof Resources, number> = {
     rubies: 100,
     emeralds: 150,
     diamonds: 300,
-    coal: 5,
-    oil: 15,
-    gas: 30,
+    coal: 1,      // Снижено с 5; 1 метр = 1 кредит
+    oil: 4,       // Снижено с 15
+    gas: 10,      // Снижено с 30
     ice: 10,
     scrap: 8,
     credits: 1,

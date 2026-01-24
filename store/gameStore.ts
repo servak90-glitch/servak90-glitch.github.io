@@ -74,6 +74,7 @@ export interface GameStore extends GameState,
     actionLogQueue: VisualEvent[];
     activateAbility: (id: AbilityType) => void;
     damageWeakPoint: (wpId: string) => void;
+    addLog: (msg: string, color?: string, icon?: string, detail?: string) => void;
 }
 
 // === НАЧАЛЬНОЕ СОСТОЯНИЕ ===
@@ -114,7 +115,7 @@ const INITIAL_STATE: GameState = {
     skillLevels: {},
     artifacts: [],
     inventory: {},
-    equippedArtifacts: [null, null, null] as (string | null)[],
+    equippedArtifacts: [null, null, null, null] as (string | null)[],
     discoveredArtifacts: [],
     analyzer: { activeItemInstanceId: null, timeLeft: 0, maxTime: 0 },
     activeQuests: [],
@@ -537,9 +538,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (res.damageDealt > 0) {
             audioEngine.playLaser();
             set({ currentBoss: res.boss });
-            // Ideally we'd log this or show visual feedback here too, but BossRenderer handles the visual 'hit' state via props if we passed it,
-            // or we rely on the BossOverlay pulsing.
         }
+    },
+
+    addLog: (msg: string, color?: string, icon?: string, detail?: string) => {
+        const s = get();
+        const event: VisualEvent = { type: 'LOG', msg, color, icon, detail };
+        set({ actionLogQueue: [...s.actionLogQueue, event] });
     }
 }));
 

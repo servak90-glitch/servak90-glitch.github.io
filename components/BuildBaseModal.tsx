@@ -16,7 +16,7 @@ export const BuildBaseModal: React.FC<BuildBaseModalProps> = ({ regionId, onClos
     const resources = useGameStore(s => s.resources);
     const lang = useGameStore(s => s.settings.language);
 
-    const baseTypes: BaseType[] = ['outpost', 'camp', 'station'];
+    const baseTypes: BaseType[] = ['outpost'];
 
     const canAfford = (baseType: BaseType): boolean => {
         const cost = BASE_COSTS[baseType];
@@ -46,19 +46,19 @@ export const BuildBaseModal: React.FC<BuildBaseModalProps> = ({ regionId, onClos
         const features: string[] = [];
 
         if (baseType === 'outpost') {
-            features.push('📦 Storage only');
+            features.push(lang === 'RU' ? '📦 Только хранилище' : '📦 Storage only');
         }
 
         if (baseType === 'camp') {
-            features.push('🔧 Workshop (Tier 1-5)');
-            features.push('📦 Medium storage');
+            features.push(lang === 'RU' ? '🔧 Мастерская (Тир 1-5)' : '🔧 Workshop (Tier 1-5)');
+            features.push(lang === 'RU' ? '📦 Среднее хранилище' : '📦 Medium storage');
         }
 
         if (baseType === 'station') {
-            features.push('🔧 Workshop (Tier 1-10)');
-            features.push('💰 Market access');
-            features.push('⛽ Fuel facilities');
-            features.push('📦 Large storage');
+            features.push(lang === 'RU' ? '🔧 Мастерская (Тир 1-10)' : '🔧 Workshop (Tier 1-10)');
+            features.push(lang === 'RU' ? '💰 Доступ к рынку' : '💰 Market access');
+            features.push(lang === 'RU' ? '⛽ Заправка' : '⛽ Fuel facilities');
+            features.push(lang === 'RU' ? '📦 Большое хранилище' : '📦 Large storage');
         }
 
         return features;
@@ -83,7 +83,7 @@ export const BuildBaseModal: React.FC<BuildBaseModalProps> = ({ regionId, onClos
                     {/* Header */}
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl md:text-3xl font-black text-cyan-400 pixel-text">
-                            🏗️ BUILD BASE
+                            🏗️ {t(TL.ui.build_base_title, lang)}
                         </h2>
                         <button
                             onClick={onClose}
@@ -95,7 +95,7 @@ export const BuildBaseModal: React.FC<BuildBaseModalProps> = ({ regionId, onClos
 
                     {/* Region info */}
                     <div className="mb-6 p-3 bg-gray-800/50 border border-gray-700 rounded">
-                        <p className="text-sm text-gray-400">Region:</p>
+                        <p className="text-sm text-gray-400">{t(TL.ui.region_label, lang)}:</p>
                         <p className="text-lg font-bold text-white">{t(TL.regions[regionId], lang)}</p>
                     </div>
 
@@ -125,19 +125,19 @@ export const BuildBaseModal: React.FC<BuildBaseModalProps> = ({ regionId, onClos
 
                                     {/* Build time */}
                                     <div className="mb-3 p-2 bg-black/30 rounded">
-                                        <p className="text-xs text-gray-400">Build Time:</p>
+                                        <p className="text-xs text-gray-400">{t(TL.ui.build_time, lang)}:</p>
                                         <p className="text-sm font-bold text-cyan-400">{formatBuildTime(buildTime)}</p>
                                     </div>
 
                                     {/* Storage */}
                                     <div className="mb-3 p-2 bg-black/30 rounded">
-                                        <p className="text-xs text-gray-400">Storage Capacity:</p>
+                                        <p className="text-xs text-gray-400">{t(TL.ui.storage_capacity, lang)}:</p>
                                         <p className="text-sm font-bold text-green-400">{formatCompactNumber(storage)} kg</p>
                                     </div>
 
                                     {/* Features */}
                                     <div className="mb-4">
-                                        <p className="text-xs text-gray-400 mb-1">Features:</p>
+                                        <p className="text-xs text-gray-400 mb-1">{t(TL.ui.features, lang)}:</p>
                                         <ul className="space-y-1">
                                             {features.map((feature, idx) => (
                                                 <li key={idx} className="text-xs text-gray-300">
@@ -183,7 +183,7 @@ export const BuildBaseModal: React.FC<BuildBaseModalProps> = ({ regionId, onClos
                                             : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                             }`}
                                     >
-                                        {canBuild ? `🏗️ BUILD ${baseType.toUpperCase()}` : '❌ INSUFFICIENT RESOURCES'}
+                                        {canBuild ? `🏗️ ${lang === 'RU' ? 'ПОСТРОИТЬ' : 'BUILD'} ${baseType.toUpperCase()}` : (lang === 'RU' ? '❌ НЕДОСТАТОЧНО РЕСУРСОВ' : '❌ INSUFFICIENT RESOURCES')}
                                     </button>
                                 </div>
                             );
@@ -193,7 +193,7 @@ export const BuildBaseModal: React.FC<BuildBaseModalProps> = ({ regionId, onClos
                     {/* Help text */}
                     <div className="mt-6 p-3 bg-blue-900/20 border border-blue-700 rounded">
                         <p className="text-xs text-blue-300">
-                            💡 <strong>Tip:</strong> Each region can only have ONE base. Choose wisely!
+                            💡 <strong>{t(TL.ui.tip_label, lang)}:</strong> {t(TL.ui.one_base_per_region, lang)}
                         </p>
                     </div>
                 </motion.div>

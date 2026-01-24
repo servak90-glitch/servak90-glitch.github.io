@@ -5,7 +5,6 @@ export enum View {
   CITY = 'CITY',
   FORGE = 'FORGE',
   SKILLS = 'SKILLS',
-  ARTIFACTS = 'ARTIFACTS',
   CODEX = 'CODEX',
   COMBAT = 'COMBAT',
   GLOBAL_MAP = 'GLOBAL_MAP'
@@ -736,6 +735,7 @@ export interface ActiveEffect {
     clickPowerMultiplier?: number;
     autoClickDisabled?: boolean;
     heatInstability?: boolean;
+    consumableDropMultiplier?: number;
   };
 }
 

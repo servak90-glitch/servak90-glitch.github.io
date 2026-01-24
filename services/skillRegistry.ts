@@ -12,7 +12,7 @@ export const SKILLS: SkillDefinition[] = [
     baseCost: 100,
     costMultiplier: 1.3,
     position: { x: 0, y: 0 }, // Center
-    getBonusText: (lvl) => `Мощность клика: +${(lvl * 5).toFixed(0)}%`
+    getBonusText: (lvl) => `Мощность клика: +${(lvl * 10).toFixed(0)}%`
   },
   {
     id: 'synaptic_overclock',
@@ -24,7 +24,7 @@ export const SKILLS: SkillDefinition[] = [
     costMultiplier: 1.4,
     requiredParent: 'neural_link',
     position: { x: 0, y: 2 }, // Down
-    getBonusText: (lvl) => `Крит. шанс клика: +${(lvl * 1).toFixed(0)}%`
+    getBonusText: (lvl) => `Крит. шанс клика: +${(lvl * 2).toFixed(0)}%`
   },
   {
     id: 'creator_protocol',
@@ -50,7 +50,7 @@ export const SKILLS: SkillDefinition[] = [
     costMultiplier: 1.25,
     requiredParent: 'neural_link',
     position: { x: -2, y: 0 }, // Left
-    getBonusText: (lvl) => `Скорость авто: +${(lvl * 2).toFixed(0)}%`
+    getBonusText: (lvl) => `Скорость авто: +${(lvl * 5).toFixed(0)}%`
   },
   {
     id: 'vibration_dampening',
@@ -73,8 +73,8 @@ export const SKILLS: SkillDefinition[] = [
     baseCost: 1000,
     costMultiplier: 1.5,
     requiredParent: 'vibration_dampening',
-    position: { x: -4, y: 2 }, 
-    getBonusText: (lvl) => `Пасс. холод: +${(lvl * 5).toFixed(0)}%`
+    position: { x: -4, y: 2 },
+    getBonusText: (lvl) => `Пасс. холод: +${(lvl * 10).toFixed(0)}%`
   },
 
   // === 3. VISUAL (RIGHT) - RESOURCES ===
@@ -174,18 +174,18 @@ export const calculateSkillModifiers = (skillLevels: Record<string, number>) => 
     analysisSpeedPct: 0
   };
 
-  mods.clickPowerPct += (skillLevels['neural_link'] || 0) * 5;
-  mods.critChance += (skillLevels['synaptic_overclock'] || 0) * 1;
-  mods.coolingPowerPct += (skillLevels['heat_regulation'] || 0) * 5;
-  mods.autoSpeedPct += (skillLevels['servo_optimization'] || 0) * 2;
+  mods.clickPowerPct += (skillLevels['neural_link'] || 0) * 10;
+  mods.critChance += (skillLevels['synaptic_overclock'] || 0) * 2;
+  mods.coolingPowerPct += (skillLevels['heat_regulation'] || 0) * 10;
+  mods.autoSpeedPct += (skillLevels['servo_optimization'] || 0) * 5;
   mods.heatGenReductionPct += (skillLevels['vibration_dampening'] || 0) * 0.5;
   mods.resourceMultPct += (skillLevels['mineral_scanner'] || 0) * 5;
   mods.residueEffPct += (skillLevels['residue_filter'] || 0) * 2;
   mods.xpGainPct += (skillLevels['synaptic_plasticity'] || 0) * 1;
-  
+
   // Logic Updated: Temporal Dilation now boosts Analysis Speed primarily
-  mods.analysisSpeedPct += (skillLevels['temporal_dilation'] || 0) * 2.5; 
-  
+  mods.analysisSpeedPct += (skillLevels['temporal_dilation'] || 0) * 2.5;
+
   mods.globalSpeedPct += (skillLevels['void_whisper'] || 0) * 0.5;
 
   return mods;

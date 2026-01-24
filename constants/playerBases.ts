@@ -9,16 +9,16 @@ import { RegionId, type BaseType, type Resources } from '../types';
 // Стоимость постройки баз
 export const BASE_COSTS: Record<BaseType, { credits: number; materials: Partial<Resources> }> = {
     outpost: {
-        credits: 10000,
-        materials: { clay: 300, stone: 200 }
+        credits: 1000,
+        materials: { clay: 30, stone: 20 }
     },
     camp: {
-        credits: 50000,
-        materials: { iron: 1000, copper: 1000 }
+        credits: 2000,
+        materials: { iron: 100, copper: 100 }
     },
     station: {
-        credits: 200000,
-        materials: { titanium: 5000, uranium: 100 }
+        credits: 5000,
+        materials: { titanium: 500, uranium: 10 }
     }
 };
 

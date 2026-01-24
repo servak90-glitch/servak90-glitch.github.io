@@ -14,7 +14,7 @@ export const STORY_QUESTS: Quest[] = [
             {
                 id: 'deliver_iron',
                 type: 'DELIVER',
-                description: { RU: 'Доставить 500 Iron в Iron Gates', EN: 'Deliver 500 Iron to Iron Gates' },
+                description: { RU: 'Доставить 500 Железа в Железные Врата', EN: 'Deliver 500 Iron to Iron Gates' },
                 target: 'iron',
                 required: 500,
                 current: 0,
@@ -40,7 +40,7 @@ export const STORY_QUESTS: Quest[] = [
             {
                 id: 'build_station_magma',
                 type: 'BUILD_BASE',
-                description: { RU: 'Построить Station в Magma Core', EN: 'Build a Station in Magma Core' },
+                description: { RU: 'Построить Станцию в Магматическом Ядре', EN: 'Build a Station in Magma Core' },
                 target: 'magma_core',
                 required: 1,
                 current: 0,
@@ -101,7 +101,7 @@ export const STORY_QUESTS: Quest[] = [
             {
                 id: 'collect_ancient_tech',
                 type: 'COLLECT',
-                description: { RU: 'Собрать 10 Ancient Tech', EN: 'Collect 10 Ancient Tech' },
+                description: { RU: 'Собрать 10 Древних Технологий', EN: 'Collect 10 Ancient Tech' },
                 target: 'ancientTech',
                 required: 10,
                 current: 0,
@@ -128,7 +128,7 @@ export const STORY_QUESTS: Quest[] = [
             {
                 id: 'smuggle_gas',
                 type: 'DELIVER',
-                description: { RU: 'Контрабандой доставить 200 Gas в Void Chasm', EN: 'Smuggle 200 Gas to Void Chasm' },
+                description: { RU: 'Контрабандой доставить 200 Газа в Разлом Пустоты', EN: 'Smuggle 200 Gas to Void Chasm' },
                 target: 'gas',
                 required: 200,
                 current: 0,
@@ -251,7 +251,7 @@ export const STORY_QUESTS: Quest[] = [
             {
                 id: 'collect_rubies_ghost',
                 type: 'COLLECT',
-                description: { RU: 'Собрать 50 Rubies для линз', EN: 'Collect 50 Rubies for lenses' },
+                description: { RU: 'Собрать 50 Рубинов для линз', EN: 'Collect 50 Rubies for lenses' },
                 target: 'rubies',
                 required: 50,
                 current: 0,
@@ -259,7 +259,7 @@ export const STORY_QUESTS: Quest[] = [
             {
                 id: 'collect_rebel_logic',
                 type: 'COLLECT',
-                description: { RU: 'Добыть 3 фрагмента логики (Artifacts)', EN: 'Obtain 3 logic fragments (Artifacts)' },
+                description: { RU: 'Добыть 3 фрагмента логики (Артефакты)', EN: 'Obtain 3 logic fragments (Artifacts)' },
                 target: 'artifact',
                 required: 3,
                 current: 0,
@@ -285,7 +285,7 @@ export const STORY_QUESTS: Quest[] = [
             {
                 id: 'defeat_void_sentinel',
                 type: 'DEFEAT_BOSS',
-                description: { RU: 'Победить Void Sentinel', EN: 'Defeat Void Sentinel' },
+                description: { RU: 'Победить Стража Пустоты', EN: 'Defeat Void Sentinel' },
                 target: 'void_sentinel',
                 required: 1,
                 current: 0,

@@ -11,6 +11,7 @@ export interface DrillActions {
     setDrilling: (isDrilling: boolean) => void;
     manualClick: () => void;
     manualRechargeShield: () => void;
+    addLog: (msg: string, color?: string, icon?: string, detail?: string) => void;
 }
 
 export const createDrillSlice: SliceCreator<DrillActions> = (set, get) => ({
@@ -18,12 +19,17 @@ export const createDrillSlice: SliceCreator<DrillActions> = (set, get) => ({
 
     manualClick: () => {
         const s = get();
-        if (s.isOverheated || s.isBroken || s.currentBoss?.isInvulnerable) return;
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const energyLoad = stats.energyProd > 0 ? (stats.energyCons / stats.energyProd) * 100 : 100;
+        const isOverloaded = (s.currentCargoWeight > stats.totalCargoCapacity && !s.isZeroWeight) || energyLoad > 100;
+
+        if (s.isOverheated || s.isBroken || s.currentBoss?.isInvulnerable || isOverloaded) {
+            if (isOverloaded) audioEngine.playError();
+            return;
+        }
 
         const now = Date.now();
         if (now - s.lastInteractTime < 50) return;
-
-        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
 
         // [BALANCING] Overload Damage Buff (+100%)
         const isOverloadActive = s.activeAbilities.find(a => a.id === 'OVERLOAD')?.isActive;
@@ -75,7 +81,7 @@ export const createDrillSlice: SliceCreator<DrillActions> = (set, get) => ({
             set({
                 resources: newRes,
                 shieldCharge: 100,
-                actionLogQueue: pushLog(s, event)
+                actionLogQueue: pushLog(s as any, event)
             });
             audioEngine.playLog();
         } else {
@@ -84,7 +90,11 @@ export const createDrillSlice: SliceCreator<DrillActions> = (set, get) => ({
                 msg: `НЕТ РЕСУРСОВ: ${getResourceLabel(resource)}`,
                 color: 'text-red-500'
             };
-            set({ actionLogQueue: pushLog(s, errorEvent) });
+            set({ actionLogQueue: pushLog(s as any, errorEvent) });
         }
     },
+    addLog: (msg, color, icon, detail) => {
+        const s = get();
+        set({ actionLogQueue: pushLog(s as any, { type: 'LOG', msg, color, icon, detail }) });
+    }
 });

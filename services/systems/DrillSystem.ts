@@ -55,6 +55,7 @@ export interface DrillUpdate {
     cityUnlocked: boolean;
     skillsUnlocked: boolean;
     storageLevel: number;
+    isDrilling?: boolean; // NEW: Возможность остановить бурение из системы (например, при перегрузе)
 }
 
 /**
@@ -125,6 +126,22 @@ export function processDrilling(
 
     // Бурение активно
     if (isDrilling && !isOverheated && !state.isBroken && !state.currentBoss) {
+        // === ПРОВЕРКА ПЕРЕГРУЗА ===
+        const cargoWeight = state.currentCargoWeight;
+        const maxCapacity = stats.totalCargoCapacity;
+        if (!state.isZeroWeight && cargoWeight > maxCapacity) {
+            events.push({
+                type: 'LOG',
+                msg: `⚠️ ГРУЗОВОЙ ОТСЕК ПЕРЕПОЛНЕН! (${Math.floor(cargoWeight)}/${Math.floor(maxCapacity)}) Сбросьте балласт или вернитесь в город.`,
+                color: 'text-red-500 font-bold'
+            });
+            return {
+                update: { depth, forgeUnlocked, cityUnlocked, skillsUnlocked, storageLevel, isDrilling: false },
+                resourceChanges,
+                events
+            };
+        }
+
         // === ПРОВЕРКА ТОПЛИВА ===
         const fuel = selectBestAvailableFuel(state.resources);
         const isInfiniteFuel = (globalThis as any).gameStore?.getState?.().isInfiniteFuel;
@@ -201,7 +218,7 @@ export function processDrilling(
             ? BIOMES.find(b => (typeof b.name === 'string' ? b.name : b.name.EN) === state.selectedBiome) || BIOMES[0]
             : BIOMES.slice().reverse().find(b => depth >= b.depth) || BIOMES[0];
 
-        const resToAdd = drillPower * 1.0 * resMult * dt; // Увеличено с 0.3 до 1.0
+        const resToAdd = drillPower * 1.0 * resMult * (1 + stats.artifactMods.resourceMultPct / 100) * dt; // Увеличено с 0.3 до 1.0 + Artifacts
         resourceChanges[currentBiome.resource] = (resourceChanges[currentBiome.resource] || 0) + resToAdd;
 
         // [POLISHING] Rare Resource Feedback
@@ -222,6 +239,33 @@ export function processDrilling(
                 kind: Math.random() > 0.7 ? 'SPARK' : 'DEBRIS',
                 color: currentBiome.color,
                 count: Math.floor(Math.random() * 3) + 1
+            });
+        }
+
+        // [BALANCE v0.5] Consumable Drops (Prospector Luck)
+        let dropMult = 1;
+        activeEffects.forEach(e => {
+            if (e.modifiers.consumableDropMultiplier) dropMult *= e.modifiers.consumableDropMultiplier;
+        });
+
+        // Базовый шанс: 0.2% в секунду
+        if (Math.random() < 0.002 * dropMult * dt * 60) {
+            const dropRoll = Math.random();
+            const consumableType = dropRoll < 0.6 ? ResourceType.REPAIR_KIT : ResourceType.COOLANT_PASTE;
+            resourceChanges[consumableType] = (resourceChanges[consumableType] || 0) + 1;
+
+            events.push({
+                type: 'LOG',
+                msg: `📦 НАЙДЕНО В ПОРОДЕ: ${consumableType === ResourceType.REPAIR_KIT ? 'РЕМКОМПЛЕКТ' : 'ХЛАДАГЕНТ'}`,
+                color: 'text-green-300 font-bold',
+                icon: '🎁'
+            });
+            events.push({
+                type: 'TEXT',
+                position: 'CENTER',
+                text: `+1 ${consumableType.toUpperCase()}`,
+                style: 'RESOURCE',
+                color: '#4ADE80'
             });
         }
 

@@ -53,7 +53,7 @@ const TradeTab: React.FC<TradeTabProps> = ({ resources, onTrade }) => {
                             <div key={res} className="flex items-center justify-between bg-black/50 border border-zinc-800/50 p-2 hover:bg-zinc-800/30 transition-colors">
                                 <div className="flex flex-col">
                                     <span className="text-[10px] md:text-xs text-zinc-200 font-bold uppercase">{t(getResourceLabel(res), lang)}</span>
-                                    <span className="text-[9px] text-zinc-500 font-mono">В НАЛИЧИИ: {resources[res]}</span>
+                                    <span className="text-[9px] text-zinc-500 font-mono">В НАЛИЧИИ: {Math.floor(resources[res])}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="text-[10px] font-mono text-zinc-600 mr-2">10 ➔ 5 ⛽</div>

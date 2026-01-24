@@ -16,25 +16,19 @@ export interface EffectsUpdate {
 /**
  * Обработка таймеров эффектов
  */
-export function processEffects(state: GameState): { update: EffectsUpdate; events: VisualEvent[] } {
+export function processEffects(state: GameState, dt: number): { update: EffectsUpdate; events: VisualEvent[] } {
     const events: VisualEvent[] = [];
     let nextEffects = state.activeEffects;
 
-    // Проверяем есть ли истекающие эффекты
-    let hasExpiring = false;
-    for (const e of nextEffects) {
-        if (e.duration - 1 <= 0) hasExpiring = true;
-    }
-
-    // Если есть изменения — обновляем
-    if (hasExpiring || nextEffects.length > 0) {
+    // Проверяем есть ли изменения
+    if (nextEffects.length > 0) {
         nextEffects = state.activeEffects
-            .map(e => ({ ...e, duration: e.duration - 1 }))
+            .map(e => ({ ...e, duration: e.duration - dt }))
             .filter(e => {
                 if (e.duration <= 0) {
                     events.push({
                         type: 'LOG',
-                        msg: `ЭФФЕКТ ИСТЕК: ${e.name}`,
+                        msg: `🚀 ЭФФЕКТ ИСТЕК: ${e.name}`,
                         color: 'text-zinc-500'
                     });
                     return false;

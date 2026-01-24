@@ -1094,6 +1094,26 @@ export class AudioEngine {
     };
   }
 
+  playError() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(150, t);
+    osc.frequency.linearRampToValueAtTime(100, t + 0.2);
+
+    g.gain.setValueAtTime(0.1, t);
+    g.gain.linearRampToValueAtTime(0, t + 0.2);
+
+    osc.connect(g);
+    g.connect(this.sfxBus);
+
+    osc.start();
+    osc.stop(t + 0.25);
+  }
+
   playLog() {
     if (!this.ctx || !this.sfxBus || !this.sfxDelayBus) return;
     const t = this.ctx.currentTime;

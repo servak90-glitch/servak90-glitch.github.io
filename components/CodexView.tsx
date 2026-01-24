@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArtifactDefinition, ArtifactRarity } from '../types';
 import { useGameStore } from '../store/gameStore';
-import { t, TEXT_IDS } from '../services/localization';
+import { t, TEXT_IDS, TL } from '../services/localization';
 import { ARTIFACTS, getArtifactColor } from '../services/artifactRegistry';
 import { audioEngine } from '../services/audioEngine';
 import { MONSTER_CODEX } from '../constants/monsters';
@@ -188,7 +188,7 @@ const CodexView: React.FC<CodexViewProps> = ({ discoveredArtifacts }) => {
                                                 <div className="text-[9px] text-zinc-300 mb-2 leading-relaxed">{t(monster.lore, lang)}</div>
                                                 <div className="w-full h-px bg-zinc-800 mb-2" />
                                                 <div className="text-[9px] text-cyan-400 font-mono">
-                                                    СЛАБОСТЬ: {monster.weakness}
+                                                    {lang === 'RU' ? 'СЛАБОСТЬ' : 'WEAKNESS'}: {t((TL as any).weaknesses[monster.weakness], lang) || monster.weakness}
                                                 </div>
                                             </div>
                                         )

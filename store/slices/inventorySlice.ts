@@ -3,7 +3,7 @@
  */
 
 import { SliceCreator, pushLogs } from './types';
-import { VisualEvent, InventoryItem, ArtifactRarity } from '../../types';
+import { VisualEvent, InventoryItem, ArtifactRarity, ResourceType, Resources } from '../../types';
 import { ARTIFACTS } from '../../services/artifactRegistry';
 import { audioEngine } from '../../services/audioEngine';
 import { getActivePerkIds } from '../../services/factionLogic';
@@ -16,7 +16,7 @@ import { calculateStats } from '../../services/gameMath';
 export interface InventoryActions {
     // Artifacts
     startAnalysis: (instanceId: string) => void;
-    equipArtifact: (instanceId: string) => void;
+    equipArtifact: (instanceId: string, slotIdx?: number) => void;
     unequipArtifact: (instanceId: string) => void;
     scrapArtifact: (instanceId: string) => void;
     transmuteArtifacts: (instanceIds: string[]) => void;
@@ -29,6 +29,9 @@ export interface InventoryActions {
 
     // === Phase 3: Consumables ===
     useConsumable: (id: 'repairKit' | 'coolantPaste' | 'advancedCoolant') => void;
+
+    // === Phase 3.1: Creative Recycling ===
+    recycleResources: (type: 'repair' | 'lubricate' | 'lottery' | 'scrap' | 'afterburn') => void;
 }
 
 export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) => ({
@@ -51,12 +54,36 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
         set({ analyzer: { activeItemInstanceId: instanceId, timeLeft: time, maxTime: time } });
     },
 
-    equipArtifact: (instanceId) => {
+    equipArtifact: (instanceId, slotIdx) => {
         const s = get();
         const item = s.inventory[instanceId];
-        if (!item || !item.isIdentified || item.isEquipped) return;
+        if (!item || !item.isIdentified) return;
 
         const slots = [...s.equippedArtifacts];
+
+        // Если указан конкретный слот — ставим туда (и вытесняем старый)
+        if (slotIdx !== undefined && slotIdx >= 0 && slotIdx < 4) {
+            // Если этот артефакт уже где-то стоит — убираем оттуда
+            const currentIdx = slots.indexOf(instanceId);
+            if (currentIdx !== -1) slots[currentIdx] = null;
+
+            // Если в целевом слоте что-то есть — помечаем как неэкипированное
+            const oldId = slots[slotIdx];
+            const updatedInventory = { ...s.inventory, [instanceId]: { ...item, isEquipped: true } };
+            if (oldId && oldId !== instanceId) {
+                updatedInventory[oldId] = { ...s.inventory[oldId], isEquipped: false };
+            }
+
+            slots[slotIdx] = instanceId;
+            set({
+                equippedArtifacts: slots,
+                inventory: updatedInventory
+            });
+            return;
+        }
+
+        // Если слот не указан — просто ищем свободный
+        if (item.isEquipped) return;
         const emptyIdx = slots.indexOf(null);
         if (emptyIdx !== -1) {
             slots[emptyIdx] = instanceId;
@@ -396,5 +423,105 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
         });
 
         audioEngine.playClick();
+    },
+
+    recycleResources: (type) => {
+        const s = get();
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const { resources, activeEffects } = s;
+
+        let resUpdate: Partial<Resources> = {};
+        let effect: any = null;
+        let msg = "";
+        let color = "text-zinc-400";
+        let integrityUpdate: number | undefined;
+
+        switch (type) {
+            case 'repair': // Field Repair: 500 Stone + 50 Scrap -> +5% Integrity
+                if (resources.stone >= 500 && resources.scrap >= 50) {
+                    resUpdate = { stone: resources.stone - 500, scrap: resources.scrap - 50 };
+                    const repairAmt = Math.ceil(stats.integrity * 0.05);
+                    integrityUpdate = Math.min(stats.integrity, s.integrity + repairAmt);
+                    msg = `🔨 ПОЛЕВОЙ РЕМОНТ: +${repairAmt} HP (за 500 камня и 50 лома)`;
+                    color = "text-green-400";
+                }
+                break;
+
+            case 'lubricate': // Lube: 300 Clay + 50 Ice -> -20% Heat Gen (120s)
+                if (resources.clay >= 300 && resources.ice >= 50) {
+                    resUpdate = { clay: resources.clay - 300, ice: resources.ice - 50 };
+                    effect = {
+                        id: 'LUBRICANT',
+                        name: 'СМАЗОЧНЫЙ КОНЦЕНТРАТ',
+                        description: '-20% нагрева при бурении',
+                        duration: 120,
+                        type: 'BUFF',
+                        modifiers: { heatGenMultiplier: 0.8 }
+                    };
+                    msg = `🧪 НАНЕСЕНА СМАЗКА: -20% нагрева на 2 мин.`;
+                    color = "text-blue-400";
+                }
+                break;
+
+            case 'lottery': // Lottery: 200 Iron + 100 Clay + 100 Stone -> +50% Drop Chance (170s)
+                if (activeEffects.some(e => e.id === 'PROSPECTOR_LUCK')) return;
+                if (resources.iron >= 200 && resources.clay >= 100 && resources.stone >= 100) {
+                    resUpdate = { iron: resources.iron - 200, clay: resources.clay - 100, stone: resources.stone - 100 };
+                    effect = {
+                        id: 'PROSPECTOR_LUCK',
+                        name: 'УДАЧА СТАРАТЕЛЯ',
+                        description: '+50% шанс найти расходники',
+                        duration: 170, // В СЕКУНДАХ
+                        type: 'BUFF',
+                        modifiers: { consumableDropMultiplier: 1.5 }
+                    };
+                    msg = `🎰 ЛОТЕРЕЯ: Вероятность найти расходники в породе увеличена!`;
+                    color = "text-purple-400";
+                }
+                break;
+
+            case 'scrap': // Scrap Sale: 100 base -> 7 Credits
+                if (resources.stone >= 100) {
+                    const gain = 7;
+                    resUpdate = { stone: resources.stone - 100, credits: resources.credits + gain };
+                    msg = `📦 УТИЛЬ: 100 камня переработано в ${gain} кредитов`;
+                    color = "text-amber-500";
+                } else if (resources.clay >= 100) {
+                    const gain = 7;
+                    resUpdate = { clay: resources.clay - 100, credits: resources.credits + gain };
+                    msg = `📦 УТИЛЬ: 100 глины переработано в ${gain} кредитов`;
+                    color = "text-amber-500";
+                }
+                break;
+
+            case 'afterburn': // Ballast Afterburn: 1000 base -> +50% Speed (30s)
+                if (activeEffects.some(e => e.id === 'BALLAST_DUMP')) return;
+                if (resources.stone >= 1000) {
+                    resUpdate = { stone: resources.stone - 1000 };
+                    effect = {
+                        id: 'BALLAST_DUMP',
+                        name: 'БАЛЛАСТНЫЙ ФОРСАЖ',
+                        description: '+50% скорость бурения',
+                        duration: 30, // В СЕКУНДАХ
+                        type: 'BUFF',
+                        modifiers: { drillSpeedMultiplier: 1.5 }
+                    };
+                    msg = `🚀 БАЛЛАСТ СБРОШЕН: Форсаж активирован на 30с!`;
+                    color = "text-orange-500 font-bold";
+                }
+                break;
+        }
+
+        if (msg) {
+            set((state: any) => ({
+                resources: { ...state.resources, ...resUpdate },
+                ...(integrityUpdate !== undefined ? { integrity: integrityUpdate } : {}),
+                ...(effect ? { activeEffects: [...state.activeEffects, effect] } : {}),
+                actionLogQueue: pushLogs(state, [{ type: 'LOG', msg, color }])
+            }));
+            audioEngine.playUpgrade ? audioEngine.playUpgrade() : audioEngine.playCollect();
+        } else {
+            audioEngine.playUIError();
+        }
     }
 });

@@ -59,7 +59,15 @@ export function applyResourceChanges(
     const newResources = { ...currentResources };
     for (const [key, value] of Object.entries(changes)) {
         const resKey = key as ResourceType;
-        newResources[resKey] = Math.max(0, (newResources[resKey] || 0) + (value || 0));
+        const oldValue = newResources[resKey] || 0;
+        const newValue = Math.max(0, oldValue + (value || 0));
+
+        // Отладочное логирование при значимом уменьшении ресурсов
+        if (value && value < 0 && Math.abs(value) > 0.001) {
+            console.log(`[RESOURCE_CHANGE] ${resKey}: ${oldValue.toFixed(2)} -> ${newValue.toFixed(2)} (diff: ${value.toFixed(4)})`);
+        }
+
+        newResources[resKey] = newValue;
     }
     return newResources;
 }

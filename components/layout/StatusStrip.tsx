@@ -113,14 +113,14 @@ const StatusStrip: React.FC = () => {
             </div>
 
             {/* 6. SUPPLIES (Ice, Scrap, Kits) */}
-            <div className="flex-[0.5] flex items-center bg-zinc-950/50 px-2 gap-2 border-r border-zinc-900 pointer-events-auto" title={`Расходники: Лёд:${resources.ice || 0}, Лом:${resources.scrap || 0}, Ремкомплекты:${resources.repairKit || 0}. Используются для крафта и ремонта.`}>
+            <div className="flex-[0.5] flex items-center bg-zinc-950/50 px-2 gap-2 border-r border-zinc-900 pointer-events-auto" title={`Расходники: Лёд:${Math.floor(resources.ice || 0)}, Лом:${Math.floor(resources.scrap || 0)}, Ремкомплекты:${Math.floor(resources.repairKit || 0)}. Используются для крафта и ремонта.`}>
                 <div className="flex items-center gap-1">
                     <span className="text-[10px] opacity-70">❄️</span>
-                    <span className="text-[10px] font-mono text-cyan-200">{resources.ice || 0}</span>
+                    <span className="text-[10px] font-mono text-cyan-200">{Math.floor(resources.ice || 0)}</span>
                 </div>
                 <div className="flex items-center gap-1 text-[10px]">
                     <span className="text-[10px] opacity-70">♻️</span>
-                    <span className="text-[10px] font-mono text-zinc-400">{resources.scrap || 0}</span>
+                    <span className="text-[10px] font-mono text-zinc-400">{Math.floor(resources.scrap || 0)}</span>
                 </div>
             </div>
 

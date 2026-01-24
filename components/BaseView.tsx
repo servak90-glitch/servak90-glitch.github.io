@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { PlayerBase, ResourceType, FacilityId, DefenseUnitType, Resources } from '../types';
 import { FUEL_RECIPES } from '../constants/fuelRecipes';
@@ -8,6 +8,8 @@ import { DEFENSE_UNITS, BASE_REPAIR_COST } from '../constants/defenseUnits';
 import { TL } from '../services/localization';
 import { t } from '../services/localization';
 import { getResourceLabel } from '../services/gameMath';
+import { BASE_COSTS } from '../constants/playerBases';
+import { audioEngine } from '../services/audioEngine';
 
 interface BaseViewProps {
     base: PlayerBase;
@@ -15,7 +17,7 @@ interface BaseViewProps {
 }
 
 export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
-    const { settings, resources, transferResources, refineResource, craftConsumable, buildFacility, startDefenseProduction, repairBase } = useGameStore();
+    const { settings, resources, transferResources, refineResource, craftConsumable, buildFacility, startDefenseProduction, repairBase, upgradeBase } = useGameStore();
     const lang = settings.language;
     const [activeTab, setActiveTab] = useState<'storage' | 'facilities' | 'refinery' | 'workshop' | 'garrison'>('storage');
 
@@ -32,6 +34,33 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
     };
     const productionQueue = base.productionQueue ?? [];
 
+    // Ticker for building progress
+    const [now, setNow] = useState(Date.now());
+    useEffect(() => {
+        if (base.status !== 'building') return;
+        const interval = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, [base.status, base.id]);
+
+    const isBuilding = base.status === 'building';
+    let progress = 0;
+    let timeLeft = 0;
+    if (isBuilding) {
+        const total = base.constructionCompletionTime - base.constructionStartTime;
+        const elapsed = now - base.constructionStartTime;
+        progress = Math.min(100, (elapsed / total) * 100);
+        timeLeft = Math.max(0, base.constructionCompletionTime - now);
+    }
+
+    const formatTime = (ms: number) => {
+        const totalSec = Math.floor(ms / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        if (h > 0) return `${h}h ${m}m ${s}s`;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+
     return (
         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
             <div className="bg-gray-900 border-2 border-cyan-500 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(6,182,212,0.3)] overflow-hidden">
@@ -41,7 +70,19 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
                         <h2 className="text-3xl font-bold text-white flex items-center gap-3">
                             🏢 {base.type.toUpperCase()} - {t(TL.regions[base.regionId], lang)}
                         </h2>
-                        <p className="text-cyan-400 text-sm font-mono mt-1">Status: {base.status.toUpperCase()} | LVL {base.upgradeLevel}</p>
+                        <div className="flex items-center gap-4 mt-1">
+                            <p className={`text-sm font-mono uppercase ${isBuilding ? 'text-yellow-500 animate-pulse' : 'text-cyan-400'}`}>
+                                {t(TL.ui.status_label, lang)}: {base.status.toUpperCase()} | {t(TL.ui.level_label, lang)} {base.upgradeLevel}
+                            </p>
+                            {isBuilding && (
+                                <div className="flex items-center gap-3 bg-black/40 px-3 py-1 rounded border border-yellow-900/40">
+                                    <div className="w-24 h-1.5 bg-gray-950 rounded-full overflow-hidden border border-gray-800">
+                                        <div className="h-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]" style={{ width: `${progress}%` }} />
+                                    </div>
+                                    <span className="text-[10px] font-mono text-yellow-500 font-bold whitespace-nowrap">{formatTime(timeLeft)}</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <button
                         onClick={onClose}
@@ -79,7 +120,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
                             {/* Storage Status */}
                             <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
                                 <div className="flex justify-between mb-2 text-sm">
-                                    <span className="text-gray-400">{lang === 'RU' ? 'Заполнение хранилища' : 'Storage Fill'}</span>
+                                    <span className="text-gray-400">{t(TL.ui.storage_fill, lang)}</span>
                                     <span className={storagePercent > 90 ? 'text-red-400 font-bold' : 'text-cyan-400'}>
                                         {Math.floor(totalStored)} / {base.storageCapacity} Un
                                     </span>
@@ -95,7 +136,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Base Inventory */}
                                 <div className="space-y-3">
-                                    <h3 className="text-lg font-bold text-gray-300 border-l-4 border-cyan-500 pl-3">{lang === 'RU' ? 'На базе' : 'In Base'}</h3>
+                                    <h3 className="text-lg font-bold text-gray-300 border-l-4 border-cyan-500 pl-3">{t(TL.ui.in_base, lang)}</h3>
                                     <div className="bg-gray-800/30 rounded-xl p-3 border border-gray-800 min-h-[200px] flex flex-col gap-2">
                                         {Object.entries(base.storedResources).map(([res, amount]) => (amount || 0) > 0 && (
                                             <div key={res} className="flex items-center justify-between p-2 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors">
@@ -128,13 +169,69 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
                                                     onClick={() => transferResources(base.id, res as any, 100, 'to_base')}
                                                     className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded-md text-gray-300 transition-all active:scale-95"
                                                 >
-                                                    {lang === 'RU' ? 'В ХРАН. (100)' : 'TO STORAGE (100)'}
+                                                    {t(TL.ui.to_storage_100, lang)}
                                                 </button>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             </div>
+
+                            {/* UPGRADE SECTION */}
+                            {base.status === 'active' && (base.type === 'outpost' || base.type === 'camp') && (
+                                <div className="mt-8 bg-black/40 border-2 border-dashed border-cyan-900/50 p-6 rounded-2xl animate-in fade-in slide-in-from-bottom-4">
+                                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                                        <div className="flex-1">
+                                            <h3 className="text-xl font-black text-cyan-400 pixel-text uppercase flex items-center gap-3">
+                                                <span>🚀</span> {t(TL.ui.upgrade_base, lang)}
+                                            </h3>
+                                            <p className="text-xs text-gray-500 font-mono mt-1">
+                                                {base.type === 'outpost'
+                                                    ? (lang === 'RU' ? 'Улучшить до уровня ЛАГЕРЬ' : 'Upgrade to CAMP level')
+                                                    : (lang === 'RU' ? 'Улучшить до уровня СТАНЦИЯ' : 'Upgrade to STATION level')}
+                                                — {lang === 'RU' ? 'увеличит склад и откроет новые модули' : 'increase storage and unlock new facilities'}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 justify-center">
+                                            {(() => {
+                                                const nextType = base.type === 'outpost' ? 'camp' : 'station';
+                                                const currentC = BASE_COSTS[base.type];
+                                                const nextC = BASE_COSTS[nextType];
+                                                const credDiff = nextC.credits - (currentC.credits || 0);
+
+                                                return (
+                                                    <>
+                                                        <div className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold ${resources.rubies >= credDiff ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400' : 'border-red-900/30 bg-red-900/10 text-red-500'}`}>
+                                                            {credDiff} 💎
+                                                        </div>
+                                                        {Object.entries(nextC.materials).map(([res, amt]) => {
+                                                            const currentAmt = currentC.materials[res as keyof Resources] || 0;
+                                                            const diff = Math.max(0, (amt || 0) - currentAmt);
+                                                            if (diff <= 0) return null;
+                                                            return (
+                                                                <div key={res} className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold ${(resources[res as keyof Resources] || 0) >= diff ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400' : 'border-red-900/30 bg-red-900/10 text-red-500'}`}>
+                                                                    {diff} {t(getResourceLabel(res), lang).toUpperCase()}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+
+                                        <button
+                                            onClick={() => {
+                                                upgradeBase(base.id);
+                                                audioEngine.playUpgrade ? audioEngine.playUpgrade() : audioEngine.playCollect();
+                                            }}
+                                            className="px-8 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all active:scale-90 uppercase text-xs"
+                                        >
+                                            {t(TL.ui.start_upgrade, lang)}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -154,11 +251,11 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
                                                 onClick={() => buildFacility(base.id, facility.id)}
                                                 className="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg transition-all"
                                             >
-                                                {lang === 'RU' ? 'ПОСТРОИТЬ МОДУЛЬ' : 'BUILD FACILITY'}
+                                                {t(TL.ui.build_facility, lang)}
                                             </button>
                                         )}
                                         {isBuilt && (
-                                            <div className="text-xs text-green-400 font-mono">{lang === 'RU' ? 'МОДУЛЬ ФУНКЦИОНИРУЕТ' : 'FACILITY OPERATIONAL'}</div>
+                                            <div className="text-xs text-green-400 font-mono">{t(TL.ui.facility_operational, lang)}</div>
                                         )}
                                     </div>
                                 );
@@ -300,7 +397,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
                                             onClick={() => repairBase(base.id)}
                                             className="w-full mt-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-bold rounded transition-all uppercase"
                                         >
-                                            🛠️ {lang === 'RU' ? `Отремонтировать` : `Repair Base`} ({BASE_REPAIR_COST.scrap} Scrap, {BASE_REPAIR_COST.iron} Iron)
+                                            🛠️ {t(TL.ui.repair_base_btn, lang)} ({BASE_REPAIR_COST.scrap} Scrap, {BASE_REPAIR_COST.iron} Iron)
                                         </button>
                                     )}
                                 </div>
@@ -419,8 +516,8 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
 
                 {/* Footer */}
                 <div className="p-4 bg-gray-950/80 border-t border-gray-800 flex justify-between items-center px-8 text-xs text-gray-500 font-mono">
-                    <span>SECTOR ACCESS: GRANTED</span>
-                    <span>BASE ID: {base.id}</span>
+                    <span>{t(TL.ui.sector_access, lang)}: GRANTED</span>
+                    <span>{t(TL.ui.base_id, lang)}: {base.id}</span>
                 </div>
             </div>
         </div>

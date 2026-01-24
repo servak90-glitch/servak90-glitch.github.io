@@ -25,7 +25,6 @@ import BossRenderer from './components/BossRenderer';
 import PixiOverlay, { PixiOverlayHandle } from './components/PixiOverlay';
 import FloatingTextOverlay, { FloatingTextHandle } from './components/FloatingTextOverlay';
 import EventModal from './components/EventModal';
-import ArtifactsView from './components/ArtifactsView';
 import CityView from './components/CityView';
 import SkillsView from './components/SkillsView';
 import AICompanion from './components/AICompanion';
@@ -44,10 +43,11 @@ import MenuOverlay from './components/MenuOverlay';
 import CombatOverlay from './components/CombatOverlay';
 import { GlobalMapView } from './components/GlobalMapView';
 import { EquipmentInventoryView } from './components/EquipmentInventoryView';
-import { ConsumableBar } from './components/ConsumableBar';
+import { QuickAccessBar } from './components/QuickAccessBar';
 import { PredictionAlert } from './components/PredictionAlert';
+import { DrillStatsPanel } from './components/DrillStatsPanel';
 
-const GAME_VERSION = "v4.1.3 (BALANCE UPDATE)";
+const GAME_VERSION = "v4.5.0 (SURVIVAL & GREED)";
 
 const TravelProgressMini = ({ travel, lang }: { travel: any, lang: string }) => {
     const [progress, setProgress] = useState(0);
@@ -126,7 +126,7 @@ const App: React.FC = () => {
     const { isGameActive, activeView, settings, enterGame, manualLoad, tick } = useGameCore();
     const lang = settings.language;
 
-    const { depth, heat, shieldCharge, resources, drill, xp, integrity, sideTunnel } = useDrillState();
+    const { depth, heat, shieldCharge, resources, drill, xp, integrity, currentCargoWeight, sideTunnel } = useDrillState();
     const { isDrilling, isOverheated, setDrilling, manualClick, manualRechargeShield } = useDrillActions();
 
     const { currentBoss, combatMinigame, eventQueue, isCoolingGameActive, clickFlyingObject } = useCombatState();
@@ -329,7 +329,11 @@ const App: React.FC = () => {
     const handleDrillStart = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
         if (e.cancelable) e.preventDefault();
 
-        if (isLowPower) {
+        const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth);
+        const energyLoad = stats.energyProd > 0 ? (stats.energyCons / stats.energyProd) * 100 : 100;
+        const isCargoFull = currentCargoWeight > stats.totalCargoCapacity && !useGameStore.getState().isZeroWeight;
+
+        if (energyLoad > 100 || isCargoFull) {
             let x = 0, y = 0;
             if ('touches' in e) {
                 x = e.touches[0].clientX;
@@ -338,7 +342,8 @@ const App: React.FC = () => {
                 x = (e as React.MouseEvent).clientX;
                 y = (e as React.MouseEvent).clientY;
             }
-            textRef.current?.addText(x, y - 50, "ПЕРЕГРУЗКА!", "DAMAGE");
+            textRef.current?.addText(x, y - 50, energyLoad > 100 ? "ПЕРЕГРУЗКА!" : "СКЛАД ПОЛОН!", "DAMAGE");
+            audioEngine.playError();
             return;
         }
 
@@ -352,6 +357,7 @@ const App: React.FC = () => {
                 y = (e as React.MouseEvent).clientY;
             }
             textRef.current?.addText(x, y - 50, "ПЕРЕГРЕВ!", "DAMAGE");
+            audioEngine.playError();
             return;
         }
 
@@ -366,6 +372,7 @@ const App: React.FC = () => {
                 y = (e as React.MouseEvent).clientY;
             }
             textRef.current?.addText(x, y - 50, lang === 'RU' ? "В ПУТИ!" : "IN TRANSIT!", "INFO");
+            audioEngine.playError();
             return;
         }
 
@@ -477,7 +484,7 @@ const App: React.FC = () => {
                             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto flex items-center justify-center">
                                 <button
                                     className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center justify-center pixel-text text-sm md:text-lg font-black tracking-widest transition-transform active:scale-95 touch-none select-none relative
-                                ${isLowPower
+                                ${isLowPower || (currentCargoWeight > stats.totalCargoCapacity && !useGameStore.getState().isZeroWeight)
                                             ? 'bg-zinc-900 border-orange-600 text-orange-500 cursor-not-allowed opacity-90 animate-pulse'
                                             : isOverheated
                                                 ? 'bg-zinc-800 border-red-900 text-red-500 cursor-not-allowed opacity-80'
@@ -490,7 +497,7 @@ const App: React.FC = () => {
                                     onPointerUp={handleDrillEnd}
                                     onPointerLeave={handleDrillEnd}
                                 >
-                                    {isLowPower ? 'ПЕРЕГРУЗКА!' : isOverheated ? 'ОСТЫВАНИЕ' : (heat > 90 ? '!!!' : 'БУРИТЬ')}
+                                    {isLowPower ? 'ПЕРЕГРУЗКА!' : (currentCargoWeight > stats.totalCargoCapacity && !useGameStore.getState().isZeroWeight) ? 'СКЛАД ПОЛОН' : isOverheated ? 'ОСТЫВАНИЕ' : (heat > 90 ? '!!!' : 'БУРИТЬ')}
 
                                     {/* SHIELD CAPACITOR INDICATOR (RING) */}
                                     <svg className="absolute inset-0 w-full h-full pointer-events-none -rotate-90 scale-110" viewBox="0 0 100 100">
@@ -508,8 +515,10 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="absolute bottom-4 left-4 z-40 pointer-events-auto">
-                                <ConsumableBar />
+                                <QuickAccessBar />
                             </div>
+
+                            <DrillStatsPanel />
 
                             <CoolingMinigame isVisible={isCoolingGameActive} heat={heat} onSuccess={(amount) => forceVentHeat(amount)} onFail={triggerOverheat} onClose={() => setCoolingGame(false)} />
                         </>
@@ -534,7 +543,6 @@ const App: React.FC = () => {
                             />
                         )}
                         {activeView === View.SKILLS && <SkillsView />}
-                        {activeView === View.ARTIFACTS && <ArtifactsView />}
                         {activeView === View.CODEX && <CodexView discoveredArtifacts={discoveredArtifacts} />}
                         {activeView === View.GLOBAL_MAP && <GlobalMapView />}
                     </div>

@@ -594,5 +594,5 @@ export const DRONES: DroneDefinition[] = [
   }
 ];
 
-export const GAME_VERSION = '4.1.3';
+export const GAME_VERSION = '4.5.0';
 

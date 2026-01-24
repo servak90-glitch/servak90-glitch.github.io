@@ -26,11 +26,11 @@ export function processDrones(
     let heat = currentHeat;
     let hasChanges = false;
 
-    // Ремонтный дрон
+    // Ремонтный дрон (Существенно замедлен)
     if (state.activeDrones.includes(DroneType.REPAIR)) {
         const lvl = state.droneLevels[DroneType.REPAIR] || 0;
-        const baseRepair = 0.05 * lvl;
-        const repairAmount = baseRepair * stats.droneEfficiency; // Применяем droneEfficiency
+        const baseRepair = 0.01 * lvl; // Снижено с 0.05 до 0.01
+        const repairAmount = baseRepair * stats.droneEfficiency;
         if (integrity < stats.integrity) {
             integrity = Math.min(stats.integrity, integrity + repairAmount);
             hasChanges = true;
@@ -52,15 +52,14 @@ export function processDrones(
 }
 
 /**
- * Пассивная регенерация HP
+ * Пассивная регенерация HP - ОТКЛЮЧЕНО (Хардкор-философия)
+ * Игрок должен чиниться ремкомплектами или в городе.
  */
 export function processRegeneration(
     state: GameState,
     stats: Stats,
     currentIntegrity: number
 ): number {
-    if (stats.regen > 0 && currentIntegrity < stats.integrity && !state.isBroken) {
-        return Math.min(stats.integrity, currentIntegrity + (stats.regen * 0.4));
-    }
+    // Регенерация полностью отключена. Здоровье восстанавливается только расходниками или в городе.
     return currentIntegrity;
 }

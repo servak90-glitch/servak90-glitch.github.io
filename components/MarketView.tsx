@@ -45,10 +45,9 @@ export const MarketView = () => {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-6 flex items-center justify-center">
                 <div className="bg-gray-800/80 border-2 border-red-500 rounded-lg p-8 max-w-md">
-                    <h2 className="text-2xl font-bold text-red-400 mb-4">🚫 РЫНОК НЕДОСТУПЕН</h2>
+                    <h2 className="text-2xl font-bold text-red-400 mb-4">🚫 {t(TL.ui.market_unavailable, lang)}</h2>
                     <p className="text-gray-400">
-                        Рынок доступен только в <span className="text-cyan-400 font-bold">Station</span> базах.
-                        Постройте Station в этом регионе для доступа к торговле.
+                        {t(TL.ui.market_station_required, lang)}
                     </p>
                 </div>
             </div>
@@ -83,15 +82,15 @@ export const MarketView = () => {
             {/* Header */}
             <div className="max-w-6xl mx-auto mb-6">
                 <h1 className="text-4xl font-bold text-cyan-400 mb-2">💰 {t(TL.ui.market, lang).toUpperCase()}</h1>
-                <p className="text-gray-400">Региональная торговля • Комиссия продажи: 20%</p>
+                <p className="text-gray-400">{lang === 'RU' ? 'Региональная торговля • Комиссия продажи: 20%' : 'Regional trade • Sell fee: 20%'}</p>
             </div>
 
             {/* Credits Display */}
             <div className="max-w-6xl mx-auto mb-6 bg-gray-800/50 border-2 border-cyan-500/30 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-gray-400 text-sm">Баланс</p>
-                        <p className="text-yellow-400 font-bold text-2xl">💎 {resources.rubies} credits</p>
+                        <p className="text-gray-400 text-sm">{lang === 'RU' ? 'Баланс' : 'Balance'}</p>
+                        <p className="text-yellow-400 font-bold text-2xl">💎 {Math.floor(resources.credits || 0)} Credits</p>
                     </div>
                     <div className="text-right">
                         <p className="text-gray-400 text-sm">{t(TL.ui.currentRegion, lang)}</p>
@@ -116,13 +115,13 @@ export const MarketView = () => {
                                 onClick={() => setActiveTab('black_market')}
                                 className={`px-4 py-2 rounded font-bold transition-all ${activeTab === 'black_market' ? 'bg-purple-900 border border-purple-500 text-purple-200' : 'bg-gray-900 text-gray-500 hover:text-purple-400'}`}
                             >
-                                👁️ SHADOW NETWORK
+                                👁️ {t(TL.ui.shadow_network, lang)}
                             </button>
                             <button
                                 onClick={() => setActiveTab('exchange')}
                                 className={`px-4 py-2 rounded font-bold transition-all ${activeTab === 'exchange' ? 'bg-amber-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-amber-400'}`}
                             >
-                                ♻️ ОБМЕН
+                                ♻️ {lang === 'RU' ? 'ОБМЕН' : 'EXCHANGE'}
                             </button>
                         </div>
                     )}
@@ -162,16 +161,16 @@ export const MarketView = () => {
                                             <div className="space-y-1 text-sm">
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-400">{t(TL.ui.buy, lang)}:</span>
-                                                    <span className="text-green-400 font-bold">{price.finalPrice} 💎</span>
+                                                    <span className="text-green-400 font-bold">{Math.floor(price.finalPrice)} 🪙</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-400">{t(TL.ui.sell, lang)}:</span>
                                                     <span className="text-yellow-400 font-bold">
-                                                        {Math.floor(price.finalPrice * 0.8)} 💎
+                                                        {Math.floor(price.finalPrice * 0.8)} 🪙
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between pt-1 border-t border-gray-700">
-                                                    <span className="text-gray-500 text-xs">У вас:</span>
+                                                    <span className="text-gray-500 text-xs">{lang === 'RU' ? 'В наличии:' : 'Owned:'}</span>
                                                     <span className="text-white text-xs">{resources[price.resource] || 0}</span>
                                                 </div>
 
@@ -192,7 +191,7 @@ export const MarketView = () => {
                         </>
                     ) : activeTab === 'black_market' ? (
                         <div className="space-y-4">
-                            <h2 className="text-2xl font-bold text-purple-400 mb-4 tracking-widest glitch-text">👁️ SHADOW NETWORK</h2>
+                            <h2 className="text-2xl font-bold text-purple-400 mb-4 tracking-widest glitch-text">👁️ {t(TL.ui.shadow_network, lang)}</h2>
 
                             <div className="grid gap-4">
                                 {BLACK_MARKET_ITEMS.map(item => {
@@ -242,7 +241,7 @@ export const MarketView = () => {
                                                             : 'bg-gray-900 border-red-900/50 text-gray-600 cursor-not-allowed'}
                                                 `}
                                             >
-                                                {isUnlocked ? 'OWNED' : 'ACQUIRE'}
+                                                {isUnlocked ? (lang === 'RU' ? 'КУПЛЕНО' : 'OWNED') : t(TL.ui.acquire, lang)}
                                             </button>
                                         </div>
                                     );
@@ -250,7 +249,7 @@ export const MarketView = () => {
                             </div>
 
                             <p className="text-xs text-center text-purple-900 font-mono mt-8">
-                                WARNING: TRANSACTIONS ARE UNTRACEABLE. NO REFUNDS.
+                                {t(TL.ui.shadow_warning, lang)}
                             </p>
                         </div>
                     ) : activeTab === 'exchange' ? (
@@ -303,7 +302,7 @@ export const MarketView = () => {
                                                             }
                                                         `}
                                                     >
-                                                        {available >= 10 ? `♻️ ОБМЕНЯТЬ ВСЁ` : '❌ МИНИМУМ 10'}
+                                                        {available >= 10 ? t(TL.ui.exchange_all, lang) : t(TL.ui.minimum_10, lang)}
                                                     </button>
                                                 </div>
                                             </div>
@@ -373,7 +372,7 @@ export const MarketView = () => {
                                         }
                                     `}
                                 >
-                                    {resources.rubies >= totalBuyCost ? `💵 ${t(TL.ui.buy, lang).toUpperCase()}` : '❌ НЕДОСТАТОЧНО СРЕДСТВ'}
+                                    {resources.rubies >= totalBuyCost ? `💵 ${t(TL.ui.buy, lang).toUpperCase()}` : (lang === 'RU' ? '❌ НЕДОСТАТОЧНО СРЕДСТВ' : '❌ INSUFFICIENT FUNDS')}
                                 </button>
                             </div>
 
@@ -394,7 +393,7 @@ export const MarketView = () => {
                                         }
                                     `}
                                 >
-                                    {availableResource >= amount ? `💰 ${t(TL.ui.sell, lang).toUpperCase()}` : '❌ НЕДОСТАТОЧНО РЕСУРСОВ'}
+                                    {availableResource >= amount ? `💰 ${t(TL.ui.sell, lang).toUpperCase()}` : (lang === 'RU' ? '❌ НЕДОСТАТОЧНО РЕСУРСОВ' : '❌ INSUFFICIENT RESOURCES')}
                                 </button>
                             </div>
                         </div>

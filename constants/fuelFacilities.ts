@@ -8,14 +8,14 @@ export const FUEL_FACILITIES: Partial<Record<FacilityId, Facility>> = {
     basic_refinery: {
         id: 'basic_refinery',
         name: 'Базовая Нефтепереработка',
-        cost: 5000,
+        cost: 500,
         description: 'Перерабатывает глину и камень в топливо',
         unlocksRecipes: ['clay_to_oil', 'stone_to_gas']
     },
     advanced_refinery: {
         id: 'advanced_refinery',
         name: 'Продвинутая Нефтепереработка',
-        cost: 25000,
+        cost: 2500,
         description: 'Японская ликвефакция угля (Coal → Oil)',
         unlocksRecipes: ['coal_to_oil']
     },

@@ -7,7 +7,7 @@ export const BASE_FACILITIES: Record<FacilityId, Facility> = {
     basic_refinery: {
         id: 'basic_refinery',
         name: { RU: 'Базовая Нефтепереработка', EN: 'Basic Refinery' },
-        cost: 5000,
+        cost: 500,
         description: {
             RU: 'Позволяет перерабатывать глину в мазут и камень в газ.',
             EN: 'Enables refining clay to oil and stone to gas.'
@@ -17,7 +17,7 @@ export const BASE_FACILITIES: Record<FacilityId, Facility> = {
     advanced_refinery: {
         id: 'advanced_refinery',
         name: { RU: 'Продвинутая Нефтепереработка', EN: 'Advanced Refinery' },
-        cost: 25000,
+        cost: 2500,
         description: {
             RU: 'Японская ликвефакция угля. Позволяет добывать качественное топливо из угля.',
             EN: 'Advanced coal liquefaction. Produce high-quality fuel from coal.'
@@ -27,7 +27,7 @@ export const BASE_FACILITIES: Record<FacilityId, Facility> = {
     workshop_facility: {
         id: 'workshop_facility',
         name: { RU: 'Мастерская (Ур. 1)', EN: 'Workshop (Tier 1)' },
-        cost: 15000,
+        cost: 1500,
         description: {
             RU: 'Позволяет производить базовые расходные материалы (Ремкомплекты).',
             EN: 'Allows production of basic consumables (Repair Kits).'
@@ -37,7 +37,7 @@ export const BASE_FACILITIES: Record<FacilityId, Facility> = {
     advanced_workshop: {
         id: 'advanced_workshop',
         name: { RU: 'Мастерская (Ур. 2)', EN: 'Advanced Workshop (Tier 2)' },
-        cost: 45000,
+        cost: 4500,
         description: {
             RU: 'Позволяет производить продвинутые системы охлаждения.',
             EN: 'Allows production of advanced cooling systems.'
@@ -47,7 +47,7 @@ export const BASE_FACILITIES: Record<FacilityId, Facility> = {
     research_lab: {
         id: 'research_lab',
         name: { RU: 'Исследовательская Лаборатория', EN: 'Research Lab' },
-        cost: 60000,
+        cost: 6000,
         description: {
             RU: 'Ускоряет анализ артефактов в этом регионе в 2 раза.',
             EN: 'Speeds up artifact analysis in this region by 2x.'
