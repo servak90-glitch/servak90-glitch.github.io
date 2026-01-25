@@ -333,6 +333,21 @@ export function processCombat(
         // Initialize phases
         currentBoss.phases = [1];
 
+        // NEW: Generate Weak Points
+        const weakPointsCount = 3;
+        currentBoss.weakPoints = [];
+        for (let i = 0; i < weakPointsCount; i++) {
+            currentBoss.weakPoints.push({
+                id: `wp_${Date.now()}_${i}`,
+                x: (Math.random() - 0.5) * 60, // Relative to center
+                y: (Math.random() - 0.5) * 60, // Relative to center
+                radius: 15,
+                currentHp: 200 * (1 + state.depth / 5000),
+                maxHp: 200 * (1 + state.depth / 5000),
+                isActive: true
+            });
+        }
+
         events.push({
             type: 'LOG',
             msg: `!!! ВНИМАНИЕ: ${currentBoss.description} !!!`,

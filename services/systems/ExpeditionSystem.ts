@@ -22,7 +22,7 @@ const BASE_TIME_MS = 60 * 1000; // 1 минута базы
 
 export class ExpeditionSystem {
 
-    public calculateExpeditionParams(difficulty: ExpeditionDifficulty, droneCount: number, targetResource: ResourceType) {
+    public calculateExpeditionParams(difficulty: ExpeditionDifficulty, droneCount: number, targetResource: ResourceType, maintenance: number = 100) {
         const config = DIFFICULTY_CONFIG[difficulty];
 
         // Время: База * Множитель сложности
@@ -30,9 +30,13 @@ export class ExpeditionSystem {
         const speedBonus = Math.min(0.5, (droneCount - config.minDrones) * 0.01);
         const duration = (BASE_TIME_MS * config.timeMult) * (1 - speedBonus);
 
+        // Риск увеличивается, если обслуживание ниже 100%
+        const maintenancePenalty = maintenance < 100 ? (100 - maintenance) * 0.005 : 0;
+        const totalRisk = Math.min(0.95, config.risk + maintenancePenalty);
+
         return {
             duration: Math.floor(duration),
-            risk: config.risk,
+            risk: totalRisk,
             minDrones: config.minDrones
         };
     }

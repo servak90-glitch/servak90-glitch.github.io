@@ -45,9 +45,7 @@ const GameFooter: React.FC<GameFooterProps> = ({ logs }) => {
 
     const navButtons = [
         { id: View.DRILL, label: t(TEXT_IDS.MENU_DRILL, lang), icon: <Pickaxe className="w-4.5 h-4.5" /> },
-        ...(cityUnlocked ? [{ id: View.CITY, label: t(TEXT_IDS.MENU_CITY, lang), icon: <Landmark className="w-4.5 h-4.5" /> }] : []),
         ...(cityUnlocked ? [{ id: View.GLOBAL_MAP, label: t(TEXT_IDS.MENU_MAP, lang), icon: <MapIcon className="w-4.5 h-4.5" /> }] : []),
-        ...(forgeUnlocked ? [{ id: View.FORGE, label: t(TEXT_IDS.MENU_FORGE, lang), icon: <Hammer className="w-4.5 h-4.5" /> }] : []),
         ...(skillsUnlocked ? [{ id: View.SKILLS, label: t(TEXT_IDS.MENU_SKILLS, lang), icon: <Zap className="w-4.5 h-4.5" /> }] : []),
         { id: View.CODEX, label: t(TEXT_IDS.MENU_ARCHIVE, lang), icon: <Library className="w-4.5 h-4.5" /> }
     ];

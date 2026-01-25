@@ -5,6 +5,7 @@ import { getResourceLabel } from '../../services/gameMath';
 import { useGameStore } from '../../store/gameStore';
 import { t, TL } from '../../services/localization';
 import { audioEngine } from '../../services/audioEngine';
+import { REGIONS } from '../../constants/regions';
 import {
     ChevronRight,
     Lock,
@@ -18,6 +19,8 @@ import {
 const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, resources, onStartCraft, craftingQueue }) => {
     const lang = useGameStore(s => s.settings.language);
     const unlockedBlueprints = useGameStore(s => s.unlockedBlueprints);
+    const currentRegionId = useGameStore(s => s.currentRegion);
+    const currentRegion = REGIONS[currentRegionId];
 
     if (!next) return (
         <div className="glass-panel p-4 opacity-50 flex flex-col justify-between min-h-[220px] bg-white/5 border-white/5 grayscale">
@@ -32,13 +35,14 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
     );
 
     const isFusionLocked = next.tier >= 13;
+    const isTierLocked = next.tier > currentRegion.tierLimit;
     const requiresBlueprint = next.blueprintId;
     const hasBlueprint = !requiresBlueprint || unlockedBlueprints.includes(requiresBlueprint);
     const isAlreadyCrafting = craftingQueue.some(job => job.partId === next.id);
 
     const cost = (next.cost || {}) as Partial<Resources>;
     const costKeys = Object.keys(cost) as Array<keyof Resources>;
-    const canAfford = !isFusionLocked && hasBlueprint && !isAlreadyCrafting && costKeys.every(r => resources[r] >= (cost[r] || 0));
+    const canAfford = !isFusionLocked && !isTierLocked && hasBlueprint && !isAlreadyCrafting && costKeys.every(r => resources[r] >= (cost[r] || 0));
 
     return (
         <div className={`glass-panel p-5 flex flex-col justify-between min-h-[280px] transition-all duration-300 group relative hover:translate-y-[-2px] 
@@ -116,7 +120,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                     audioEngine.playBaseBuild(next.id as any);
                 }}
                 className={`w-full py-3.5 rounded text-[11px] font-bold font-technical transition-all flex items-center justify-center gap-2 relative overflow-hidden group/btn
-                    ${isFusionLocked
+                    ${isFusionLocked || isTierLocked
                         ? 'bg-purple-900/10 border border-purple-900/30 text-purple-900/50 cursor-not-allowed'
                         : canAfford
                             ? 'bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] active:scale-95'
@@ -125,6 +129,8 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
             >
                 {isFusionLocked ? (
                     t(TL.ui.fusionLocked, lang)
+                ) : isTierLocked ? (
+                    <span className="text-amber-500/50">{lang === 'RU' ? 'ЛИМИТ РЕГИОНА' : 'REGIONAL_LIMIT'}</span>
                 ) : !hasBlueprint ? (
                     t(TL.ui.unavailable, lang)
                 ) : isAlreadyCrafting ? (

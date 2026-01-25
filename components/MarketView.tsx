@@ -53,35 +53,14 @@ export const MarketView = () => {
         audioEngine.playUIPanelOpen();
     }, []);
 
-    // Проверка: игрок в Station?
-    const currentBase = playerBases.find(b => b.regionId === currentRegion);
-    const canAccessMarket = currentBase?.type === 'station';
+    // Проверка доступа к рынку: Терминал Хаба теперь общественный
+    const canAccessMarket = true; // Всегда доступно в Хабе
 
     const activePerks = useMemo(() => getActivePerkIds(reputation), [reputation]);
     const hasBlackMarket = activePerks.includes('BLACK_MARKET');
     const marketPrices = useMemo(() => getAllMarketPrices(currentRegion, [], activePerks), [currentRegion, activePerks]);
 
-    if (!canAccessMarket) {
-        return (
-            <div className="flex-1 flex items-center justify-center p-8 backdrop-blur-xl bg-void/40">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                    className="glass-panel p-16 max-w-xl border-rose-500/20 bg-rose-500/5 backdrop-blur-3xl text-center relative overflow-hidden shadow-[0_0_100px_rgba(239,68,68,0.1)]"
-                >
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent" />
-                    <div className="p-6 glass-panel border-rose-500/30 bg-rose-500/5 inline-block mb-8 rounded-full">
-                        <Lock className="w-16 h-16 text-rose-500 opacity-80" />
-                    </div>
-                    <h2 className="text-4xl font-black font-technical text-white uppercase tracking-tighter mb-6 italic">
-                        {t(TL.ui.market_unavailable, lang)}
-                    </h2>
-                    <p className="text-white/40 font-technical text-[10px] leading-loose uppercase tracking-[0.4em] max-w-sm mx-auto">
-                        {t(TL.ui.market_station_required, lang)}
-                    </p>
-                </motion.div>
-            </div>
-        );
-    }
+    const currentBase = playerBases.find(b => b.regionId === currentRegion);
 
     const handleBuy = () => {
         if (selectedResource && amount > 0) {
@@ -149,7 +128,7 @@ export const MarketView = () => {
                     <div className="hidden sm:flex glass-panel px-4 md:px-6 py-3 md:py-5 border-white/5 bg-black/40 flex-col justify-center">
                         <span className="text-[7px] md:text-[9px] font-black text-white/20 uppercase tracking-widest mb-1 italic">{t(TL.ui.currentRegion, lang)}</span>
                         <span className="text-xs md:text-base font-black text-cyan-400 uppercase tracking-widest">
-                            {t(TL.regions[currentBase.regionId], lang) || currentBase.regionId}
+                            {t(TL.regions[currentRegion], lang) || currentRegion}
                         </span>
                     </div>
                 </div>

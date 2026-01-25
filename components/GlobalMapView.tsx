@@ -5,7 +5,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { IsometricCanvas } from './GlobalMap/IsometricCanvas';
+import { ScannerCanvas } from './GlobalMap/ScannerCanvas';
 import { REGIONS, REGION_IDS } from '../constants/regions';
 import { RegionId, ResourceType } from '../types';
 import { CaravanPanel } from './CaravanPanel';
@@ -14,6 +14,7 @@ import QuestPanel from './QuestPanel';
 import FactionPanel from './FactionPanel';
 import { BuildBaseModal } from './BuildBaseModal';
 import { BaseView } from './BaseView';
+import { RegionalHubOverlay } from './overlays/RegionalHubOverlay';
 import { useDrillStats, useMapState, useMapActions } from '../store/selectors';
 import { calculateDistance } from '../services/regionMath';
 import { FUEL_TYPES, getFuelLabel } from '../services/travelMath';
@@ -122,6 +123,7 @@ export const GlobalMapView = () => {
     const [selectedFuel, setSelectedFuel] = useState<ResourceType>(ResourceType.COAL);
     const [isBuildModalOpen, setIsBuildModalOpen] = useState(false);
     const [managedBaseId, setManagedBaseId] = useState<string | null>(null);
+    const [hubRegionId, setHubRegionId] = useState<RegionId | null>(null);
 
     const { drill, resources, stats, equipmentInventory } = useDrillStats();
     const { level, unlockedLicenses, travel, currentRegion, playerBases, caravans, currentCargoWeight } = useMapState();
@@ -156,6 +158,7 @@ export const GlobalMapView = () => {
             <div className="absolute inset-0 mesh-bg opacity-20 pointer-events-none" />
             <AnimatePresence>
                 {travel && <TravelOverlay travel={travel} lang={lang} />}
+                {hubRegionId && <RegionalHubOverlay regionId={hubRegionId} onClose={() => setHubRegionId(null)} />}
             </AnimatePresence>
 
             {/* HEADER HUB BENTO */}
@@ -307,28 +310,38 @@ export const GlobalMapView = () => {
                                                                 {isOverloaded ? t(TL.ui.overloaded, lang) : t(TL.ui.initiateTransit, lang)}
                                                             </button>
                                                         </div>
-                                                    ) : currentBase ? (
-                                                        <div className="glass-panel p-4 md:p-6 border-purple-500/20 bg-purple-500/5">
-                                                            <div className="flex items-center gap-3 mb-4">
-                                                                <div className="w-8 h-8 md:w-10 md:h-10 glass-panel flex items-center justify-center bg-purple-500/10 text-purple-400">
-                                                                    <Hammer className="w-4 h-4 md:w-5 md:h-5" />
-                                                                </div>
-                                                                <div>
-                                                                    <div className="text-[7px] md:text-[8px] font-black font-technical text-purple-400/60 uppercase">Base_Link_Operational</div>
-                                                                    <div className="text-xs md:text-sm font-black font-technical text-white uppercase">{t(TL.baseTypes[currentBase.type], lang)}</div>
-                                                                </div>
-                                                            </div>
-                                                            <button
-                                                                onClick={() => setManagedBaseId(currentBase.id)}
-                                                                className="w-full py-2 md:py-3 glass-panel border-white/10 bg-white/5 hover:bg-white/10 text-white font-black font-technical text-[8px] md:text-[9px] uppercase tracking-widest transition-all"
-                                                            >
-                                                                {t(TL.ui.accessMainframe, lang)}
-                                                            </button>
-                                                        </div>
                                                     ) : (
-                                                        <div className="p-4 md:p-6 glass-panel border-cyan-500/20 bg-cyan-500/5 text-center">
-                                                            <div className="text-[10px] md:text-xs font-black font-technical text-cyan-400 uppercase tracking-widest mb-1">{t(TL.ui.youAreHere, lang)}</div>
-                                                            <div className="text-[8px] md:text-[9px] font-technical text-white/40 uppercase">{t(TL.ui.awaitingCommand, lang)}</div>
+                                                        <div className="space-y-4">
+                                                            {currentBase && currentBase.type !== 'station' && (
+                                                                <div className="glass-panel p-4 border-purple-500/20 bg-purple-500/5 flex items-center gap-3">
+                                                                    <div className="w-8 h-8 glass-panel flex items-center justify-center bg-purple-500/10 text-purple-400">
+                                                                        <Hammer className="w-4 h-4" />
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        <div className="text-[7px] font-black font-technical text-purple-400/60 uppercase">Outpost_Active</div>
+                                                                        <button
+                                                                            onClick={() => setManagedBaseId(currentBase.id)}
+                                                                            className="text-[9px] font-black font-technical text-white hover:text-cyan-400 transition-colors uppercase"
+                                                                        >
+                                                                            {t(TL.ui.accessMainframe, lang)} →
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            <div className="p-6 glass-panel border-cyan-500/30 bg-cyan-500/5 flex flex-col items-center gap-4">
+                                                                <div className="text-center">
+                                                                    <div className="text-[10px] font-black font-technical text-cyan-400 uppercase tracking-widest mb-1">{t(TL.ui.youAreHere, lang)}</div>
+                                                                    <div className="text-[8px] font-technical text-white/40 uppercase tracking-tighter">Terminal_Sync: 100%</div>
+                                                                </div>
+
+                                                                <button
+                                                                    onClick={() => setHubRegionId(currentRegion)}
+                                                                    className="w-full py-4 bg-cyan-500 text-black font-black font-technical text-[10px] uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:bg-white transition-all transform hover:scale-[1.02]"
+                                                                >
+                                                                    {lang === 'RU' ? 'ОТКРЫТЬ ТЕРМИНАЛ ХАБА' : 'OPEN REGIONAL HUB'}
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </motion.div>
@@ -364,12 +377,15 @@ export const GlobalMapView = () => {
                                 </div>
 
                                 <div className="absolute inset-0 pointer-events-auto">
-                                    <IsometricCanvas
+                                    <ScannerCanvas
                                         regions={REGION_IDS}
                                         activeRegion={selectedRegion || currentRegion}
                                         bases={playerBases}
                                         caravans={caravans}
-                                        onRegionSelect={setSelectedRegion}
+                                        onRegionSelect={(id) => {
+                                            if (selectedRegion === id && id === currentRegion) setHubRegionId(id);
+                                            setSelectedRegion(id);
+                                        }}
                                     />
                                 </div>
 
@@ -379,7 +395,15 @@ export const GlobalMapView = () => {
                                         {playerBases.map(base => (
                                             <button
                                                 key={base.id}
-                                                onClick={() => { setActiveTab('map'); setManagedBaseId(base.id); setSelectedRegion(base.regionId); }}
+                                                onClick={() => {
+                                                    setActiveTab('map');
+                                                    setSelectedRegion(base.regionId);
+                                                    if (base.type === 'station' && base.regionId === currentRegion) {
+                                                        setHubRegionId(base.regionId);
+                                                    } else {
+                                                        setManagedBaseId(base.id);
+                                                    }
+                                                }}
                                                 className={`p-1 md:p-1.5 glass-panel border-white/10 bg-black/60 hover:border-cyan-400 group transition-all text-left flex items-center gap-2 md:gap-3 shrink-0
                                                   ${managedBaseId === base.id ? 'border-cyan-400 bg-cyan-400/5' : ''}
                                                 `}

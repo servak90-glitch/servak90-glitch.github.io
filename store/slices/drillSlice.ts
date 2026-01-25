@@ -12,6 +12,7 @@ export interface DrillActions {
     manualClick: () => void;
     manualRechargeShield: () => void;
     addLog: (msg: string, color?: string, icon?: string, detail?: string) => void;
+    hitWeakPoint: (wpId: string) => void;
 }
 
 export const createDrillSlice: SliceCreator<DrillActions> = (set, get) => ({
@@ -93,8 +94,45 @@ export const createDrillSlice: SliceCreator<DrillActions> = (set, get) => ({
             set({ actionLogQueue: pushLog(s as any, errorEvent) });
         }
     },
-    addLog: (msg, color, icon, detail) => {
+    addLog: (msg: string, color?: string, icon?: string, detail?: string) => {
         const s = get();
         set({ actionLogQueue: pushLog(s as any, { type: 'LOG', msg, color, icon, detail }) });
+    },
+
+    hitWeakPoint: (wpId: string) => {
+        const s = get();
+        const boss = s.currentBoss;
+        if (!boss || !boss.weakPoints) return;
+
+        const wp = boss.weakPoints.find(p => p.id === wpId);
+        if (!wp || !wp.isActive) return;
+
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const damage = 10 * stats.clickMult * 3; // x3 damage for weak point
+
+        const newWp = { ...wp, currentHp: Math.max(0, wp.currentHp - damage) };
+        if (newWp.currentHp <= 0) {
+            newWp.isActive = false;
+        }
+
+        const newBoss = {
+            ...boss,
+            currentHp: Math.max(0, boss.currentHp - damage),
+            weakPoints: boss.weakPoints.map(p => p.id === wpId ? newWp : p)
+        };
+
+        const hitEvent: VisualEvent = {
+            type: 'TEXT',
+            x: (typeof window !== 'undefined' ? window.innerWidth : 800) / 2 + (Math.random() - 0.5) * 100,
+            y: (typeof window !== 'undefined' ? window.innerHeight : 600) / 2 - 150,
+            text: `WEAK POINT! -${Math.floor(damage)}`,
+            style: 'CRIT'
+        };
+
+        set({
+            currentBoss: newBoss,
+            actionLogQueue: pushLog(s, hitEvent)
+        });
+        audioEngine.playClick();
     }
 });

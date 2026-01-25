@@ -24,6 +24,10 @@ export interface BaseActions {
     // === PHASE 4: DEFENSE ACTIONS ===
     startDefenseProduction: (baseId: string, unitType: DefenseUnitType) => void;
     repairBase: (baseId: string) => void;
+
+    // === NEW: DRONE STATION ACTIONS ===
+    refuelDrones: (baseId: string, fuelType: 'coal' | 'oil' | 'gas', amount: number) => void;
+    maintainDrones: (baseId: string) => void;
 }
 
 export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
@@ -124,7 +128,17 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
                 integrity: 100,
                 shields: 0
             },
-            productionQueue: []
+            productionQueue: [],
+
+            // === NEW: DRONE STATION INITIALIZATION ===
+            droneStation: (baseType as string) === 'station' ? {
+                level: 1,
+                fuelStorage: { coal: 0, oil: 0, gas: 0 },
+                maxFuelStorage: 1000,
+                activeDrones: 2,
+                maxDrones: 5,
+                maintenanceLevel: 100
+            } : undefined
         };
 
         const successEvent: VisualEvent = {
@@ -519,5 +533,61 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
         });
 
         audioEngine.playBaseBuild();
+    },
+
+    /**
+     * Заправка дронов на базе
+     */
+    refuelDrones: (baseId, fuelType, amount) => {
+        const s = get();
+        const base = s.playerBases.find(b => b.id === baseId);
+        if (!base || !base.droneStation) return;
+
+        // Проверка наличия ресурса у игрока
+        const playerAmount = s.resources[fuelType] || 0;
+        const actualAmount = Math.min(amount, playerAmount);
+
+        // Проверка места в баках дронов
+        const currentFuel = base.droneStation.fuelStorage[fuelType];
+        const canAccept = base.droneStation.maxFuelStorage - currentFuel;
+        const finalAmount = Math.min(actualAmount, canAccept);
+
+        if (finalAmount <= 0) return;
+
+        set(state => ({
+            resources: { ...state.resources, [fuelType]: state.resources[fuelType] - finalAmount },
+            playerBases: state.playerBases.map(b => b.id === baseId ? {
+                ...b,
+                droneStation: {
+                    ...b.droneStation!,
+                    fuelStorage: {
+                        ...b.droneStation!.fuelStorage,
+                        [fuelType]: b.droneStation!.fuelStorage[fuelType] + finalAmount
+                    }
+                }
+            } : b),
+            actionLogQueue: pushLog(state, { type: 'LOG', msg: `⛽ ЗАПРАВКА ДРОНОВ: +${finalAmount} ${fuelType.toUpperCase()}`, color: 'text-cyan-400' })
+        }));
+    },
+
+    /**
+     * Обслуживание (ремонт) дронов
+     */
+    maintainDrones: (baseId) => {
+        const s = get();
+        const base = s.playerBases.find(b => b.id === baseId);
+        if (!base || !base.droneStation) return;
+
+        const repairCost = 100; // credits
+        if (s.resources.credits < repairCost) return;
+
+        set(state => ({
+            resources: { ...state.resources, credits: state.resources.credits - repairCost },
+            playerBases: state.playerBases.map(b => b.id === baseId ? {
+                ...b,
+                droneStation: { ...b.droneStation!, maintenanceLevel: 100 }
+            } : b),
+            actionLogQueue: pushLog(state, { type: 'LOG', msg: `🛠️ ДРОНЫ ТЕХНИЧЕСКИ ОБСЛУЖЕНЫ`, color: 'text-green-400' })
+        }));
     }
 });

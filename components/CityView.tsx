@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useGameStore } from '../store/gameStore';
 import { Biome, Resources, Quest } from '../types';
+import { BIOMES } from '../constants';
 import { audioEngine } from '../services/audioEngine';
 import QuestPanel from './QuestPanel';
 import TradeTab from './city/TradeTab';
@@ -56,7 +58,14 @@ const CityView: React.FC<CityViewProps> = ({
   onHeal,
   onRepair
 }) => {
-  const [activeTab, setActiveTab] = useState<CityTab>('EXPEDITIONS');
+  const { playerBases } = useGameStore();
+  const biomeIndex = BIOMES.findIndex(b =>
+    (typeof b.name === 'object' && b.name.EN === (typeof biome.name === 'object' ? biome.name.EN : biome.name)) ||
+    b.name === biome.name
+  );
+  const regionIds = ['rust_valley', 'crystal_wastes', 'iron_gates', 'magma_core', 'void_chasm'];
+  const currentBase = playerBases.find(b => b.regionId === regionIds[biomeIndex % regionIds.length]);
+  const [activeTab, setActiveTab] = useState<CityTab>(currentBase?.droneStation ? 'EXPEDITIONS' : 'TRADE');
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -82,7 +91,7 @@ const CityView: React.FC<CityViewProps> = ({
         return <BarTab resources={resources} depth={depth} />;
 
       case 'EXPEDITIONS':
-        return <ExpeditionTab />;
+        return <ExpeditionTab base={currentBase} />;
       case 'LICENSES':
         return <LicenseTab resources={resources} depth={depth} />;
       default:

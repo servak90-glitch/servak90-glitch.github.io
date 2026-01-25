@@ -25,10 +25,13 @@ import { AlertTriangle } from 'lucide-react';
 // Components
 import DrillRenderer from './components/DrillRenderer';
 import BossRenderer from './components/BossRenderer';
+import BossOverlay from './components/BossOverlay';
 import PixiOverlay, { PixiOverlayHandle } from './components/PixiOverlay';
 import FloatingTextOverlay, { FloatingTextHandle } from './components/FloatingTextOverlay';
+import RootLayout from './components/layout/RootLayout';
+import NavigationManager from './components/navigation/NavigationManager';
+import OverlayManager from './components/overlays/OverlayManager';
 import EventModal from './components/EventModal';
-import CityView from './components/CityView';
 import SkillsView from './components/SkillsView';
 import AICompanion from './components/AICompanion';
 import SettingsModal from './components/SettingsModal';
@@ -37,7 +40,6 @@ import CoolingMinigame from './components/CoolingMinigame';
 import CombatMinigameOverlay from './components/CombatMinigameOverlay';
 import HelpModal from './components/HelpModal';
 import DevTools from './components/DevTools';
-import ForgeView from './components/ForgeView';
 import GameHeader, { RareResourcesMenu } from './components/layout/GameHeader';
 import GameFooter from './components/layout/GameFooter';
 import StatusStrip from './components/layout/StatusStrip';
@@ -468,130 +470,116 @@ const App: React.FC = () => {
                             isHit={bossHitEffect}
                             visualEffect={visualEffect}
                         />
+                        <BossOverlay onWeakPointClick={(wpId) => useGameStore.getState().hitWeakPoint(wpId)} />
                     </div>
                 )}
             </div>
 
             {/* --- LAYER 2: UI (Z-10) --- */}
-            <div className="absolute inset-0 z-10 flex flex-col pointer-events-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-
-                {/* NEW HEADER & STATUS STRIP */}
-                <GameHeader
-                    onOpenMenu={() => setIsMenuOpen(true)}
-                    onOpenInventory={() => setIsInventoryOpen(true)}
-                    onOpenRare={() => setIsRareOpen(!isRareOpen)}
-                    isRareOpen={isRareOpen}
-                />
-
-                {/* Mobile Menu Trigger (убрано, т.к. GameHeader всегда виден) */}
-
-                {(activeView === View.DRILL || activeView === View.COMBAT) && <StatusStrip />}
-                <ActiveEffects />
-
-                {/* MAIN VIEWPORT */}
-                <div className="flex-1 relative min-h-0 pointer-events-none">
-
-                    {/* DRILL HUD */}
-                    {activeView === View.DRILL && (
-                        <>
-                            {/* AMBIENT TICKER PLACEHOLDER (To be implemented next) */}
-                            <div className="absolute top-2 left-0 right-0 h-6 flex justify-center items-center pointer-events-none opacity-80">
-                                {/* Future Ticker Location */}
-                            </div>
-
-                            <div className="absolute top-8 left-2 z-30 pointer-events-auto">
-                                <div className="text-2xl md:text-6xl font-black text-white/90 drop-shadow-md font-mono">{Math.floor(depth)}<span className="text-sm md:text-2xl text-zinc-400 ml-1 md:ml-2">m</span></div>
-                                <div className="mt-1 flex items-center gap-2">
-                                    <div className="text-[10px] md:text-xs font-bold text-zinc-400 bg-black/50 px-2 py-1 inline-block border-l-2" style={{ borderColor: currentBiome.color }}>
-                                        {t(currentBiome.name, lang)}
-                                    </div>
-                                    {availableBiomes.length > 1 && (
-                                        <select
-                                            value={selectedBiome || ''}
-                                            onChange={(e) => selectBiome(e.target.value || null)}
-                                            className="bg-black/50 text-white text-[9px] border border-zinc-700 px-1 py-1 font-mono outline-none"
-                                        >
-                                            <option value="">АВТО</option>
-                                            {availableBiomes.map(b => <option key={typeof b.name === 'string' ? b.name : b.name.EN} value={typeof b.name === 'string' ? b.name : b.name.EN}>{t(b.name, lang)}</option>)}
-                                        </select>
-                                    )}
+            <RootLayout
+                activeView={activeView}
+                logs={logs}
+                onOpenMenu={() => setIsMenuOpen(true)}
+                onOpenInventory={() => setIsInventoryOpen(true)}
+                onOpenRare={() => setIsRareOpen(!isRareOpen)}
+                isRareOpen={isRareOpen}
+                resources={resources}
+                discoveredArtifactsCount={discoveredArtifacts.length}
+                lang={lang}
+            >
+                {/* DRILL HUD */}
+                {activeView === View.DRILL && (
+                    <>
+                        <div className="absolute top-8 left-2 z-30 pointer-events-auto">
+                            <div className="text-2xl md:text-6xl font-black text-white/90 drop-shadow-md font-mono">{Math.floor(depth)}<span className="text-sm md:text-2xl text-zinc-400 ml-1 md:ml-2">m</span></div>
+                            <div className="mt-1 flex items-center gap-2">
+                                <div className="text-[10px] md:text-xs font-bold text-zinc-400 bg-black/50 px-2 py-1 inline-block border-l-2" style={{ borderColor: currentBiome.color }}>
+                                    {t(currentBiome.name, lang)}
                                 </div>
+                                {availableBiomes.length > 1 && (
+                                    <select
+                                        value={selectedBiome || ''}
+                                        onChange={(e) => selectBiome(e.target.value || null)}
+                                        className="bg-black/50 text-white text-[9px] border border-zinc-700 px-1 py-1 font-mono outline-none"
+                                    >
+                                        <option value="">АВТО</option>
+                                        {availableBiomes.map(b => <option key={typeof b.name === 'string' ? b.name : b.name.EN} value={typeof b.name === 'string' ? b.name : b.name.EN}>{t(b.name, lang)}</option>)}
+                                    </select>
+                                )}
                             </div>
+                        </div>
 
-                            <div className="pointer-events-auto"><AICompanion state={aiState} heat={heat} /></div>
+                        <div className="pointer-events-auto"><AICompanion state={aiState} heat={heat} /></div>
 
-                            {/* DRILL BUTTON */}
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto flex items-center justify-center">
-                                <button
-                                    className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center justify-center pixel-text text-sm md:text-lg font-black tracking-widest transition-transform active:scale-95 touch-none select-none relative
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto flex items-center justify-center">
+                            <button
+                                className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center justify-center pixel-text text-sm md:text-lg font-black tracking-widest transition-transform active:scale-95 touch-none select-none relative
                                 ${isLowPower || (currentCargoWeight > totalCargoCapacity && !isZeroWeight)
-                                            ? 'bg-zinc-900 border-orange-600 text-orange-500 cursor-not-allowed opacity-90 animate-pulse'
-                                            : isOverheated
-                                                ? 'bg-zinc-800 border-red-900 text-red-500 cursor-not-allowed opacity-80'
-                                                : calculateTotalFuel(resources) < 1
-                                                    ? 'bg-zinc-900 border-orange-700 text-orange-600 animate-pulse cursor-not-allowed'
-                                                    : heat > 90
-                                                        ? 'bg-red-900 border-red-500 text-red-100 animate-pulse'
-                                                        : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-cyan-500 hover:text-white'}
+                                        ? 'bg-zinc-900 border-orange-600 text-orange-500 cursor-not-allowed opacity-90 animate-pulse'
+                                        : isOverheated
+                                            ? 'bg-zinc-800 border-red-900 text-red-500 cursor-not-allowed opacity-80'
+                                            : calculateTotalFuel(resources) < 1
+                                                ? 'bg-zinc-900 border-orange-700 text-orange-600 animate-pulse cursor-not-allowed'
+                                                : heat > 90
+                                                    ? 'bg-red-900 border-red-500 text-red-100 animate-pulse'
+                                                    : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-cyan-500 hover:text-white'}
                                 ${isDrilling && !isOverheated && !isLowPower ? 'scale-95 border-cyan-400 text-cyan-400 bg-zinc-900 shadow-[0_0_30px_rgba(34,211,238,0.3)]' : ''}
                             `}
-                                    onPointerDown={handleDrillStart}
-                                    onPointerUp={handleDrillEnd}
-                                    onPointerLeave={handleDrillEnd}
-                                >
-                                    {calculateTotalFuel(resources) < 1 ? 'НЕТ ТОПЛИВА' : isLowPower ? 'ПЕРЕГРУЗКА!' : (currentCargoWeight > totalCargoCapacity && !isZeroWeight) ? 'СКЛАД ПОЛОН' : isOverheated ? 'ОСТЫВАНИЕ' : (heat > 90 ? '!!!' : 'БУРИТЬ')}
+                                onPointerDown={handleDrillStart}
+                                onPointerUp={handleDrillEnd}
+                                onPointerLeave={handleDrillEnd}
+                            >
+                                {calculateTotalFuel(resources) < 1 ? 'НЕТ ТОПЛИВА' : isLowPower ? 'ПЕРЕГРУЗКА!' : (currentCargoWeight > totalCargoCapacity && !isZeroWeight) ? 'СКЛАД ПОЛОН' : isOverheated ? 'ОСТЫВАНИЕ' : (heat > 90 ? '!!!' : 'БУРИТЬ')}
 
-                                    {/* SHIELD CAPACITOR INDICATOR (RING) */}
-                                    <svg className="absolute inset-0 w-full h-full pointer-events-none -rotate-90 scale-110" viewBox="0 0 100 100">
-                                        <circle cx="50" cy="50" r="48" fill="none" stroke="#222" strokeWidth="3" />
-                                        <circle
-                                            cx="50" cy="50" r="48" fill="none"
-                                            stroke={shieldCharge < 25 ? '#ef4444' : isDrilling ? '#22c55e' : '#3b82f6'}
-                                            strokeWidth="3"
-                                            strokeDasharray="301.59"
-                                            strokeDashoffset={301.59 * (1 - shieldCharge / 100)}
-                                            className="transition-all duration-100"
-                                        />
-                                    </svg>
-                                </button>
-                            </div>
+                                <svg className="absolute inset-0 w-full h-full pointer-events-none -rotate-90 scale-110" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="48" fill="none" stroke="#222" strokeWidth="3" />
+                                    <circle
+                                        cx="50" cy="50" r="48" fill="none"
+                                        stroke={shieldCharge < 25 ? '#ef4444' : isDrilling ? '#22c55e' : '#3b82f6'}
+                                        strokeWidth="3"
+                                        strokeDasharray="301.59"
+                                        strokeDashoffset={301.59 * (1 - shieldCharge / 100)}
+                                        className="transition-all duration-100"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
 
-                            <div className={`absolute ${isMobile ? 'bottom-4 left-4' : 'bottom-4 left-4'} z-40 pointer-events-auto`}>
-                                <QuickAccessBar orientation={isMobile ? 'vertical' : 'horizontal'} />
-                            </div>
+                        <div className={`absolute ${isMobile ? 'bottom-4 left-4' : 'bottom-4 left-4'} z-40 pointer-events-auto`}>
+                            <QuickAccessBar orientation={isMobile ? 'vertical' : 'horizontal'} />
+                        </div>
 
-                            <DrillStatsPanel />
+                        <DrillStatsPanel />
 
-                            <CoolingMinigame isVisible={isCoolingGameActive} heat={heat} onSuccess={(amount) => forceVentHeat(amount)} onFail={triggerOverheat} onClose={() => setCoolingGame(false)} />
-                        </>
-                    )}
+                        <CoolingMinigame isVisible={isCoolingGameActive} heat={heat} onSuccess={(amount) => forceVentHeat(amount)} onFail={triggerOverheat} onClose={() => setCoolingGame(false)} />
+                    </>
+                )}
 
-                    {/* COMBAT HUD */}
-                    {activeView === View.COMBAT && currentBoss && (
-                        <CombatOverlay
-                            onDrillStart={handleDrillStart}
-                            onDrillEnd={handleDrillEnd}
-                            onRechargeShield={manualRechargeShield}
-                        />
-                    )}
+                {/* COMBAT HUD */}
+                {activeView === View.COMBAT && currentBoss && (
+                    <CombatOverlay
+                        onDrillStart={handleDrillStart}
+                        onDrillEnd={handleDrillEnd}
+                        onRechargeShield={manualRechargeShield}
+                    />
+                )}
 
-                    {/* FULL SCREENS */}
-                    <div key={activeView} className={`w-full h-full animate-fadeIn ${isNavOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
-                        {activeView === View.FORGE && <ForgeView />}
-                        {activeView === View.CITY && (
-                            <CityView
-                                biome={currentBiome} resources={resources} heat={heat} integrity={integrity} maxIntegrity={maxIntegrity} xp={xp} depth={depth}
-                                onTrade={tradeCity} onHeal={healCity} onRepair={repairHull}
-                            />
-                        )}
-                        {activeView === View.SKILLS && <SkillsView />}
-                        {activeView === View.CODEX && <CodexView discoveredArtifacts={discoveredArtifacts} />}
-                        {activeView === View.GLOBAL_MAP && <GlobalMapView />}
-                    </div>
-                </div>
-
-                <GameFooter logs={logs} />
-            </div>
+                <NavigationManager
+                    activeView={activeView}
+                    lang={lang}
+                    currentBiome={currentBiome}
+                    resources={resources}
+                    heat={heat}
+                    integrity={integrity}
+                    maxIntegrity={maxIntegrity}
+                    xp={xp}
+                    depth={depth}
+                    discoveredArtifacts={discoveredArtifacts}
+                    onTrade={tradeCity}
+                    onHeal={healCity}
+                    onRepair={repairHull}
+                />
+            </RootLayout>
 
             {/* --- LAYER 3: OVERLAYS (Z-50+) --- */}
             {combatMinigame && combatMinigame.active && <CombatMinigameOverlay type={combatMinigame.type} difficulty={combatMinigame.difficulty} onComplete={completeCombatMinigame} />}
@@ -605,64 +593,40 @@ const App: React.FC = () => {
                 onOpenHelp={() => setIsHelpOpen(true)}
             />
 
+            <OverlayManager
+                eventQueue={eventQueue}
+                combatMinigame={combatMinigame}
+                isMenuOpen={isMenuOpen}
+                isSettingsOpen={isSettingsOpen}
+                isHelpOpen={isHelpOpen}
+                isInventoryOpen={isInventoryOpen}
+                isRareOpen={isRareOpen}
+                settings={settings}
+                lang={lang}
+                resources={resources}
+                discoveredArtifacts={discoveredArtifacts}
+                onOptionSelect={handleEventOption}
+                onCompleteMinigame={completeCombatMinigame}
+                onCloseMenu={() => setIsMenuOpen(false)}
+                onCloseSettings={() => setIsSettingsOpen(false)}
+                onCloseHelp={() => setIsHelpOpen(false)}
+                onCloseInventory={() => setIsInventoryOpen(false)}
+                onCloseRare={() => setIsRareOpen(false)}
+                onUpdateSettings={updateSettings}
+                onResetProgress={resetProgress}
+                onSetLanguage={setLanguage}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenHelp={() => setIsHelpOpen(true)}
+            />
+
+            {/* Splash Screens */}
             {!isGameActive && (
                 <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-void overflow-hidden">
-                    {/* Background Decors */}
-                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
-                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] animate-pulse" />
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10" />
-
-                    <div className="absolute top-4 right-4 flex gap-2 z-10">
-                        <div className="glass-panel p-1 flex gap-2 border-white/10 bg-black/40">
-                            <button
-                                onClick={() => setIsHelpOpen(true)}
-                                className="px-4 py-2 hover:bg-white/5 text-white/40 hover:text-white text-[10px] font-black font-technical uppercase tracking-widest transition-all"
-                            >
-                                {t(TEXT_IDS.MANUAL_BUTTON, lang)}
-                            </button>
-                            <button
-                                onClick={() => setIsSettingsOpen(true)}
-                                className="px-4 py-2 hover:bg-white/5 text-white/40 hover:text-white text-[10px] font-black font-technical uppercase tracking-widest transition-all"
-                            >
-                                {t(TEXT_IDS.SETTINGS_BUTTON, lang)}
-                            </button>
-                        </div>
-                        <div className="glass-panel p-1 flex gap-1 border-white/10 bg-black/40">
-                            {(['RU', 'EN'] as Language[]).map(l => (
-                                <button
-                                    key={l}
-                                    onClick={() => setLanguage(l)}
-                                    className={`px-3 py-1.5 text-[10px] font-black font-technical transition-all rounded-sm ${lang === l ? 'bg-cyan-500 text-black' : 'text-white/20 hover:text-white/50'}`}
-                                >
-                                    {l}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
                     <div className="relative z-10 flex flex-col items-center">
-                        <div className="mb-8 relative group">
-                            <div className="absolute -inset-4 bg-cyan-500/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                            <h1 className="text-5xl md:text-8xl font-black text-center leading-[0.85] font-technical tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/20 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                                COSMIC<br />
-                                <span className="neon-text-cyan tracking-[-0.05em]">EXCAVATOR</span>
-                            </h1>
-                        </div>
-
-                        <div className="max-w-md px-6 text-center mb-12">
-                            <div className="glass-panel p-4 border-rose-500/20 bg-rose-500/5 animate-pulse">
-                                <p className="text-[10px] text-rose-400 font-technical uppercase tracking-[0.2em] leading-relaxed">
-                                    {t(TEXT_IDS.HARDCORE_WARNING, lang)}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="text-white/20 font-technical text-[10px] tracking-[0.5em] mb-12 uppercase">{GAME_VERSION}</div>
-
-                        <button
-                            onClick={handleInitClick}
-                            className="group relative px-12 py-5 bg-transparent overflow-hidden active:scale-95 transition-transform"
-                        >
+                        <h1 className="text-5xl md:text-8xl font-black text-center leading-[0.85] font-technical tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/20 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                            COSMIC<br /><span className="neon-text-cyan tracking-[-0.05em]">EXCAVATOR</span>
+                        </h1>
+                        <button onClick={handleInitClick} className="mt-12 group relative px-12 py-5 bg-transparent overflow-hidden active:scale-95 transition-transform">
                             <div className="absolute inset-0 bg-cyan-500 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-out" />
                             <div className="absolute inset-0 border-2 border-cyan-500 group-hover:border-white transition-colors duration-500" />
                             <span className="relative z-10 text-cyan-500 group-hover:text-black font-black font-technical text-2xl tracking-[0.2em] uppercase transition-colors duration-500">
@@ -674,58 +638,34 @@ const App: React.FC = () => {
             )}
 
             {showFirstRunModal && (
-                <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-void/90 backdrop-blur-2xl p-6 animate-in fade-in duration-700">
-                    <div className="max-w-md w-full glass-panel border-rose-500/30 bg-rose-500/5 p-8 shadow-[0_0_100px_rgba(244,63,94,0.1)] relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent" />
-
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-void/90 p-6">
+                    <div className="max-w-md w-full glass-panel border-rose-500/30 p-8 shadow-[0_0_100px_rgba(244,63,94,0.1)] relative overflow-hidden">
                         <h2 className="text-rose-500 font-black font-technical text-2xl mb-6 flex items-center gap-3 uppercase tracking-tighter">
-                            <AlertTriangle className="w-8 h-8" />
-                            {t(TEXT_IDS.FIRST_RUN_TITLE, lang)}
+                            <AlertTriangle className="w-8 h-8" /> {t(TEXT_IDS.FIRST_RUN_TITLE, lang)}
                         </h2>
-
-                        <p className="text-white/60 font-technical text-xs leading-relaxed mb-10 uppercase tracking-widest border-l border-white/10 pl-4 py-2">
-                            {t(TEXT_IDS.FIRST_RUN_BODY, lang)}
-                        </p>
-
-                        <button
-                            onClick={handleFirstRunConfirm}
-                            className="w-full py-5 bg-rose-600 hover:bg-rose-500 text-white font-black font-technical text-sm tracking-[0.3em] uppercase transition-all shadow-[0_10px_30px_rgba(225,29,72,0.3)] active:scale-[0.98]"
-                        >
+                        <button onClick={handleFirstRunConfirm} className="w-full py-5 bg-rose-600 text-white font-black font-technical text-sm tracking-[0.3em] uppercase">
                             {t(TEXT_IDS.BTN_ACKNOWLEDGE, lang)}
                         </button>
                     </div>
                 </div>
             )}
 
-            {/* PREDICTION ALERTS */}
             {activePredictions.map(pred => (
-                <PredictionAlert
-                    key={pred.id}
-                    eventTitle={pred.eventTitle}
-                    eventType={pred.eventType}
-                    timeRemaining={pred.timeRemaining}
-                    detailLevel={pred.detailLevel}
-                    onDismiss={() => setActivePredictions(prev => prev.filter(p => p.id !== pred.id))}
-                />
+                <PredictionAlert key={pred.id} eventTitle={pred.eventTitle} eventType={pred.eventType} timeRemaining={pred.timeRemaining} detailLevel={pred.detailLevel} onDismiss={() => setActivePredictions(prev => prev.filter(p => p.id !== pred.id))} />
             ))}
 
-            {/* SIDE TUNNEL PROGRESS & ATMOSPHERE */}
             {sideTunnel && activeView === View.DRILL && (
                 <>
                     <TunnelAtmosphereOverlay type={sideTunnel.type} />
-                    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] animate-fadeIn">
-                        <SideTunnelProgressMini tunnel={sideTunnel} lang={lang} />
-                    </div>
+                    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60]"><SideTunnelProgressMini tunnel={sideTunnel} lang={lang} /></div>
                 </>
             )}
 
-            {/* GLOBAL TRAVEL PROGRESS */}
             {useGameStore(s => s.travel) && activeView !== View.GLOBAL_MAP && (
-                <div className="fixed top-36 left-1/2 -translate-x-1/2 z-[60] animate-fadeIn">
-                    <TravelProgressMini travel={useGameStore(s => s.travel)!} lang={lang} />
-                </div>
+                <div className="fixed top-36 left-1/2 -translate-x-1/2 z-[60]"><TravelProgressMini travel={useGameStore(s => s.travel)!} lang={lang} /></div>
             )}
 
+            {/* Global Modals that are not yet in OverlayManager (if any) */}
             {isSettingsOpen && <SettingsModal settings={settings} onClose={() => setIsSettingsOpen(false)} onUpdateSettings={updateSettings} onResetProgress={resetProgress} language={lang} onSetLanguage={setLanguage} />}
             {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
             {isInventoryOpen && <EquipmentInventoryView onClose={() => setIsInventoryOpen(false)} />}

@@ -24,8 +24,12 @@ import {
     CheckCircle2
 } from 'lucide-react';
 
-const ExpeditionTab: React.FC = () => {
-    const { resources, launchExpedition, activeExpeditions, collectRewards, cancelExpedition } = useGameStore();
+interface ExpeditionTabProps {
+    base?: any; // PlayerBase
+}
+
+const ExpeditionTab: React.FC<ExpeditionTabProps> = ({ base }) => {
+    const { resources, launchExpedition, activeExpeditions, collectRewards, cancelExpedition, refuelDrones, maintainDrones } = useGameStore();
 
     const [selectedDiff, setSelectedDiff] = useState<ExpeditionDifficulty>('LOW');
     const [selectedResource, setSelectedResource] = useState<ResourceType>(ResourceType.IRON);
@@ -155,6 +159,61 @@ const ExpeditionTab: React.FC = () => {
                             </div>
                         </div>
                     </div>
+
+                    {base?.droneStation && (
+                        <div className="bg-black/60 backdrop-blur-2xl border border-cyan-500/30 p-6 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-[10px] font-black text-cyan-400 uppercase tracking-widest flex items-center gap-2">
+                                    <Zap className="w-4 h-4" /> Drone Station Status
+                                </h3>
+                                <span className="text-[10px] text-zinc-500 font-mono italic">Tier {base.droneStation.level}</span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-[8px] font-mono text-zinc-500">
+                                        <span>MAINTENANCE</span>
+                                        <span className={base.droneStation.maintenanceLevel < 30 ? 'text-red-500' : 'text-zinc-300'}>
+                                            {base.droneStation.maintenanceLevel}%
+                                        </span>
+                                    </div>
+                                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full transition-all ${base.droneStation.maintenanceLevel < 30 ? 'bg-red-500 shadow-[0_0_5px_#ef4444]' : 'bg-cyan-500'}`}
+                                            style={{ width: `${base.droneStation.maintenanceLevel}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-[8px] font-mono text-zinc-500">
+                                        <span>FUEL (COAL)</span>
+                                        <span className="text-zinc-300">{base.droneStation.fuelStorage.coal}/{base.droneStation.maxFuelStorage}</span>
+                                    </div>
+                                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-orange-500"
+                                            style={{ width: `${(base.droneStation.fuelStorage.coal / base.droneStation.maxFuelStorage) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => refuelDrones(base.id, 'coal', 100)}
+                                    className="flex-1 py-2 bg-white/5 border border-white/10 text-[8px] font-black text-white hover:bg-cyan-500 hover:text-black transition-all"
+                                >
+                                    REFUEL COAL
+                                </button>
+                                <button
+                                    onClick={() => maintainDrones(base.id)}
+                                    className="flex-1 py-2 bg-white/5 border border-white/10 text-[8px] font-black text-white hover:bg-green-500 hover:text-black transition-all"
+                                >
+                                    MAINTAIN (100$)
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="bg-cyan-950/20 border border-cyan-500/20 p-4 rounded-sm">
                         <h4 className="text-[8px] font-black text-cyan-500 uppercase tracking-widest mb-2">Protocol Briefing</h4>

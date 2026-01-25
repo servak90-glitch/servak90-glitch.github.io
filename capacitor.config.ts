@@ -5,7 +5,6 @@ const config: CapacitorConfig = {
   appName: 'Cosmic Excavator',
   webDir: 'dist',
   android: {
-    fullscreen: true
   }
 };
 

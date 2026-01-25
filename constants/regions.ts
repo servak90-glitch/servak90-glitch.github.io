@@ -21,7 +21,8 @@ export const REGIONS: Record<RegionId, Region> = {
         resourceBonuses: {
             coal: 1.3  // Бонус +30% к углю для топливной системы
         },
-        description: { RU: 'Стартовый регион. Зона нелегальных бурильщиков, бандиты и коррозия.', EN: 'Starting region. Zone of illegal drillers, bandits, and corrosion.' }
+        description: { RU: 'Стартовый регион. Зона нелегальных бурильщиков, бандиты и коррозия.', EN: 'Starting region. Zone of illegal drillers, bandits, and corrosion.' },
+        tierLimit: 3
     },
 
 
@@ -36,7 +37,8 @@ export const REGIONS: Record<RegionId, Region> = {
             stone: 1.5,
             gas: 1.2
         },
-        description: { RU: 'Заброшенные кристаллические шахты Science Faction. Изумруды ×3, магнитные аномалии.', EN: 'Abandoned crystal mines of the Science Faction. Emeralds ×3, magnetic anomalies.' }
+        description: { RU: 'Заброшенные кристаллические шахты Science Faction. Изумруды ×3, магнитные аномалии.', EN: 'Abandoned crystal mines of the Science Faction. Emeralds ×3, magnetic anomalies.' },
+        tierLimit: 6
     },
 
 
@@ -51,7 +53,8 @@ export const REGIONS: Record<RegionId, Region> = {
             silver: 1.5,
             oil: 1.3
         },
-        description: { RU: 'Военная зона Void Industries. Железо ×2, контроль корпораций, патрули дронов.', EN: 'Military zone of Void Industries. Iron ×2, corporate control, drone patrols.' }
+        description: { RU: 'Военная зона Void Industries. Железо ×2, контроль корпораций, патрули дронов.', EN: 'Military zone of Void Industries. Iron ×2, corporate control, drone patrols.' },
+        tierLimit: 9
     },
 
 
@@ -67,7 +70,8 @@ export const REGIONS: Record<RegionId, Region> = {
             uranium: 1.5,
             ancientTech: 2.0
         },
-        description: { RU: 'Вулканический регион. Экстремальные температуры, древние руины, лавовые потоки.', EN: 'Volcanic region. Extreme temperatures, ancient ruins, lava flows.' }
+        description: { RU: 'Вулканический регион. Экстремальные температуры, древние руины, лавовые потоки.', EN: 'Volcanic region. Extreme temperatures, ancient ruins, lava flows.' },
+        tierLimit: 12
     },
 
 
@@ -82,7 +86,8 @@ export const REGIONS: Record<RegionId, Region> = {
             diamonds: 2.0,
             nanoSwarm: 1.5
         },
-        description: { RU: 'Аномальная зона. Пространственные разрывы, Ancient Tech ×3, подготовка к порталу.', EN: 'Anomalous zone. Spatial ruptures, Ancient Tech ×3, portal preparation.' }
+        description: { RU: 'Аномальная зона. Пространственные разрывы, Ancient Tech ×3, подготовка к порталу.', EN: 'Anomalous zone. Spatial ruptures, Ancient Tech ×3, portal preparation.' },
+        tierLimit: 15
     }
 
 };

@@ -1,4 +1,4 @@
-import { SliceCreator } from './types';
+import { SliceCreator, pushLog } from './types';
 import { Expedition, ExpeditionDifficulty, ResourceType } from '../../types';
 import { expeditionSystem } from '../../services/systems/ExpeditionSystem';
 
@@ -49,7 +49,15 @@ export const createExpeditionSlice: SliceCreator<ExpeditionActions> = (set, get)
         const droneCost = droneCount * 10; // 10 Nano Swarm per drone
         if (state.resources.nanoSwarm < droneCost) return;
 
+        // NEW: Проверка топлива и обслуживания, если запуск из базы
+        const activeBase = state.playerBases?.find(b => b.droneStation && b.status === 'active');
+        const maintenance = activeBase?.droneStation?.maintenanceLevel || 100;
+
         const newExpedition = expeditionSystem.createExpedition(difficulty, droneCount, targetResource);
+        // Принудительно корректируем риск на основе обслуживания
+        const params = expeditionSystem.calculateExpeditionParams(difficulty, droneCount, targetResource, maintenance);
+        newExpedition.riskChance = params.risk;
+        newExpedition.duration = params.duration;
 
         set(s => ({
             activeExpeditions: [...s.activeExpeditions, newExpedition],
@@ -57,7 +65,7 @@ export const createExpeditionSlice: SliceCreator<ExpeditionActions> = (set, get)
                 ...s.resources,
                 nanoSwarm: s.resources.nanoSwarm - droneCost
             },
-            actionLogQueue: [...s.actionLogQueue, { type: 'LOG', msg: `ЭКСПЕДИЦИЯ ОТПРАВЛЕНА: ${targetResource}`, color: 'text-cyan-400' }]
+            actionLogQueue: pushLog(s, { type: 'LOG', msg: `ЭКСПЕДИЦИЯ ОТПРАВЛЕНА: ${targetResource}`, color: 'text-cyan-400' })
         }));
     },
 

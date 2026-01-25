@@ -89,6 +89,9 @@ export interface Region {
 
   // Lore description
   description?: LocalizedString;
+
+  // NEW: Tactical Scanner Phase 5
+  tierLimit: number; // Максимальный тир крафта в этом регионе
 }
 
 // === LICENSES & PERMITS ===
@@ -137,6 +140,19 @@ export interface FactionDef {
 export type BaseType = 'outpost' | 'camp' | 'station';
 export type BaseStatus = 'building' | 'active' | 'abandoned' | 'damaged' | 'under_attack';
 
+export interface DroneStation {
+  level: number;
+  fuelStorage: {
+    coal: number;
+    oil: number;
+    gas: number;
+  };
+  maxFuelStorage: number;
+  activeDrones: number;
+  maxDrones: number;
+  maintenanceLevel: number; // 0-100%
+}
+
 export interface BaseDefense {
   infantry: number;   // "Стражи"
   drones: number;     // "Перехватчики"
@@ -179,6 +195,9 @@ export interface PlayerBase {
 
   // === PHASE 4: DEFENSE PRODUCTION ===
   productionQueue: DefenseProductionJob[];
+
+  // === NEW: DRONE STATION (Phase 5.1) ===
+  droneStation?: DroneStation;
 }
 
 export interface DefenseProductionJob {
