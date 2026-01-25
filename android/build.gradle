@@ -24,6 +24,26 @@ allprojects {
     }
 }
 
+subprojects {
+    afterEvaluate {project ->
+        if (project.hasProperty('android')) {
+            project.android.buildTypes.each { buildType ->
+                if (buildType.name == 'release') {
+                    def newProguardFiles = buildType.proguardFiles.collect { file ->
+                        if (file.name == 'proguard-android.txt') {
+                            project.android.getDefaultProguardFile('proguard-android-optimize.txt')
+                        } else {
+                            file
+                        }
+                    }
+                    buildType.proguardFiles.clear()
+                    buildType.proguardFiles.addAll(newProguardFiles)
+                }
+            }
+        }
+    }
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
