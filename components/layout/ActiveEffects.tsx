@@ -1,4 +1,5 @@
 import React from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from '../../store/gameStore';
 import { t } from '../../services/localization';
 import { ActiveEffect } from '../../types';
@@ -65,8 +66,10 @@ const EffectBadge: React.FC<{ effect: ActiveEffect; lang: 'RU' | 'EN' }> = ({ ef
 };
 
 const ActiveEffects: React.FC = () => {
-    const effects = useGameStore(s => s.activeEffects);
-    const lang = useGameStore(s => s.settings.language);
+    const { effects, lang } = useGameStore(useShallow(s => ({
+        effects: s.activeEffects,
+        lang: s.settings.language
+    })));
 
     if (effects.length === 0) return null;
 

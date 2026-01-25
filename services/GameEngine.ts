@@ -142,28 +142,12 @@ export class GameEngine {
         visualEvents.push(...entityResult.events);
 
         // 9. Регенерация и дроны
-        // [MODULAR] Check Expeditions (every 1s roughly)
-        if (state.eventCheckTick % 10 === 0) {
-            // [MODULAR] Expedition Update
-            const updatedExpeditions = state.activeExpeditions.map(ex => expeditionSystem.checkStatus(ex));
-            // Check for any changes to avoid unnecessary state updates (React optimization)
-            // But here we are returning partialState.
-            // If we just return mapped, it replaces the array.
-            // Does it matter? 
-            // Let's only add it to partialState if functionality implies it.
-            // checkStatus updates the object effectively (returns new if changed).
-            // We should push this to partialState.
-            // However partialState is aggregated.
-            // We need to merge it?
-            // No, GameEngine returns one object.
-            // We can just assign it to a property of the returned object.
-            // But `entityResult` creates `events`.
-            // Let's create `expeditionResult`.
-        }
-
-        // Actually, let's just do it properly:
+        // [PHASE 5 OPTIMIZATION] Throttle non-critical systems to 30 ticks (~0.5s)
+        const isSlowTick = state.eventCheckTick % 30 === 0;
         let activeExpeditions = state.activeExpeditions;
-        if (state.eventCheckTick % 10 === 0) {
+
+        if (isSlowTick) {
+            // [MODULAR] Expedition Update
             let hasChanges = false;
             const updated = state.activeExpeditions.map(ex => {
                 const newVal = expeditionSystem.checkStatus(ex);
@@ -172,9 +156,7 @@ export class GameEngine {
             });
             if (hasChanges) activeExpeditions = updated;
 
-            // [PHASE 2] Check caravan completions every 10 ticks (~10 seconds)
-            // This is a side-effect action that modifies the store directly
-            // [HARDCORE RESILIENCE] Wrap side systems in try-catch to prevent core loop failure
+            // [PHASE 2] Check caravan completions
             try {
                 (state as any).checkAllCaravans?.();
                 (state as any).checkAllQuestsProgress?.(); // [PHASE 3.1] Quest System check
@@ -453,7 +435,7 @@ export class GameEngine {
                     : {}),
 
                 // Let's add activeExpeditions if changed
-                ...(state.eventCheckTick % 10 === 0 ? { activeExpeditions } : {}),
+                ...(isSlowTick ? { activeExpeditions } : {}),
 
                 // Перемещение
                 ...travelResult.update,

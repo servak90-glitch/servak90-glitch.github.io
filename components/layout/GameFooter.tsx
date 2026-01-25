@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from '../../store/gameStore';
 import { View } from '../../types';
 import { t, TEXT_IDS } from '../../services/localization';
@@ -24,14 +25,15 @@ interface GameFooterProps {
 }
 
 const GameFooter: React.FC<GameFooterProps> = ({ logs }) => {
-    const activeView = useGameStore(s => s.activeView);
-    const setView = useGameStore(s => s.setView);
-    const currentBoss = useGameStore(s => s.currentBoss);
-    const lang = useGameStore(s => s.settings.language);
-
-    const forgeUnlocked = useGameStore(s => s.forgeUnlocked);
-    const skillsUnlocked = useGameStore(s => s.skillsUnlocked);
-    const cityUnlocked = useGameStore(s => s.cityUnlocked);
+    const { activeView, setView, currentBoss, lang, forgeUnlocked, skillsUnlocked, cityUnlocked } = useGameStore(useShallow(s => ({
+        activeView: s.activeView,
+        setView: s.setView,
+        currentBoss: s.currentBoss,
+        lang: s.settings.language,
+        forgeUnlocked: s.forgeUnlocked,
+        skillsUnlocked: s.skillsUnlocked,
+        cityUnlocked: s.cityUnlocked
+    })));
 
     const consoleEndRef = useRef<HTMLDivElement>(null);
 

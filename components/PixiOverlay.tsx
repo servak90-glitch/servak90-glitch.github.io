@@ -15,6 +15,8 @@ let activeComponentsCount = 0;
 let globalTextures: { debris: Texture; spark: Texture; smoke: Texture; dust: Texture } | null = null;
 let globalParticleLayer: Container | null = null;
 const globalParticles: Particle[] = [];
+let globalDroneTextures: Map<string, Texture> | null = null;
+let globalObjectTextures: Map<string, Texture> | null = null;
 
 // [DEV_CONTEXT: OPTIMIZATION] Removed globalPropsRef. The ticker now accesses the store directly.
 
@@ -87,8 +89,8 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                         const particleLayer = new Container();
                         const dustLayer = new Container();
 
-                        const droneGraphicsMap = new Map<number, Graphics>();
-                        const objectGraphicsMap = new Map<string, Graphics>();
+                        const droneGraphicsMap = new Map<number, Sprite>();
+                        const objectGraphicsMap = new Map<string, Sprite>();
                         const dustParticles: DustParticle[] = [];
 
                         // Expose particle layer to global scope for Imperative Handle
@@ -108,7 +110,8 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                             { x: 0, y: 0 }
                         );
 
-                        app.stage.filters = [rgbSplitFilter, crtFilter];
+                        const isMobile = window.innerWidth < 768;
+                        app.stage.filters = isMobile ? [] : [rgbSplitFilter, crtFilter];
 
                         tunnelAtmosphere.init(app.stage, {
                             screenWidth: app.screen.width,
@@ -141,6 +144,99 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                 c.fillRect(0, 0, 4, 4);
                             }, 4, 4),
                         };
+
+                        // [OPTIMIZATION] Pre-generate textures for drones to avoid Graphics.clear() every frame
+                        const generateDroneTextures = () => {
+                            const textures = new Map<string, Texture>();
+                            const droneTypes = [DroneType.COLLECTOR, DroneType.COOLER, DroneType.BATTLE, DroneType.REPAIR, DroneType.MINER];
+
+                            droneTypes.forEach(type => {
+                                const size = 16;
+                                const tex = generateTexture(ctx => {
+                                    const centerX = size;
+                                    const centerY = size;
+                                    const s = 10;
+                                    ctx.strokeStyle = '#ffffff';
+                                    ctx.lineWidth = 2;
+
+                                    if (type === DroneType.COLLECTOR) {
+                                        ctx.strokeRect(centerX - s / 2, centerY - s / 2, s, s);
+                                        ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+                                        ctx.fillRect(centerX - s / 4, centerY - s / 4, s / 2, s / 2);
+                                    } else if (type === DroneType.COOLER) {
+                                        ctx.beginPath();
+                                        ctx.arc(centerX, centerY, s / 3, 0, Math.PI * 2);
+                                        ctx.stroke();
+                                        ctx.fillStyle = '#00ffff';
+                                        ctx.fill();
+                                    } else if (type === DroneType.BATTLE) {
+                                        ctx.beginPath();
+                                        ctx.moveTo(centerX, centerY - s / 2);
+                                        ctx.lineTo(centerX + s / 2, centerY + s / 2);
+                                        ctx.lineTo(centerX - s / 2, centerY + s / 2);
+                                        ctx.closePath();
+                                        ctx.stroke();
+                                        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                                        ctx.fill();
+                                    } else if (type === DroneType.REPAIR) {
+                                        ctx.fillStyle = '#FFD700';
+                                        ctx.fillRect(centerX - 2, centerY - s / 2, 4, s);
+                                        ctx.fillRect(centerX - s / 2, centerY - 2, s, 4);
+                                    } else if (type === DroneType.MINER) {
+                                        ctx.beginPath();
+                                        ctx.moveTo(centerX - s / 3, centerY - s / 2);
+                                        ctx.lineTo(centerX + s / 3, centerY - s / 2);
+                                        ctx.lineTo(centerX, centerY + s / 2);
+                                        ctx.closePath();
+                                        ctx.fillStyle = '#FF00FF';
+                                        ctx.fill();
+                                    }
+                                }, size * 2, size * 2);
+                                textures.set(type, tex);
+                            });
+                            return textures;
+                        };
+
+                        const generateObjectTextures = () => {
+                            const textures = new Map<string, Texture>();
+                            const types = ['GEODE_SMALL', 'GEODE_LARGE', 'SCRAP'];
+
+                            types.forEach(type => {
+                                const size = 32;
+                                const tex = generateTexture(ctx => {
+                                    const cx = size;
+                                    const cy = size;
+                                    if (type === 'GEODE_SMALL') {
+                                        ctx.fillStyle = 'rgba(0, 255, 136, 0.4)';
+                                        ctx.strokeStyle = '#00ffaa';
+                                        ctx.lineWidth = 2;
+                                        ctx.beginPath();
+                                        for (let i = 0; i < 8; i++) {
+                                            const a = i * Math.PI / 4;
+                                            const r = i % 2 === 0 ? 12 : 8;
+                                            ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+                                        }
+                                        ctx.closePath();
+                                        ctx.fill(); ctx.stroke();
+                                    } else if (type === 'GEODE_LARGE') {
+                                        ctx.fillStyle = 'rgba(170, 68, 255, 0.4)';
+                                        ctx.strokeStyle = '#cc66ff';
+                                        ctx.lineWidth = 2;
+                                        ctx.strokeRect(cx - 12, cy - 12, 24, 24);
+                                        ctx.fillRect(cx - 10, cy - 10, 20, 20);
+                                    } else {
+                                        ctx.fillStyle = 'rgba(255, 136, 0, 0.4)';
+                                        ctx.fillRect(cx - 10, cy - 4, 20, 8);
+                                        ctx.fillRect(cx - 4, cy - 10, 8, 20);
+                                    }
+                                }, size * 2, size * 2);
+                                textures.set(type, tex);
+                            });
+                            return textures;
+                        };
+
+                        globalDroneTextures = generateDroneTextures();
+                        globalObjectTextures = generateObjectTextures();
 
                         for (let i = 0; i < 60; i++) {
                             const sprite = new Sprite(globalTextures.dust);
@@ -217,10 +313,12 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                     rgbSplitFilter.blue = { x: 0, y: 0 };
                                 }
 
-                                const damageRatio = (100 - integrity) / 100;
-                                crtFilter.noise = 0.1 + (damageRatio * 0.4);
-                                crtFilter.curvature = 1 + (damageRatio > 0.8 ? Math.sin(time * 10) * 0.5 : 0);
-                                crtFilter.time = time;
+                                if (!isMobile) {
+                                    const damageRatio = (100 - integrity) / 100;
+                                    crtFilter.noise = 0.1 + (damageRatio * 0.4);
+                                    crtFilter.curvature = 1 + (damageRatio > 0.8 ? Math.sin(time * 10) * 0.5 : 0);
+                                    crtFilter.time = time;
+                                }
 
                                 const warpSpeed = isDrillingActive ? 25 : 1;
 
@@ -257,114 +355,29 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                     if (p.life <= 0) { p.sprite.destroy(); globalParticles.splice(i, 1); }
                                 }
 
-                                droneGraphicsMap.forEach((g, idx) => {
-                                    if (idx >= activeDrones.length) {
-                                        g.destroy();
-                                        droneGraphicsMap.delete(idx);
-                                    }
-                                });
-
                                 activeDrones.forEach((type, i) => {
-                                    let g = droneGraphicsMap.get(i);
-                                    if (!g || g.destroyed) {
-                                        g = new Graphics();
-                                        droneLayer.addChild(g);
-                                        droneGraphicsMap.set(i, g);
+                                    let sprite = droneGraphicsMap.get(i);
+                                    if (!sprite || sprite.destroyed) {
+                                        const tex = globalDroneTextures?.get(type) || globalTextures?.debris;
+                                        sprite = new Sprite(tex);
+                                        sprite.anchor.set(0.5);
+                                        droneLayer.addChild(sprite);
+                                        droneGraphicsMap.set(i, sprite);
                                     }
 
-                                    g.clear();
                                     const level = droneLevels[type] || 1;
                                     const scale = 1 + (level * 0.1);
-
                                     const radius = 90 + i * 35;
                                     const speed = (1 + (i % 3) * 0.3) * (i % 2 === 0 ? 1 : -1);
                                     const angle = time * speed + (i * 1.5);
 
-                                    const dx = Math.cos(angle) * radius;
-                                    const dy = Math.sin(angle) * (radius * 0.3);
+                                    sprite.x = cx + Math.cos(angle) * radius;
+                                    sprite.y = cy + Math.sin(angle) * (radius * 0.3);
+                                    sprite.scale.set(scale);
 
-                                    const droneX = cx + dx;
-                                    const droneY = cy + dy;
-
-                                    g.ellipse(cx, cy, radius, radius * 0.3)
-                                        .stroke({ width: 1, color: 0xffffff, alpha: 0.05 });
-
-                                    const size = 6 * scale;
-
-                                    switch (type) {
-                                        case DroneType.COLLECTOR: {
-                                            const color = 0x00FF00;
-                                            g.poly([
-                                                droneX - size, droneY - size,
-                                                droneX + size, droneY - size,
-                                                droneX + size, droneY + size,
-                                                droneX - size, droneY + size
-                                            ]).stroke({ width: 2, color: color });
-                                            g.rect(droneX - size / 2, droneY - size / 2, size, size)
-                                                .fill({ color: color, alpha: 0.3 + Math.sin(time * 5) * 0.2 });
-                                            const open = Math.abs(Math.sin(time * 3)) * 3;
-                                            g.moveTo(droneX - size, droneY + size);
-                                            g.lineTo(droneX - size - 2, droneY + size + 4 + open);
-                                            g.moveTo(droneX + size, droneY + size);
-                                            g.lineTo(droneX + size + 2, droneY + size + 4 + open);
-                                            g.stroke({ width: 1, color: color });
-                                            break;
-                                        }
-                                        case DroneType.COOLER: {
-                                            const color = 0x00FFFF;
-                                            const rot = time * 10;
-                                            g.circle(droneX, droneY, size / 2).fill({ color });
-                                            for (let k = 0; k < 3; k++) {
-                                                const bladeAng = rot + (k * (Math.PI * 2 / 3));
-                                                const bx = droneX + Math.cos(bladeAng) * size * 1.5;
-                                                const by = droneY + Math.sin(bladeAng) * size * 1.5;
-                                                g.moveTo(droneX, droneY).lineTo(bx, by).stroke({ width: 2 * scale, color });
-                                            }
-                                            if (level >= 5) {
-                                                g.circle(droneX, droneY, size * 2)
-                                                    .stroke({ width: 1, color, alpha: 0.2 });
-                                            }
-                                            break;
-                                        }
-                                        case DroneType.BATTLE: {
-                                            const color = 0xFF0000;
-                                            const headAng = angle + (speed > 0 ? Math.PI / 2 : -Math.PI / 2);
-                                            const p1x = droneX + Math.cos(headAng) * size * 1.5;
-                                            const p1y = droneY + Math.sin(headAng) * size * 1.5;
-                                            const p2x = droneX + Math.cos(headAng + 2.5) * size;
-                                            const p2y = droneY + Math.sin(headAng + 2.5) * size;
-                                            const p3x = droneX + Math.cos(headAng - 2.5) * size;
-                                            const p3y = droneY + Math.sin(headAng - 2.5) * size;
-                                            g.poly([p1x, p1y, p2x, p2y, p3x, p3y])
-                                                .fill({ color, alpha: 0.8 })
-                                                .stroke({ width: 1, color: 0xffffff });
-                                            if (level >= 3) {
-                                                g.circle(p1x, p1y, 2).fill({ color: 0xffff00 });
-                                            }
-                                            break;
-                                        }
-                                        case DroneType.REPAIR: {
-                                            const color = 0xFFD700;
-                                            g.rect(droneX - size / 3, droneY - size, size * 0.66, size * 2).fill({ color });
-                                            g.rect(droneX - size, droneY - size / 3, size * 2, size * 0.66).fill({ color });
-                                            g.ellipse(droneX, droneY, size * 1.5, size * 0.5)
-                                                .stroke({ width: 1, color, alpha: 0.5 });
-                                            break;
-                                        }
-                                        case DroneType.MINER: {
-                                            const color = 0xFF00FF;
-                                            g.poly([
-                                                droneX - size / 2, droneY - size,
-                                                droneX + size / 2, droneY - size,
-                                                droneX, droneY + size * 1.5
-                                            ]).fill({ color });
-                                            const offset = (time * 5) % size;
-                                            g.moveTo(droneX - size / 2, droneY - size + offset)
-                                                .lineTo(droneX + size / 2, droneY - size + offset + 2)
-                                                .stroke({ width: 1, color: 0xffffff });
-                                            break;
-                                        }
-                                    }
+                                    // Pulse effect for variety
+                                    const pulse = 1 + Math.sin(time * 3 + i) * 0.05;
+                                    sprite.scale.set(scale * pulse);
                                 });
 
                                 const currentIds = new Set(flyingObjects.map(o => o.id));
@@ -373,95 +386,32 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                 });
 
                                 flyingObjects.forEach(obj => {
-                                    let g = objectGraphicsMap.get(obj.id);
-                                    if (!g || g.destroyed) {
-                                        g = new Graphics();
-                                        g.eventMode = 'static';
-                                        g.cursor = 'pointer';
-                                        g.hitArea = new Circle(0, 0, 30);
-                                        g.on('pointerdown', (e) => {
+                                    let sprite = objectGraphicsMap.get(obj.id);
+                                    if (!sprite || sprite.destroyed) {
+                                        const texType = obj.type === 'GEODE_SMALL' ? 'GEODE_SMALL' : (obj.type === 'GEODE_LARGE' ? 'GEODE_LARGE' : 'SCRAP');
+                                        const tex = globalObjectTextures?.get(texType) || globalTextures?.debris;
+                                        sprite = new Sprite(tex);
+                                        sprite.anchor.set(0.5);
+                                        sprite.eventMode = 'static';
+                                        sprite.cursor = 'pointer';
+                                        sprite.on('pointerdown', (e) => {
                                             e.stopPropagation();
-                                            g.on('pointerdown', (e) => {
-                                                e.stopPropagation();
-                                                propsRef.current.onObjectClick(obj.id, e.global.x, e.global.y);
-                                            });
+                                            propsRef.current.onObjectClick(obj.id, e.global.x, e.global.y);
                                         });
-                                        objectLayer.addChild(g);
-                                        objectGraphicsMap.set(obj.id, g);
+                                        objectLayer.addChild(sprite);
+                                        objectGraphicsMap.set(obj.id, sprite);
                                     }
 
-                                    g.clear();
-
-                                    const pulse = 1 + Math.sin(time * 5) * 0.15; // Increased pulse speed
-                                    const healthPercent = obj.hp / obj.maxHp;
-
+                                    const pulse = 1 + Math.sin(time * 5) * 0.15;
                                     let rarityScale = 1;
-                                    let rarityGlowColor = 0x000000;
-                                    let rarityGlowAlpha = 0;
+                                    if (obj.rarity === 'RARE') rarityScale = 1.2;
+                                    else if (obj.rarity === 'EPIC') rarityScale = 1.5;
 
-                                    if (obj.rarity === 'RARE') {
-                                        rarityScale = 1.2;
-                                        rarityGlowColor = 0x00FFFF;
-                                        rarityGlowAlpha = 0.3;
-                                    } else if (obj.rarity === 'EPIC') {
-                                        rarityScale = 1.5;
-                                        rarityGlowColor = 0xFFD700;
-                                        rarityGlowAlpha = 0.5;
-                                    }
-
-                                    if (obj.rarity !== 'COMMON') {
-                                        g.circle(0, 0, 25 * rarityScale * pulse)
-                                            .fill({ color: rarityGlowColor, alpha: rarityGlowAlpha * 0.5 + Math.sin(time * 10) * 0.1 });
-                                    }
-
-                                    if (obj.type === 'GEODE_SMALL') {
-                                        const r = 12 * pulse * rarityScale;
-                                        const path: number[] = [];
-                                        for (let k = 0; k < 8; k++) {
-                                            const ang = (k * Math.PI) / 4;
-                                            const rad = k % 2 === 0 ? r : r * 0.6;
-                                            path.push(Math.cos(ang) * rad, Math.sin(ang) * rad);
-                                        }
-                                        g.drawPolygon(path.map((v, i) => v * 1.3))
-                                            .fill({ color: 0x00ff88, alpha: 0.15 });
-                                        g.drawPolygon(path)
-                                            .fill({ color: 0x00ff88, alpha: 0.4 * healthPercent + 0.2 })
-                                            .stroke({ width: 2, color: 0x00ffaa });
-                                        g.circle(0, -r * 0.3, r * 0.2)
-                                            .fill({ color: 0xffffff, alpha: 0.5 });
-
-                                    } else if (obj.type === 'GEODE_LARGE') {
-                                        const s = 15 * pulse * rarityScale;
-                                        g.rect(-s * 1.4, -s * 1.4, s * 2.8, s * 2.8)
-                                            .fill({ color: 0x9900ff, alpha: 0.1 });
-                                        g.rect(-s, -s, s * 2, s * 2)
-                                            .fill({ color: 0xaa44ff, alpha: 0.35 * healthPercent + 0.15 })
-                                            .stroke({ width: 2, color: 0xcc66ff });
-                                        const sparkX = Math.sin(time * 5) * s * 0.5;
-                                        const sparkY = Math.cos(time * 4) * s * 0.5;
-                                        g.circle(sparkX, sparkY, 3).fill({ color: 0xffffff, alpha: 0.8 });
-
-                                    } else {
-                                        const baseAlpha = 0.6 * healthPercent + 0.2;
-                                        g.rect(-10 * pulse * rarityScale, -4 * pulse * rarityScale, 20 * pulse * rarityScale, 8 * pulse * rarityScale)
-                                            .fill({ color: 0xff8800, alpha: baseAlpha });
-                                        g.rect(-3 * pulse * rarityScale, -10 * pulse * rarityScale, 6 * pulse * rarityScale, 20 * pulse * rarityScale)
-                                            .fill({ color: 0xffaa00, alpha: baseAlpha });
-                                        for (let sp = 0; sp < 4; sp++) {
-                                            const sparkAngle = time * 2 + sp * (Math.PI / 2);
-                                            const sparkDist = 15 * rarityScale + Math.sin(time * 8 + sp) * 3;
-                                            g.circle(
-                                                Math.cos(sparkAngle) * sparkDist,
-                                                Math.sin(sparkAngle) * sparkDist,
-                                                2
-                                            ).fill({ color: 0xffff00, alpha: 0.7 });
-                                        }
-                                        g.circle(0, 0, 4 * pulse * rarityScale).fill({ color: 0xffcc00, alpha: 0.9 });
-                                    }
-
-                                    g.x = (obj.x / 100) * screenW;
-                                    g.y = (obj.y / 100) * screenH;
-                                    g.rotation = time * 0.5;
+                                    sprite.x = (obj.x / 100) * screenW;
+                                    sprite.y = (obj.y / 100) * screenH;
+                                    sprite.scale.set(rarityScale * pulse);
+                                    sprite.rotation = time * 0.5;
+                                    sprite.alpha = 0.4 + (obj.hp / obj.maxHp) * 0.6;
                                 });
                             } catch (error) {
                                 console.error("Pixi Ticker Error:", error);
@@ -517,10 +467,12 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
     useImperativeHandle(ref, () => ({
         emitParticle: (x, y, colorStr, type, count) => {
             if (!globalApp || !globalTextures || !globalParticleLayer) return;
+            const isMobile = window.innerWidth < 768;
+            const maxParticles = isMobile ? 100 : 300;
             let color = 0xffffff;
             if (colorStr.startsWith('#')) color = parseInt(colorStr.replace('#', ''), 16);
 
-            for (let i = 0; i < count; i++) {
+            for (let i = 0; i < (isMobile ? Math.ceil(count / 2) : count); i++) {
                 let tex = globalTextures.debris;
                 let life = 0, vx = 0, vy = 0;
 
@@ -549,8 +501,8 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                 globalParticleLayer.addChild(sprite);
                 globalParticles.push({ sprite, vx, vy, life, maxLife: life, type });
             }
-            if (globalParticles.length > 300) {
-                const removed = globalParticles.splice(0, globalParticles.length - 300);
+            if (globalParticles.length > maxParticles) {
+                const removed = globalParticles.splice(0, globalParticles.length - maxParticles);
                 removed.forEach(p => p.sprite.destroy());
             }
         }
