@@ -6,6 +6,8 @@ import { FUSION_RECIPES } from '../../constants';
 import { ARTIFACTS } from '../../services/artifactRegistry';
 import { BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS } from '../../constants';
 import { t, TEXT_IDS, TL } from '../../services/localization';
+import { Activity, Zap, Thermometer, ShieldCheck, Atom, Fingerprint, ChevronRight, Package, Lock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 const ALL_PARTS = [...BITS, ...ENGINES, ...COOLERS, ...HULLS, ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES, ...POWER_CORES, ...ARMORS];
@@ -45,24 +47,42 @@ const FusionTab: React.FC<FusionTabProps> = ({
     };
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-10">
             {/* TRANSMUTATION */}
-            <div className="bg-zinc-900 border border-amber-900/50 p-4">
-                <h3 className="text-xl pixel-text text-amber-500 mb-2">{t(TEXT_IDS.TRANSMUTATION_TITLE, lang)}</h3>
-                <div className="flex flex-col md:flex-row gap-4 md:items-center">
-                    <div className="text-zinc-500 text-xs">{t(TEXT_IDS.TRANSMUTATION_DESC, lang)}</div>
+            <div className="glass-panel border-amber-500/20 bg-amber-500/5 p-8 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Fingerprint className="w-32 h-32" />
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-8 md:items-center justify-between mb-8 relative z-10">
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 glass-panel border-amber-500/30 bg-amber-500/10 flex items-center justify-center rounded-2xl rotate-3 group-hover:rotate-0 transition-transform">
+                            <Fingerprint className="w-8 h-8 text-amber-500" />
+                        </div>
+                        <div>
+                            <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-1">{t(TEXT_IDS.TRANSMUTATION_TITLE, lang)}</h3>
+                            <p className="text-[10px] text-amber-500/60 font-black uppercase tracking-[0.3em]">{t(TEXT_IDS.TRANSMUTATION_DESC, lang)}</p>
+                        </div>
+                    </div>
+
                     <button
                         onClick={() => {
                             transmuteArtifacts(selectedArtifactsForFusion);
                             setSelectedArtifactsForFusion([]);
                         }}
                         disabled={selectedArtifactsForFusion.length !== 3}
-                        className={`px-4 py-2 font-bold transition-all ${selectedArtifactsForFusion.length === 3 ? 'bg-amber-600 text-black hover:bg-amber-500' : 'bg-zinc-800 text-zinc-600'}`}
+                        className={`px-8 py-4 font-black uppercase tracking-[0.2em] italic text-xs transition-all flex items-center gap-3
+                            ${selectedArtifactsForFusion.length === 3
+                                ? 'bg-amber-500 text-black hover:bg-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.3)]'
+                                : 'bg-white/5 text-white/10 border border-white/5 cursor-not-allowed'}
+                        `}
                     >
                         {t(TEXT_IDS.TRANSMUTATION_BUTTON, lang)}
+                        <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
-                <div className="grid grid-cols-6 md:grid-cols-8 gap-2 mt-4 bg-black/50 p-2 border border-zinc-800">
+
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-3 p-4 glass-panel border-white/5 bg-black/40">
                     {inventoryList.filter(i => i.isIdentified && !i.isEquipped).map(item => {
                         const isSelected = selectedArtifactsForFusion.includes(item.instanceId);
                         const def = ARTIFACTS.find(a => a.id === item.defId);
@@ -70,141 +90,151 @@ const FusionTab: React.FC<FusionTabProps> = ({
                             <button
                                 key={item.instanceId}
                                 onClick={() => toggleArtifactSelection(item.instanceId)}
-                                className={`w-10 h-10 border transition-all relative flex items-center justify-center text-xl
-                  ${isSelected ? 'bg-amber-500/20 border-amber-500 scale-110 z-10' : 'bg-black border-zinc-700 hover:border-zinc-500'}
-                `}
+                                className={`aspect-square border transition-all relative flex items-center justify-center text-2xl
+                                    ${isSelected ? 'bg-amber-500/20 border-amber-500 scale-110 z-10 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10'}
+                                `}
                             >
                                 {def?.icon}
-                                {isSelected && <div className="absolute top-0 right-0 w-2 h-2 bg-amber-500 rounded-full" />}
+                                {isSelected && (
+                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-black" />
+                                )}
                             </button>
                         );
                     })}
                     {inventoryList.filter(i => i.isIdentified && !i.isEquipped).length === 0 && (
-                        <div className="col-span-full text-center text-xs text-zinc-600 py-4">{t(TEXT_IDS.TRANSMUTATION_NO_ARTIFACTS, lang)}</div>
+                        <div className="col-span-full text-center text-[10px] font-black uppercase tracking-widest text-white/20 py-8 italic">
+                            {t(TEXT_IDS.TRANSMUTATION_NO_ARTIFACTS, lang)}
+                        </div>
                     )}
                 </div>
             </div>
 
             {/* FUSION RECIPES */}
-            <div className="bg-zinc-900 border border-purple-900/50 p-4">
-                <h3 className="text-xl pixel-text text-purple-400 mb-4 border-b border-purple-900 pb-2">{t(TEXT_IDS.FUSION_ATOMIC_RECONSTRUCTOR, lang)}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {FUSION_RECIPES.map(recipe => {
+            <div className="glass-panel border-purple-500/20 bg-purple-500/5 p-8 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Atom className="w-32 h-32" />
+                </div>
+
+                <div className="flex items-center gap-6 mb-8 border-b border-purple-500/20 pb-6 relative z-10">
+                    <div className="w-16 h-16 glass-panel border-purple-500/30 bg-purple-500/10 flex items-center justify-center rounded-2xl -rotate-3 group-hover:rotate-0 transition-transform">
+                        <Atom className="w-8 h-8 text-purple-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-1">{t(TEXT_IDS.FUSION_ATOMIC_RECONSTRUCTOR, lang)}</h3>
+                        <p className="text-[10px] text-purple-400/60 font-black uppercase tracking-[0.3em]">{lang === 'RU' ? 'СИНТЕЗ МОДУЛЕЙ ПРЕДЕЛЬНОГО УРОВНЯ' : 'ULTIMATE MODULE SYNTHESIS'}</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                    {FUSION_RECIPES.map((recipe, idx) => {
                         const targetPart = ALL_PARTS.find(p => p.id === recipe.resultId);
-                        const hasCatalyst = resources[recipe.catalyst.resource] >= recipe.catalyst.amount;
+                        const hasCatalyst = (resources as any)[recipe.catalyst.resource] >= recipe.catalyst.amount;
 
                         let conditionMet = true;
                         let conditionStatus = t(TEXT_IDS.FUSION_COMPLETED, lang);
-                        let statusColor = "text-green-500";
+                        let StatusIcon = ShieldCheck;
+                        let statusColor = "text-emerald-400";
 
                         if (recipe.condition) {
                             if (recipe.condition.type === 'DEPTH_REACHED') {
+                                StatusIcon = Activity;
                                 if (depth < recipe.condition.target) {
                                     conditionMet = false;
                                     conditionStatus = `${Math.floor(depth)} / ${recipe.condition.target}m`;
-                                    statusColor = "text-red-500";
+                                    statusColor = "text-rose-500";
                                 }
                             } else if (recipe.condition.type === 'ZERO_HEAT') {
+                                StatusIcon = Thermometer;
                                 if (heatStabilityTimer < recipe.condition.target) {
                                     conditionMet = false;
                                     conditionStatus = `${heatStabilityTimer.toFixed(1)}s / ${recipe.condition.target}s`;
                                     statusColor = "text-orange-500";
                                 }
                             } else if (recipe.condition.type === 'NO_DAMAGE') {
+                                StatusIcon = ShieldCheck;
                                 if (integrity < recipe.condition.target) {
                                     conditionMet = false;
                                     conditionStatus = t(TEXT_IDS.FUSION_HULL_DAMAGED, lang);
-                                    statusColor = "text-red-500";
+                                    statusColor = "text-rose-500";
                                 }
                             }
                         }
 
-
-                        // Проверка наличия компонента (предыдущего тира)
-                        // drill типизирован в props, но для надежности добавим null-check
-                        const currentPart = Object.values(drill || {}).find((p: { id: string }) => p.id === recipe.componentAId) as { id: string } | undefined;
-                        const currentPartId = currentPart ? currentPart.id : null;
-                        const hasRequiredPart = currentPartId === recipe.componentAId;
-
-                        // Если деталь уже улучшена до результата или выше (для отображения скрытия/галочки можно доработать, но пока блокируем кнопку)
-                        // НО: У нас drill хранит текущую, если мы апгрейднули до 13, то current будет 13.
-                        // Рецепт требует 12. Если у нас 13, рецепт нам уже не нужен (или выполнен).
-                        // Здесь мы проверяем: можем ли мы сделать апгрейд.
-                        // Мы можем сделать апгрейд ТОЛЬКО если у нас сейчас стоит componentAId.
-
-                        // Получаем текущую деталь в этом слоте
+                        // Находим текущую установленную деталь в этом слоте
                         let currentSlotPart: any = null;
-                        const allPartsArrays = [BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS];
-                        const targetSlot: string | null = null;
+                        const allPartsArrays = [[BITS, 'bit'], [ENGINES, 'engine'], [COOLERS, 'cooling'], [HULLS, 'hull'], [LOGIC_CORES, 'logic'], [CONTROL_UNITS, 'control'], [GEARBOXES, 'gearbox'], [POWER_CORES, 'power'], [ARMORS, 'armor']];
 
-                        for (const arr of allPartsArrays) {
-                            if (arr.some(p => p.id === recipe.resultId)) {
-                                // Нашли массив, к которому относится рецепт.
-                                // Теперь нужно найти, какая деталь сейчас стоит в этом слоте у игрока.
-                                // Проще: мы передали drill целиком.
-                                // Нам нужно знать, к какому слоту относится recipe.resultId.
-                                // Но у нас нет явной мапы recipe -> slot.
-                                // Придется искать.
-                                if (arr === BITS) currentSlotPart = drill.bit;
-                                else if (arr === ENGINES) currentSlotPart = drill.engine;
-                                else if (arr === COOLERS) currentSlotPart = drill.cooling;
-                                else if (arr === HULLS) currentSlotPart = drill.hull;
-                                else if (arr === LOGIC_CORES) currentSlotPart = drill.logic;
-                                else if (arr === CONTROL_UNITS) currentSlotPart = drill.control;
-                                else if (arr === GEARBOXES) currentSlotPart = drill.gearbox;
-                                else if (arr === POWER_CORES) currentSlotPart = drill.power;
-                                else if (arr === ARMORS) currentSlotPart = drill.armor;
+                        for (const [arr, slot] of allPartsArrays) {
+                            if ((arr as any[]).some(p => p.id === recipe.resultId)) {
+                                currentSlotPart = (drill as any)[slot as string];
                                 break;
                             }
                         }
 
                         const isCorrectTierEquipped = currentSlotPart?.id === recipe.componentAId;
                         const isAlreadyUpgraded = currentSlotPart?.tier >= (targetPart?.tier || 99);
-
                         const canCraft = hasCatalyst && conditionMet && isCorrectTierEquipped;
 
                         return (
-                            <div key={recipe.id} className="bg-black border border-purple-600/30 p-4 flex flex-col justify-between group hover:border-purple-500 transition-colors">
+                            <motion.div
+                                key={recipe.id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className={`glass-panel border-white/5 bg-white/5 p-6 flex flex-col justify-between group/card hover:border-purple-500/40 transition-all relative overflow-hidden ${isAlreadyUpgraded ? 'opacity-60 grayscale-[0.5]' : ''}`}
+                            >
                                 <div>
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h4 className="text-red-500 font-bold pixel-text text-xs leading-snug">{targetPart ? t(targetPart.name, lang) : recipe.resultId}</h4>
-                                        <span className="text-[9px] bg-purple-900/50 text-purple-300 px-1 rounded">{t(TL.ui.godly as any, lang)}</span>
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div>
+                                            <h4 className="text-xl font-black text-rose-500 uppercase italic tracking-tighter leading-none mb-1 group-hover/card:text-white transition-colors">
+                                                {targetPart ? t(targetPart.name, lang) : recipe.resultId}
+                                            </h4>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[8px] font-black bg-purple-500 text-white px-2 py-0.5 rounded-sm uppercase tracking-widest">{t(TL.ui.godly as any, lang)}</span>
+                                                <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">TIER {targetPart?.tier || '??'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="p-2 glass-panel border-white/10 bg-white/5">
+                                            <Atom className="w-5 h-5 text-purple-400" />
+                                        </div>
                                     </div>
 
-                                    <div className="text-[10px] text-zinc-400 mb-3 border-l-2 border-purple-800 pl-2">
-                                        "{t(recipe.description, lang)}"
-                                    </div>
+                                    <p className="text-[10px] text-white/40 font-black uppercase italic tracking-widest leading-relaxed mb-6 h-12 overflow-hidden border-l border-white/10 pl-3">
+                                        {t(recipe.description, lang)}
+                                    </p>
 
-
-                                    <div className="space-y-1 mb-4 bg-zinc-900/50 p-2">
-                                        <div className="flex justify-between text-[9px] font-mono">
-                                            <span className="text-zinc-500">{t(TEXT_IDS.FUSION_REQUIRED, lang)}</span>
-                                            <span className={hasCatalyst ? "text-white" : "text-red-500"}>
-                                                {recipe.catalyst.amount} {t(TL.resources[recipe.catalyst.resource as any] as any, lang)}
+                                    <div className="space-y-4 mb-6">
+                                        {/* Catalyst */}
+                                        <div className="flex justify-between items-center p-3 glass-panel border-white/5 bg-black/20">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-[8px] font-black text-white/20 uppercase tracking-widest italic">{t(TEXT_IDS.FUSION_REQUIRED, lang)}</span>
+                                                <span className="text-xs font-black text-white uppercase">{t(TL.resources[recipe.catalyst.resource as any] as any, lang)}</span>
+                                            </div>
+                                            <span className={`text-xl font-black italic tracking-tighter ${hasCatalyst ? "text-white" : "text-rose-500"}`}>
+                                                {recipe.catalyst.amount}
                                             </span>
                                         </div>
 
-
+                                        {/* Condition */}
                                         {recipe.condition && (
-                                            <div className="flex justify-between text-[9px] font-mono border-t border-zinc-800 pt-1 mt-1">
-                                                <span className="text-zinc-500">{t(recipe.condition.description, lang)}:</span>
-                                                <span className={statusColor}>
+                                            <div className="flex justify-between items-center p-3 glass-panel border-white/5 bg-black/20">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[8px] font-black text-white/20 uppercase tracking-widest italic">{t(recipe.condition.description, lang)}</span>
+                                                    <StatusIcon className={`w-3 h-3 ${statusColor}`} />
+                                                </div>
+                                                <span className={`text-sm font-black italic tracking-tighter ${statusColor}`}>
                                                     {conditionStatus}
                                                 </span>
                                             </div>
                                         )}
 
+                                        {/* Hardware Check */}
                                         {!isCorrectTierEquipped && !isAlreadyUpgraded && (
-                                            <div className="flex justify-between text-[9px] font-mono border-t border-zinc-800 pt-1 mt-1 text-red-500">
-                                                <span>{t(TEXT_IDS.FUSION_REQUIRED, lang)}</span>
-                                                <span>{t(TEXT_IDS.FUSION_PREVIOUS_TIER_REQUIRED, lang)}</span>
-                                            </div>
-                                        )}
-
-                                        {isAlreadyUpgraded && (
-                                            <div className="flex justify-between text-[9px] font-mono border-t border-zinc-800 pt-1 mt-1 text-green-500">
-                                                <span>{t(TEXT_IDS.FUSION_STATUS, lang)}</span>
-                                                <span>{t(TEXT_IDS.FUSION_ALREADY_UPGRADED, lang)}</span>
+                                            <div className="flex items-center gap-3 p-3 glass-panel border-rose-500/20 bg-rose-500/5">
+                                                <Lock className="w-4 h-4 text-rose-500 shrink-0" />
+                                                <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest leading-tight">
+                                                    {t(TEXT_IDS.FUSION_PREVIOUS_TIER_REQUIRED, lang)}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
@@ -213,17 +243,17 @@ const FusionTab: React.FC<FusionTabProps> = ({
                                 <button
                                     onClick={() => fusionUpgrade(recipe.id)}
                                     disabled={!canCraft}
-                                    className={`w-full py-3 pixel-text text-xs font-bold transition-all
-                    ${canCraft
-                                            ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_10px_#9333ea]'
+                                    className={`w-full py-5 font-black text-[10px] uppercase tracking-[0.3em] italic transition-all
+                                        ${canCraft
+                                            ? 'bg-purple-600 text-white hover:bg-white hover:text-black shadow-[0_0_30px_rgba(147,51,234,0.3)]'
                                             : isAlreadyUpgraded
-                                                ? 'bg-green-900/20 text-green-500 border border-green-900 cursor-default'
-                                                : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}
-                  `}
+                                                ? 'bg-emerald-500 text-black cursor-default'
+                                                : 'bg-white/5 text-white/10 border border-white/5 cursor-not-allowed'}
+                                    `}
                                 >
                                     {isAlreadyUpgraded ? t(TEXT_IDS.FUSION_INSTALLED, lang) : canCraft ? t(TEXT_IDS.FUSION_SYNTHESIZE, lang) : t(TEXT_IDS.FUSION_UNAVAILABLE, lang)}
                                 </button>
-                            </div>
+                            </motion.div>
                         );
                     })}
                 </div>

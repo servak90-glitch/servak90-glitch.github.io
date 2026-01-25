@@ -5,6 +5,8 @@
 import React from 'react';
 import { Resources } from '../../types';
 import { t, TL } from '../../services/localization';
+import { Wrench, Snowflake, Shield, Droplets } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ConsumableDef {
     id: string;
@@ -12,29 +14,33 @@ interface ConsumableDef {
     desc: { RU: string, EN: string };
     cost: Partial<Resources>;
     color: string;
+    icon: React.ReactNode;
 }
 
 const CONSUMABLES: ConsumableDef[] = [
     {
         id: 'repairKit',
         name: { RU: 'РЕМКОМПЛЕКТ', EN: 'REPAIR KIT' },
-        desc: { RU: 'Восстанавливает 20% прочности корпуса бура.', EN: 'Restores 20% of drill integrity.' },
+        desc: { RU: 'Массив нано-роботов для экстренного восстановления структуры корпуса.', EN: 'Nano-robot array for emergency hull restoration.' },
         cost: { scrap: 15 },
-        color: 'border-green-500 text-green-400'
+        color: 'cyan',
+        icon: <Wrench className="w-6 h-6" />
     },
     {
         id: 'coolantPaste',
         name: { RU: 'ХЛАДАГЕНТ-ПАСТА', EN: 'COOLANT PASTE' },
-        desc: { RU: 'Мгновенно снижает текущий нагрев на 30%.', EN: 'Instantly reduces heat by 30%.' },
+        desc: { RU: 'Криогенный гель для мгновенного подавления термической активности.', EN: 'Cryogenic gel for instant thermal activity suppression.' },
         cost: { clay: 25, ice: 5 },
-        color: 'border-blue-500 text-blue-400'
+        color: 'blue',
+        icon: <Snowflake className="w-6 h-6" />
     },
     {
         id: 'advancedCoolant',
-        name: { RU: 'ПРОДВИНУТЫЙ ХЛАДАГЕНТ', EN: 'ADVANCED COOLANT' },
-        desc: { RU: 'Снижает нагрев на 60% и дает иммунитет к перегреву на 30с.', EN: 'Reduces heat by 60% and gives 30s heat immunity.' },
+        name: { RU: 'ГИПЕР-ОХЛАДИТЕЛЬ', EN: 'ADVANCED COOLANT' },
+        desc: { RU: 'Превращает бур в ледяной заслон, давая полный иммунитет к нагреву.', EN: 'Turns the drill into an ice barrier, giving full heat immunity.' },
         cost: { oil: 30, silver: 5 },
-        color: 'border-purple-500 text-purple-400'
+        color: 'purple',
+        icon: <Droplets className="w-6 h-6" />
     }
 ];
 
@@ -46,23 +52,58 @@ interface Props {
 
 export const ConsumablesTab: React.FC<Props> = ({ resources, onStartCraft, lang }) => {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {CONSUMABLES.map(item => {
-                const canAfford = Object.entries(item.cost).every(([k, v]) => (resources as any)[k] >= v);
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {CONSUMABLES.map((item, idx) => {
+                const canAfford = Object.entries(item.cost).every(([k, v]) => (resources as any)[k] >= (v as number));
+                const colorClass = {
+                    cyan: 'border-cyan-500/30 text-cyan-400 group-hover:border-cyan-500/60',
+                    blue: 'border-blue-500/30 text-blue-400 group-hover:border-blue-500/60',
+                    purple: 'border-purple-500/30 text-purple-400 group-hover:border-purple-500/60'
+                }[item.color as 'cyan' | 'blue' | 'purple'];
+
+                const bgColor = {
+                    cyan: 'bg-cyan-500/5',
+                    blue: 'bg-blue-500/5',
+                    purple: 'bg-purple-500/5'
+                }[item.color as 'cyan' | 'blue' | 'purple'];
 
                 return (
-                    <div key={item.id} className="bg-zinc-900 border border-zinc-700 p-4 flex flex-col justify-between min-h-[200px] hover:border-zinc-500 transition-colors">
-                        <div>
-                            <h3 className={`font-bold mb-1 pixel-text text-sm ${item.color.split(' ')[1]}`}>{t(item.name, lang)}</h3>
-                            <p className="text-[10px] text-zinc-400 italic mb-4">"{t(item.desc, lang)}"</p>
+                    <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className={`group glass-panel p-6 flex flex-col justify-between min-h-[280px] transition-all duration-300 relative overflow-hidden ${colorClass} ${bgColor} hover:shadow-[0_0_30px_rgba(34,211,238,0.1)]`}
+                    >
+                        <div className="absolute -right-4 -top-4 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                            {item.icon}
+                        </div>
 
-                            <div className="space-y-1 mb-4">
+                        <div>
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className={`p-2 glass-panel border-white/10 ${bgColor}`}>
+                                    {item.icon}
+                                </div>
+                                <h3 className={`font-black uppercase tracking-tighter text-xl italic`}>
+                                    {t(item.name, lang)}
+                                </h3>
+                            </div>
+
+                            <p className="text-[10px] text-white/40 font-black uppercase italic tracking-widest leading-relaxed mb-6 border-l border-white/10 pl-3">
+                                {t(item.desc, lang)}
+                            </p>
+
+                            <div className="space-y-2 mb-6">
                                 {Object.entries(item.cost).map(([res, amt]) => (
-                                    <div key={res} className="flex justify-between text-[10px] font-mono border-b border-zinc-800/50 pb-0.5">
-                                        <span className="text-zinc-500 uppercase">{t(TL.resources[res as any] as any, lang)}</span>
-                                        <span className={(resources as any)[res] >= amt ? 'text-green-400' : 'text-red-500'}>
-                                            {amt}
-                                        </span>
+                                    <div key={res} className="flex justify-between items-center text-[10px] font-technical border-b border-white/5 pb-1">
+                                        <span className="text-white/20 uppercase tracking-widest">{t((TL.resources as any)[res as any], lang)}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={(resources as any)[res] >= (amt as number) ? 'text-white' : 'text-rose-500'}>
+                                                {(resources as any)[res].toLocaleString()}
+                                            </span>
+                                            <span className="text-white/20">/</span>
+                                            <span className="text-white/40">{amt}</span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -72,13 +113,15 @@ export const ConsumablesTab: React.FC<Props> = ({ resources, onStartCraft, lang 
                             disabled={!canAfford}
                             onClick={() => onStartCraft(item.id, 'CONSUMABLE')}
                             className={`
-                                w-full py-2 text-xs font-bold transition-all border
-                                ${canAfford ? 'bg-zinc-800 border-zinc-600 hover:bg-white hover:text-black' : 'bg-transparent border-zinc-800 text-zinc-700 cursor-not-allowed'}
+                                w-full py-4 text-xs font-black uppercase tracking-[0.3em] italic transition-all border
+                                ${canAfford
+                                    ? 'bg-white text-black hover:bg-cyan-400 hover:border-cyan-400 shadow-[0_0_20px_rgba(255,255,255,0.1)]'
+                                    : 'bg-white/5 border-white/5 text-white/10 cursor-not-allowed'}
                             `}
                         >
                             {t(TL.ui.craft_item as any, lang)}
                         </button>
-                    </div>
+                    </motion.div>
                 );
             })}
         </div>

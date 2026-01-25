@@ -38,7 +38,7 @@ import CombatMinigameOverlay from './components/CombatMinigameOverlay';
 import HelpModal from './components/HelpModal';
 import DevTools from './components/DevTools';
 import ForgeView from './components/ForgeView';
-import GameHeader from './components/layout/GameHeader';
+import GameHeader, { RareResourcesMenu } from './components/layout/GameHeader';
 import GameFooter from './components/layout/GameFooter';
 import StatusStrip from './components/layout/StatusStrip';
 import ActiveEffects from './components/layout/ActiveEffects';
@@ -166,6 +166,7 @@ const App: React.FC = () => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isInventoryOpen, setIsInventoryOpen] = useState(false); // NEW: Equipment Inventory
+    const [isRareOpen, setIsRareOpen] = useState(false);
     const [showFirstRunModal, setShowFirstRunModal] = useState(false);
     const [activePredictions, setActivePredictions] = useState<Array<{
         id: string;
@@ -478,6 +479,8 @@ const App: React.FC = () => {
                 <GameHeader
                     onOpenMenu={() => setIsMenuOpen(true)}
                     onOpenInventory={() => setIsInventoryOpen(true)}
+                    onOpenRare={() => setIsRareOpen(!isRareOpen)}
+                    isRareOpen={isRareOpen}
                 />
 
                 {/* Mobile Menu Trigger (убрано, т.к. GameHeader всегда виден) */}
@@ -726,6 +729,14 @@ const App: React.FC = () => {
             {isSettingsOpen && <SettingsModal settings={settings} onClose={() => setIsSettingsOpen(false)} onUpdateSettings={updateSettings} onResetProgress={resetProgress} language={lang} onSetLanguage={setLanguage} />}
             {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
             {isInventoryOpen && <EquipmentInventoryView onClose={() => setIsInventoryOpen(false)} />}
+
+            <RareResourcesMenu
+                isOpen={isRareOpen}
+                onClose={() => setIsRareOpen(false)}
+                resources={resources}
+                lang={lang}
+                discoveredArtifactsCount={discoveredArtifacts.length}
+            />
         </div>
     );
 };

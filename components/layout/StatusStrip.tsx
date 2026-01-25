@@ -79,34 +79,36 @@ const StatusStrip: React.FC = () => {
                 tooltip={`Нагрузка: ${Math.round(stats.energyCons)}W / ${Math.round(stats.energyProd)}W`}
             />
 
-            {/* 4. CARGO (Hidden on mobile) */}
-            <div className="hidden sm:flex flex-[1.5]">
+            {/* 4. CARGO */}
+            <div className="flex flex-[1.2] md:flex-[1.5]">
                 <HUDItem
-                    icon={<Package className={`w-4 h-4 ${isCargoOverloaded ? 'text-red-500 animate-pulse' : 'text-blue-400'}`} />}
-                    label="CARGO"
+                    icon={<Package className={`w-3 h-3 md:w-4 md:h-4 ${isCargoOverloaded ? 'text-red-500 animate-pulse' : 'text-blue-400'}`} />}
+                    label="CRGO"
                     value={Math.round(payload / 100) / 10}
                     unit="t"
                     percent={cargoPercent}
                     color={isCargoOverloaded ? 'bg-red-500' : 'bg-blue-500'}
                     tooltip={`Заполненность: ${Math.round(payload)}кг / ${cargoCapacity}кг`}
+                    compact
                 />
             </div>
 
-            {/* 5. FUEL (Hidden on mobile) */}
-            <div className="hidden lg:flex flex-[1.5]">
+            {/* 5. FUEL */}
+            <div className="flex flex-[1.2] md:flex-[1.5]">
                 <HUDItem
-                    icon={<Fuel className={`w-4 h-4 ${isLowFuel ? 'text-red-500 animate-pulse' : 'text-amber-400'}`} />}
+                    icon={<Fuel className={`w-3 h-3 md:w-4 md:h-4 ${isLowFuel ? 'text-red-500 animate-pulse' : 'text-amber-400'}`} />}
                     label="FUEL"
                     value={Math.round(fuelPercent)}
                     unit="%"
                     percent={fuelPercent}
                     color={isLowFuel ? 'bg-red-500' : 'bg-amber-500'}
                     tooltip={`Запас: ~${Math.round(totalFuelUnits)} ед.`}
+                    compact
                 />
             </div>
 
-            {/* 6. RESOURCES (Quick Peek - Hidden on mobile/tablet) */}
-            <div className="hidden xl:flex flex-1 items-center px-3 gap-4 border-r border-white/5 pointer-events-auto bg-white/5">
+            {/* 6. RESOURCES (Quick Peek) */}
+            <div className="hidden md:flex flex-1 items-center px-2 md:px-3 gap-2 md:gap-4 border-r border-white/5 pointer-events-auto bg-white/5">
                 <ResItem icon={<Snowflake className="w-3 h-3 text-cyan-200" />} val={resources.ice} />
                 <ResItem icon={<ZapOff className="w-3 h-3 text-zinc-400" />} val={resources.scrap} />
                 <ResItem icon={<Wrench className="w-3 h-3 text-green-400" />} val={resources.repairKit} />
@@ -128,18 +130,19 @@ interface HUDItemProps {
     glow?: string;
     tooltip: string;
     markers?: { pos: number, color: string }[];
+    compact?: boolean;
 }
 
-const HUDItem: React.FC<HUDItemProps> = ({ icon, label, value, unit, maxValue, percent, color, glow, tooltip, markers }) => (
-    <div className="flex-[1.5] flex flex-col justify-center px-2 border-r border-white/5 relative group pointer-events-auto hover:bg-white/5 transition-colors cursor-help" title={tooltip}>
-        <div className="flex items-center justify-between mb-0.5">
-            <div className="flex items-center gap-1.5">
+const HUDItem: React.FC<HUDItemProps> = ({ icon, label, value, unit, maxValue, percent, color, glow, tooltip, markers, compact }) => (
+    <div className="flex-1 md:flex-[1.5] flex flex-col justify-center px-1.5 md:px-2 border-r border-white/5 relative group pointer-events-auto hover:bg-white/5 transition-colors cursor-help min-w-0" title={tooltip}>
+        <div className="flex items-center justify-between mb-0.5 max-md:gap-1">
+            <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
                 {icon}
-                <span className="text-[10px] font-bold text-white/50 tracking-tighter uppercase font-technical leading-none">{label}</span>
+                <span className={`text-[8px] md:text-[10px] font-bold text-white/50 tracking-tighter uppercase font-technical leading-none ${compact ? 'hidden min-[400px]:inline' : ''}`}>{label}</span>
             </div>
-            <div className="text-[11px] font-technical font-bold text-white leading-none">
-                {value}<span className="text-[9px] opacity-50 ml-0.5">{unit || (maxValue ? '' : '')}</span>
-                {maxValue && <span className="text-[9px] opacity-30 ml-0.5">/ {maxValue}</span>}
+            <div className="text-[9px] md:text-[11px] font-technical font-bold text-white leading-none whitespace-nowrap">
+                {value}<span className="text-[7px] md:text-[9px] opacity-50 ml-0.5">{unit || (maxValue ? '' : '')}</span>
+                {maxValue && !compact && <span className="text-[7px] md:text-[9px] opacity-30 ml-0.5 hidden sm:inline">/ {maxValue}</span>}
             </div>
         </div>
         <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden relative">
