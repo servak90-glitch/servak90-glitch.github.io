@@ -18,15 +18,21 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            // Включаем сжатие и обфускацию
+            minifyEnabled true 
+            
+            // Указываем оптимизированный файл вместо стандартного
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
 
 repositories {
-    flatDir{
-        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    maven {
+        url uri('../capacitor-cordova-android-plugins/src/main/libs')
+    }
+    maven {
+        url uri('libs')
     }
 }
 

@@ -347,6 +347,7 @@ export const TL = {
     statPwr: { RU: "МОЩ", EN: "PWR" },
     statReg: { RU: "РЕГ", EN: "REG" },
     statCrg: { RU: "ГРЗ", EN: "CRG" },
+    statEnergy: { RU: "ЭНГ", EN: "NRG" },
     schematicLoaded: { RU: "ЧЕРТЕЖ ЗАГРУЖЕН", EN: "SCHEMATIC LOADED" },
     fusionLocked: { RU: "ЗАБЛОКИРОВАНО (СИНТЕЗ)", EN: "FUSION LOCKED" },
     unavailable: { RU: "НЕДОСТУПНО", EN: "UNAVAILABLE" },

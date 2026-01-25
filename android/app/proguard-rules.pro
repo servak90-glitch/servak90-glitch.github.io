@@ -19,3 +19,17 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Сохраняем аннотации
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes InnerClasses
+
+# Если вы используете веб-вью и JS-интерфейсы (важно для PWA)
+-keepattributes JavascriptInterface
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# Чтобы R8 не удалял важные части системных плагинов
+-keep class com.capacitorjs.** { *; }

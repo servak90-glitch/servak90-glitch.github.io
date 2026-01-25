@@ -22,9 +22,7 @@ allprojects {
         google()
         mavenCentral()
     }
-}
 
-subprojects {
     afterEvaluate {project ->
         if (project.hasProperty('android')) {
             project.android.buildTypes.each { buildType ->
@@ -46,4 +44,21 @@ subprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                buildTypes {
+                    release {
+                        // Заменяем устаревший файл на оптимизированный программно
+                        if (proguardFiles.contains("proguard-android.txt")) {
+                            proguardFiles.remove("proguard-android.txt")
+                            proguardFiles.add(getDefaultProguardFile('proguard-android-optimize.txt'))
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

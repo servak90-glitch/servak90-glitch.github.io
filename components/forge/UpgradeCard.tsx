@@ -67,6 +67,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                         {renderStat(t(TL.ui.statPwr, lang), (next.baseStats as any).energyOutput, "text-yellow-400")}
                         {renderStat(t(TL.ui.statReg, lang), (next.baseStats as any).regen, "text-emerald-400")}
                         {renderStat(t(TL.ui.statCrg, lang), (next.baseStats as any).cargoCapacity, "text-amber-400")}
+                        {renderStat(t(TL.ui.statEnergy, lang), (next.baseStats as any).energyCost, "text-yellow-500")}
                     </div>
                 </div>
 
