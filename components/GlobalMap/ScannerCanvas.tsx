@@ -25,6 +25,7 @@ export const ScannerCanvas: React.FC<ScannerCanvasProps> = ({
     const appRef = useRef<PIXI.Application | null>(null);
     const indicatorPoolRef = useRef<ObjectPool<PIXI.Graphics> | null>(null);
     const indicatorRef = useRef<PIXI.Graphics | null>(null);
+    const texturesRef = useRef<Record<string, PIXI.Texture>>({});
     const lang = useGameStore(s => s.settings.language);
 
     const dataRef = useRef({ bases, caravans, activeRegion });
@@ -55,6 +56,21 @@ export const ScannerCanvas: React.FC<ScannerCanvasProps> = ({
 
             containerRef.current.appendChild(app.canvas);
             appRef.current = app;
+
+            // Load Assets
+            try {
+                const assetMap: Record<string, string> = {};
+                REGION_IDS.forEach(id => {
+                    assetMap[id] = `/assets/regions/${id}.webp`;
+                });
+
+                for (const [id, url] of Object.entries(assetMap)) {
+                    const tex = await PIXI.Assets.load(url);
+                    texturesRef.current[id] = tex;
+                }
+            } catch (e) {
+                console.warn("Satellite images loading failed, falling back to blueprint only:", e);
+            }
 
             // Pools
             indicatorPoolRef.current = new ObjectPool(() => {
@@ -110,69 +126,7 @@ export const ScannerCanvas: React.FC<ScannerCanvasProps> = ({
                     for (let i = 0; i < w; i += 40) g.moveTo(x + i, y + 20).lineTo(x + i, y + h - 20);
                     g.stroke();
 
-                    // --- 2. Central Tactical Icon ---
-                    g.setStrokeStyle({ width: 1.5, color: color, alpha: 0.6 });
-
-                    switch (id) {
-                        case RegionId.RUST_VALLEY:
-                            // Blueprint of a massive drill
-                            const dW = 60, dH = 100;
-                            // Main body
-                            g.rect(cx - dW / 2, cy - dH / 2, dW, dH * 0.6).stroke();
-                            // Drill bit
-                            g.moveTo(cx - dW / 2, cy + dH * 0.1).lineTo(cx, cy + dH / 2).lineTo(cx + dW / 2, cy + dH * 0.1).stroke();
-                            // Interior screw lines
-                            for (let i = 0; i < 4; i++) {
-                                g.moveTo(cx - dW / 2 + (i * 5), cy + dH * 0.1 + (i * 5)).lineTo(cx + dW / 2 - (i * 5), cy + dH * 0.1 + (i * 10)).stroke();
-                            }
-                            break;
-                        case RegionId.CRYSTAL_WASTES:
-                            // Ornate crystal lattice
-                            const cS = 50;
-                            for (let i = 0; i < 3; i++) {
-                                const offset = i * 20 - 20;
-                                g.moveTo(cx + offset, cy - cS).lineTo(cx + offset + 20, cy).lineTo(cx + offset, cy + cS).lineTo(cx + offset - 20, cy).closePath().stroke();
-                                g.moveTo(cx + offset, cy - cS).lineTo(cx + offset, cy + cS).stroke();
-                            }
-                            break;
-                        case RegionId.IRON_GATES:
-                            // Fortified Gate / Industrial HUD
-                            const gW = 120, gH = 80;
-                            g.rect(cx - gW / 2, cy - gH / 2, gW, gH).stroke();
-                            g.moveTo(cx, cy - gH / 2).lineTo(cx, cy + gH / 2).stroke();
-                            // Cross-braces
-                            g.moveTo(cx - gW / 2, cy - gH / 2).lineTo(cx + gW / 2, cy + gH / 2).stroke();
-                            g.moveTo(cx + gW / 2, cy - gH / 2).lineTo(cx - gW / 2, cy + gH / 2).stroke();
-                            // Circular radar nodes
-                            g.circle(cx - gW / 2, cy - gH / 2, 10).stroke();
-                            g.circle(cx + gW / 2, cy + gH / 2, 10).stroke();
-                            break;
-                        case RegionId.MAGMA_CORE:
-                            // Heat waves / Thermal map (Adaptive Radii)
-                            const maxR = Math.min(w / 2 - 20, 120);
-                            for (let i = 0; i < 5; i++) {
-                                const r = 30 + i * (maxR / 5);
-                                g.setStrokeStyle({ width: 1, color: color, alpha: 0.6 - i * 0.1 });
-                                g.arc(cx, cy + 20, r, Math.PI, 0).stroke();
-                                // Little sparks
-                                g.rect(cx + Math.sin(now / 500 + i) * r, cy - Math.cos(now / 500 + i) * 20, 2, 2).stroke();
-                            }
-                            break;
-                        case RegionId.VOID_CHASM:
-                            // Singularity / Spatial Anomaly
-                            const vR = 60;
-                            g.circle(cx, cy, vR).stroke();
-                            g.setStrokeStyle({ width: 1, color: color, alpha: 0.3 });
-                            for (let i = 0; i < 8; i++) {
-                                const angle = (now / 1000) + (i * Math.PI / 4);
-                                g.moveTo(cx, cy).lineTo(cx + Math.cos(angle) * vR, cy + Math.sin(angle) * vR).stroke();
-                            }
-                            // Digital orbits
-                            g.ellipse(cx, cy, vR * 1.5, vR * 0.5).stroke();
-                            break;
-                    }
-
-                    // --- 3. Scanning Beam Animation ---
+                    // --- 2. Scanning Beam Animation ---
                     const beamY = y + 20 + ((now / 20) % (h - 40));
                     g.setStrokeStyle({ width: 2, color: 0xFFFFFF, alpha: 0.15 });
                     g.moveTo(x + 50, beamY).lineTo(x + w - 50, beamY).stroke();
@@ -234,6 +188,24 @@ export const ScannerCanvas: React.FC<ScannerCanvasProps> = ({
                     area.moveTo(50, y + REGION_HEIGHT - 20 - gap).lineTo(50, y + REGION_HEIGHT - 20).lineTo(50 + gap, y + REGION_HEIGHT - 20).stroke();
                     // Bottom-right
                     area.moveTo(width - 50 - gap, y + REGION_HEIGHT - 20).lineTo(width - 50, y + REGION_HEIGHT - 20).lineTo(width - 50, y + REGION_HEIGHT - 20 - gap).stroke();
+
+                    // Render Satellite Image (if loaded)
+                    const texture = texturesRef.current[id];
+                    if (texture) {
+                        const sprite = new PIXI.Sprite(texture);
+                        sprite.anchor.set(0.5);
+                        sprite.x = 50 + (width - 100) / 2;
+                        sprite.y = y + (REGION_HEIGHT - 20) / 2;
+
+                        // Cover scaling logic (3:2 source aspect ratio)
+                        const targetW = width - 100;
+                        const targetH = REGION_HEIGHT - 20;
+                        const scale = Math.max(targetW / texture.width, targetH / texture.height);
+                        sprite.scale.set(scale);
+                        sprite.alpha = 0.8; // High visibility for satellite data
+
+                        area.addChild(sprite);
+                    }
 
                     // Render Dynamic Content
                     drawRegionContent(area, id, 50, y, width - 100, REGION_HEIGHT - 20, color);
