@@ -75,7 +75,7 @@ const SkillsView: React.FC = () => {
       </div>
 
       {/* SKILLS GRID - SCROLL CONTAINER */}
-      <div className="flex-1 overflow-y-auto relative z-10 px-4 md:px-6 pb-24 md:pb-32 pt-2 md:pt-4 scrollbar-hide space-y-8 md:space-y-12">
+      <div className="flex-1 overflow-y-auto relative z-10 px-4 md:px-6 pb-4 md:pb-32 pt-2 md:pt-4 scrollbar-hide space-y-8 md:space-y-12">
         {categories.map(cat => {
           const categorySkills = SKILLS.filter(s => s.category === cat.id);
 

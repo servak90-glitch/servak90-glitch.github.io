@@ -165,7 +165,7 @@ export const MarketView = () => {
                                                 key={price.resource}
                                                 onClick={() => setSelectedResource(price.resource as any)}
                                                 className={`
-                                                glass-panel p-4 md:p-6 cursor-pointer transition-all duration-300 relative overflow-hidden group
+                                                glass-panel p-5 md:p-6 cursor-pointer transition-all duration-300 relative overflow-hidden group min-h-[120px]
                                                 ${isSelected ? 'border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_40px_rgba(34,211,238,0.1)] scale-[1.02]' : 'border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10'}
                                             `}
                                             >
@@ -386,15 +386,15 @@ export const MarketView = () => {
                                                 className="flex-1 glass-panel bg-white/5 border-white/10 p-3 md:p-5 font-black text-white text-xl md:text-3xl italic tracking-tighter text-center focus:border-cyan-500 transition-all outline-none"
                                             />
                                             <div className="flex flex-col gap-1">
-                                                <button onClick={() => setAmount(prev => prev + 10)} className="glass-panel px-3 py-2 bg-white/5 hover:bg-white/10 font-bold text-[10px]">+</button>
-                                                <button onClick={() => setAmount(prev => Math.max(1, prev - 10))} className="glass-panel px-3 py-2 bg-white/5 hover:bg-white/10 font-bold text-[10px]">-</button>
+                                                <button onClick={() => setAmount(prev => prev + 10)} className="glass-panel px-4 py-3 bg-white/5 hover:bg-white/10 font-bold text-[10px] min-h-[44px]">+</button>
+                                                <button onClick={() => setAmount(prev => Math.max(1, prev - 10))} className="glass-panel px-4 py-3 bg-white/5 hover:bg-white/10 font-bold text-[10px] min-h-[44px]">-</button>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-4 gap-2">
                                             {[1, 10, 50, 100].map(val => (
                                                 <button
                                                     key={val} onClick={() => setAmount(val)}
-                                                    className={`py-2 glass-panel font-black text-[9px] uppercase tracking-widest transition-all ${amount === val ? 'bg-cyan-500 text-black border-cyan-400' : 'bg-white/5 text-white/40'}`}
+                                                    className={`py-3 glass-panel font-black text-[9px] uppercase tracking-widest transition-all min-h-[44px] ${amount === val ? 'bg-cyan-500 text-black border-cyan-400' : 'bg-white/5 text-white/40'}`}
                                                 >
                                                     {val}
                                                 </button>
@@ -423,7 +423,7 @@ export const MarketView = () => {
                                         <button
                                             onClick={handleBuy}
                                             disabled={!canAfford}
-                                            className={`py-4 md:py-6 font-black text-[10px] md:text-sm uppercase tracking-[0.3em] flex flex-col items-center gap-2 group transition-all rounded-xl relative overflow-hidden
+                                            className={`py-5 md:py-6 font-black text-[10px] md:text-sm uppercase tracking-[0.3em] flex flex-col items-center gap-2 group transition-all rounded-xl relative overflow-hidden min-h-[48px]
                                                 ${canAfford ? 'bg-white text-black hover:bg-cyan-400 shadow-[0_0_40px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-white/10 cursor-not-allowed border border-white/5'}
                                             `}
                                         >
@@ -432,7 +432,7 @@ export const MarketView = () => {
                                         <button
                                             onClick={handleSell}
                                             disabled={availableResource < amount}
-                                            className={`py-4 md:py-6 font-black text-[10px] md:text-sm uppercase tracking-[0.3em] flex flex-col items-center gap-2 group transition-all rounded-xl relative overflow-hidden
+                                            className={`py-5 md:py-6 font-black text-[10px] md:text-sm uppercase tracking-[0.3em] flex flex-col items-center gap-2 group transition-all rounded-xl relative overflow-hidden min-h-[48px]
                                                 ${availableResource >= amount ? 'bg-cyan-500 text-black hover:bg-cyan-300 shadow-[0_0_40px_rgba(34,211,238,0.2)]' : 'bg-white/5 text-white/10 cursor-not-allowed border border-white/5'}
                                             `}
                                         >
@@ -471,7 +471,7 @@ const TabBtn = ({ active, onClick, icon, label, lang, color }: { active: boolean
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 md:gap-3 px-4 md:px-8 py-2 md:py-4 rounded-lg font-black font-technical text-[8px] md:text-[10px] uppercase tracking-[0.2em] transition-all relative overflow-hidden group shrink-0
+            className={`flex items-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 rounded-lg font-black font-technical text-[9px] md:text-[10px] uppercase tracking-[0.2em] transition-all relative overflow-hidden group shrink-0 min-h-[44px]
                 ${(colorClasses as any)[color]}
             `}
         >

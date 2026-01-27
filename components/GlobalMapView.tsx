@@ -224,7 +224,7 @@ export const GlobalMapView = () => {
             </div>
 
             {/* MAIN DASHBOARD SCENE */}
-            <div className="max-w-7xl w-full mx-auto px-4 md:px-10 mt-2 md:mt-4 flex-1 flex flex-col gap-4 md:gap-8 overflow-y-auto min-h-0 pb-24 md:pb-32 scrollbar-hide relative z-10 font-technical">
+            <div className="max-w-7xl w-full mx-auto px-4 md:px-10 mt-2 md:mt-4 flex-1 flex flex-col gap-4 md:gap-8 overflow-y-auto min-h-0 pb-4 md:pb-32 scrollbar-hide relative z-10 font-technical">
                 <AnimatePresence mode="wait">
                     {activeTab === 'map' && (
                         <motion.div
@@ -372,7 +372,7 @@ export const GlobalMapView = () => {
                                     </div>
                                 </div>
 
-                                <div className="absolute inset-0 pointer-events-auto">
+                                <div className="absolute inset-0 pointer-events-none touch-pan-y">
                                     <ScannerCanvas
                                         regions={REGION_IDS}
                                         activeRegion={selectedRegion || currentRegion}
