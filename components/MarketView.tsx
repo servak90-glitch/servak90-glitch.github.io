@@ -467,28 +467,24 @@ export const MarketView = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Мобильное модальное окно транзакций */}
+            {showMobileModal && selectedResource && selectedPrice && (
+                <MobileTransactionModal
+                    resource={selectedResource}
+                    buyPrice={selectedPrice.finalPrice}
+                    sellPrice={Math.floor(selectedPrice.finalPrice * 0.8)}
+                    availableAmount={availableResource}
+                    credits={resources.credits || 0}
+                    amount={amount}
+                    onAmountChange={setAmount}
+                    onBuy={handleBuy}
+                    onSell={handleSell}
+                    onClose={() => setShowMobileModal(false)}
+                    lang={lang}
+                />
+            )}
         </div>
-
-
-
-
-        {/* Мобильное модальное окно транзакций */ }
-    {
-        showMobileModal && selectedResource && selectedPrice && (
-            <MobileTransactionModal
-                resource={selectedResource}
-                buyPrice={selectedPrice.finalPrice}
-                sellPrice={Math.floor(selectedPrice.finalPrice * 0.8)}
-                availableAmount={availableResource}
-                credits={resources.credits || 0}
-                amount={amount}
-                onAmountChange={setAmount}
-                onBuy={handleBuy}
-                onSell={handleSell}
-                onClose={() => setShowMobileModal(false)}
-                lang={lang}
-            />
-        )}
     );
 };
 
