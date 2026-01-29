@@ -69,6 +69,18 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     effectDescription: 'Сила клика +2%',
     modifiers: { clickPowerPct: 2 }
   },
+  {
+    id: 'faraday_insulator',
+    name: 'Изолятор Фарадея',
+    description: 'Старый медный кожух с гравировкой.',
+    loreDescription: 'Простейшее устройство для блокировки внешних помех. Немного стабилизирует щит.',
+    rarity: ArtifactRarity.COMMON,
+    icon: '罩',
+    basePrice: 90,
+    scrapAmount: 10,
+    effectDescription: 'Задержка щита +1%',
+    modifiers: { shieldEfficiencyPct: 1 }
+  },
 
   // --- RARE (Useful Modules) ---
   {
@@ -151,6 +163,18 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     effectDescription: 'Удача (События) +20%',
     modifiers: { luckPct: 20 }
   },
+  {
+    id: 'field_capacitor',
+    name: 'Полевой Конденсатор',
+    description: 'Массивный блок с гудящими катушками.',
+    loreDescription: 'Накапливает избыточный заряд и медленно отдает его в систему защиты.',
+    rarity: ArtifactRarity.RARE,
+    icon: '🔋',
+    basePrice: 350,
+    scrapAmount: 40,
+    effectDescription: 'Задержка щита +3%',
+    modifiers: { shieldEfficiencyPct: 3 }
+  },
 
   // --- EPIC (Precursor Tech) ---
   {
@@ -218,6 +242,18 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     effectDescription: 'Сила клика +75%',
     modifiers: { clickPowerPct: 75 }
   },
+  {
+    id: 'retention_prism',
+    name: 'Призма Удержания',
+    description: 'Геометрически совершенный кристалл.',
+    loreDescription: 'Преломляет энергию щита таким образом, что она почти не рассеивается в пространстве.',
+    rarity: ArtifactRarity.EPIC,
+    icon: '💎',
+    basePrice: 800,
+    scrapAmount: 100,
+    effectDescription: 'Задержка щита +6%',
+    modifiers: { shieldEfficiencyPct: 6 }
+  },
 
   // --- LEGENDARY (Unique Anomalies) ---
   {
@@ -247,6 +283,19 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     allowedBiomes: ['ПЛАСТЫ ПУСТОТЫ'],
     effectDescription: 'Крит. удары бура x5 урона',
     modifiers: { clickPowerPct: 100 }
+  },
+  {
+    id: 'chrono_stabilizer',
+    name: 'Хроно-стабилизатор',
+    description: 'Устройство, зацикливающее время в малом объеме.',
+    loreDescription: 'Легендарная технология. Удерживает состояние щита в прошлом, предотвращая его падение.',
+    rarity: ArtifactRarity.LEGENDARY,
+    icon: '⏳',
+    basePrice: 2000,
+    scrapAmount: 250,
+    visualEffect: 'GLOW_GOLD',
+    effectDescription: 'Задержка щита +10%',
+    modifiers: { shieldEfficiencyPct: 10 }
   },
 
   // --- ANOMALOUS (Dangerous / Glitch) ---
@@ -279,22 +328,22 @@ export const getArtifactColor = (rarity: ArtifactRarity): string => {
 export const rollArtifact = (depth: number, luck: number = 0, currentBiomeName?: string): ArtifactDefinition => {
   const rand = Math.random();
   // Luck influence: Each 1 luck reduces "Common" range by 0.1% and shifts it to upper tiers
-  const luckFactor = luck / 1000; 
-  
+  const luckFactor = luck / 1000;
+
   // 1. FILTER BY BIOME FIRST
   let eligibleArtifacts = ARTIFACTS.filter(a => {
-      // If artifact has allowedBiomes, check if currentBiomeName is in it.
-      if (a.allowedBiomes && a.allowedBiomes.length > 0) {
-          if (!currentBiomeName) return false;
-          return a.allowedBiomes.includes(currentBiomeName);
-      }
-      // If artifact has NO allowedBiomes, it drops everywhere
-      return true;
+    // If artifact has allowedBiomes, check if currentBiomeName is in it.
+    if (a.allowedBiomes && a.allowedBiomes.length > 0) {
+      if (!currentBiomeName) return false;
+      return a.allowedBiomes.includes(currentBiomeName);
+    }
+    // If artifact has NO allowedBiomes, it drops everywhere
+    return true;
   });
 
   // If pool is empty (shouldn't happen given global items), fallback to global
   if (eligibleArtifacts.length === 0) {
-      eligibleArtifacts = ARTIFACTS.filter(a => !a.allowedBiomes);
+    eligibleArtifacts = ARTIFACTS.filter(a => !a.allowedBiomes);
   }
 
   let pool: ArtifactDefinition[] = [];
@@ -305,13 +354,13 @@ export const rollArtifact = (depth: number, luck: number = 0, currentBiomeName?:
   // Rare: 20%
   // Common: 74%
 
-  if ((rand < 0.01 + luckFactor) && depth > 20000) { 
+  if ((rand < 0.01 + luckFactor) && depth > 20000) {
     pool = eligibleArtifacts.filter(a => a.rarity === ArtifactRarity.LEGENDARY || a.rarity === ArtifactRarity.ANOMALOUS);
-  } else if ((rand < 0.06 + luckFactor) && depth > 5000) { 
+  } else if ((rand < 0.06 + luckFactor) && depth > 5000) {
     pool = eligibleArtifacts.filter(a => a.rarity === ArtifactRarity.EPIC);
-  } else if ((rand < 0.26 + luckFactor)) { 
+  } else if ((rand < 0.26 + luckFactor)) {
     pool = eligibleArtifacts.filter(a => a.rarity === ArtifactRarity.RARE);
-  } else { 
+  } else {
     pool = eligibleArtifacts.filter(a => a.rarity === ArtifactRarity.COMMON);
   }
 

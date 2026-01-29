@@ -14,8 +14,8 @@ import {
 } from '../types';
 import {
     BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS,
-    GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS
-} from '../constants';
+    GEARBOXES, POWER_CORES, ARMORS, SHIELD_GENERATORS, CARGO_BAYS
+} from '../constants.tsx';
 import { gameEngine } from '../services/GameEngine';
 // Cooling imported removed
 import { calculateStats } from '../services/gameMath';
@@ -116,6 +116,7 @@ const INITIAL_STATE: GameState = {
         [DrillSlot.GEARBOX]: GEARBOXES[0],
         [DrillSlot.POWER]: POWER_CORES[0],
         [DrillSlot.ARMOR]: ARMORS[0],
+        [DrillSlot.SHIELD]: SHIELD_GENERATORS[0],
         [DrillSlot.CARGO_BAY]: CARGO_BAYS[0]
     },
     skillLevels: {},
@@ -367,6 +368,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
             const saved = JSON.parse(raw);
             const merged = sanitizeAndMerge(INITIAL_STATE, saved);
+
+            // === MIGRATION: Add shield slot if missing ===
+            if (merged.drill && !merged.drill[DrillSlot.SHIELD]) {
+                merged.drill[DrillSlot.SHIELD] = SHIELD_GENERATORS[0];
+            }
 
             set({ ...merged, actionLogQueue: [{ type: 'LOG', msg: 'СИСТЕМА ВОССТАНОВЛЕНА', color: 'text-cyan-400' }] });
             return true;

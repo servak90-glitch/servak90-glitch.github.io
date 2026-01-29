@@ -78,7 +78,7 @@ const CombatMinigameOverlay: React.FC<CombatMinigameOverlayProps> = ({ type, dif
             return () => clearInterval(interval);
         }
         else if (type === 'GLYPH') {
-            const chars = ['Ж', 'Щ', 'Ф', 'Ω', 'Ψ', 'Δ', 'Ξ', 'Π', 'Σ', 'Φ'];
+            const chars = ['[X]', '<>', '(!)', '=?=', '||', '§', 'Δ', 'Ω', 'Σ', 'Φ'];
             const target = chars[Math.floor(Math.random() * chars.length)];
             const noise = chars.filter(c => c !== target);
             const grid = Array.from({ length: 16 }, () => Math.random() > 0.8 ? target : noise[Math.floor(Math.random() * noise.length)]);
@@ -337,7 +337,7 @@ const CombatMinigameOverlay: React.FC<CombatMinigameOverlayProps> = ({ type, dif
                                     <button
                                         key={i}
                                         onPointerDown={() => handleGlyphClick(char)}
-                                        className="w-12 h-12 glass-panel border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 text-cyan-400 font-mono text-xl transition-all active:scale-90 touch-manipulation"
+                                        className="w-12 h-12 glass-panel border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 text-cyan-400 font-mono text-sm md:text-base transition-all active:scale-90 touch-manipulation flex items-center justify-center"
                                     >
                                         {char}
                                     </button>

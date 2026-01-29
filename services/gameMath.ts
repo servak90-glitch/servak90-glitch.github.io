@@ -208,14 +208,14 @@ const calculateBaseStatsInternal = (
     inventory: GameState['inventory']
 ) => {
     // Defensive check
-    if (!drill || !drill.bit || !drill.power || !drill.engine || !drill.cooling || !drill.hull || !drill.logic || !drill.control || !drill.gearbox || !drill.armor) {
+    if (!drill || !drill.bit || !drill.power || !drill.engine || !drill.cooling || !drill.hull || !drill.logic || !drill.control || !drill.gearbox || !drill.armor || !drill.shield) {
         return getFallbackStats();
     }
 
     const energyProd = drill.power.baseStats.energyOutput;
     const baseEnergyCons = drill.bit.baseStats.energyCost + drill.engine.baseStats.energyCost + drill.cooling.baseStats.energyCost +
         drill.logic.baseStats.energyCost + drill.control.baseStats.energyCost + drill.gearbox.baseStats.energyCost +
-        drill.armor.baseStats.energyCost + (drill.cargoBay?.baseStats?.energyCost || 0);
+        drill.armor.baseStats.energyCost + drill.shield.baseStats.energyCost + (drill.cargoBay?.baseStats?.energyCost || 0);
 
     const totalCargoCapacity = BASE_CARGO_CAPACITY +
         (drill.hull.baseStats.cargoCapacity || 0) +
@@ -223,7 +223,7 @@ const calculateBaseStatsInternal = (
 
     // Пре-расчет модификаторов артефактов
     const artifactMods = {
-        clickPowerPct: 0, drillSpeedPct: 0, heatGenPct: 0, resourceMultPct: 0, luckPct: 0, shopDiscountPct: 0
+        clickPowerPct: 0, drillSpeedPct: 0, heatGenPct: 0, resourceMultPct: 0, luckPct: 0, shopDiscountPct: 0, shieldEfficiencyPct: 0
     };
 
     equippedArtifacts.forEach(id => {
@@ -266,7 +266,11 @@ const calculateBaseStatsInternal = (
         travelSpeed: 50 + (drill.engine.tier * 25),
         bitTier: drill.bit.tier,
         skillMods,
-        artifactMods
+        artifactMods,
+        // Shield Specific
+        maxShield: drill.shield.baseStats.maxShield,
+        shieldEfficiencyBase: drill.shield.baseStats.efficiency,
+        shieldRechargeMult: drill.shield.baseStats.rechargeMult
     };
 };
 
@@ -320,7 +324,11 @@ function applyDynamicModifiers(base: any, depth: number, activeEffects: any[] = 
         requiredTier,
         depthScale,
         heatGenMultiplier, // Пробрасываем для HeatSystem
-        resourceMultiplier // Пробрасываем для DrillSystem
+        resourceMultiplier, // Пробрасываем для DrillSystem
+        // Shield Final
+        shieldEfficiency: Math.min(1.0, base.shieldEfficiencyBase + (base.artifactMods.shieldEfficiencyPct / 100)),
+        maxShield: base.maxShield,
+        shieldRechargeMult: base.shieldRechargeMult
     };
 }
 

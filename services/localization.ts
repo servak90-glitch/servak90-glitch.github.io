@@ -625,6 +625,10 @@ type Language = 'RU' | 'EN';
 // Функция локализации с поддержкой языка
 export const t = (textId: { RU: string; EN: string } | string | undefined | null, lang: Language = 'RU'): string => {
   if (!textId) return '';
+  // Если это простая строка и она является ключом в TEXT_IDS, возвращаем перевод
+  if (typeof textId === 'string' && textId in TEXT_IDS) {
+    return (TEXT_IDS as any)[textId][lang] || (TEXT_IDS as any)[textId].RU || '';
+  }
   // Если это простая строка, возвращаем как есть
   if (typeof textId === 'string') return textId;
   // Если это объект с локализацией, возвращаем нужный язык

@@ -643,6 +643,9 @@ const App: React.FC = () => {
                         <h2 className="text-rose-500 font-black font-technical text-2xl mb-6 flex items-center gap-3 uppercase tracking-tighter">
                             <AlertTriangle className="w-8 h-8" /> {t(TEXT_IDS.FIRST_RUN_TITLE, lang)}
                         </h2>
+                        <p className="text-white font-mono text-sm leading-relaxed mb-8 opacity-90">
+                            {t(TEXT_IDS.FIRST_RUN_BODY, lang)}
+                        </p>
                         <button onClick={handleFirstRunConfirm} className="w-full py-5 bg-rose-600 text-white font-black font-technical text-sm tracking-[0.3em] uppercase">
                             {t(TEXT_IDS.BTN_ACKNOWLEDGE, lang)}
                         </button>

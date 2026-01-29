@@ -123,7 +123,7 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
 
             // [DEV_CONTEXT: DIRECT ACCESS] Bypass React State for 60FPS
             const state = useGameStore.getState();
-            const { heat, drill, isDrilling, activeEffects, depth, selectedBiome, inventory, equippedArtifacts, isShielding, resources, skillLevels } = state;
+            const { heat, drill, isDrilling, activeEffects, depth, selectedBiome, inventory, equippedArtifacts, isShielding, shieldCharge, resources, skillLevels } = state;
 
             // Stats calculation for cargo capacity
             const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth, activeEffects);
@@ -176,11 +176,18 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                 // Background Gradient
                 const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
                 bgGrad.addColorStop(0, '#000');
-                bgGrad.addColorStop(0.3, `${biomeColor}05`);
-                bgGrad.addColorStop(0.7, `${biomeColor}11`);
+
+                // [DEV_CONTEXT: SHIELD LIGHTING]
+                const shieldLuminance = isShielding ? (shieldCharge / 100) * 0.3 : 0;
+                const baseOpacity1 = (0.05 + shieldLuminance).toFixed(2);
+                const baseOpacity2 = (0.11 + shieldLuminance).toFixed(2);
+
+                bgGrad.addColorStop(0.3, `${biomeColor}${Math.floor(parseFloat(baseOpacity1) * 255).toString(16).padStart(2, '0')}`);
+                bgGrad.addColorStop(0.7, `${biomeColor}${Math.floor(parseFloat(baseOpacity2) * 255).toString(16).padStart(2, '0')}`);
                 bgGrad.addColorStop(1, '#000');
                 ctx.fillStyle = bgGrad;
                 ctx.fillRect(0, 0, w, h);
+                // ... rest of drawTunnel as is ...
 
                 const segmentHeight = 200;
                 const scrollY = scrollRef.current % segmentHeight;
@@ -737,7 +744,115 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                     ctx.fillStyle = theme.highlight; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
                 }
             };
-            drawLights();
+            // 2.8 ENERGY SHIELD (Phase 4.2 Professional 3D Visuals)
+            const drawShield = () => {
+                if (!isShielding) return;
+
+                const shieldAlpha = Math.min(1, (shieldCharge / 100) * 1.5); // Boost alpha for better visibility
+                const pulse = Math.sin(tick * 0.08) * 4;
+                const shieldWidth = 260 + pulse;
+                const shieldHeight = 600 + pulse;
+                const shieldY = 80; // Stretched and lowered to cover the drill bit tip
+
+                ctx.save();
+
+                // --- A. BACK GLOW (Aura around the shield) ---
+                ctx.globalCompositeOperation = 'screen';
+                const backGlow = ctx.createRadialGradient(0, shieldY, 50, 0, shieldY, 350);
+                backGlow.addColorStop(0, `rgba(34, 211, 238, ${0.15 * shieldAlpha})`);
+                backGlow.addColorStop(1, 'transparent');
+                ctx.fillStyle = backGlow;
+                ctx.beginPath();
+                ctx.ellipse(0, shieldY, shieldWidth * 1.4, shieldHeight * 1.2, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // --- B. 3D SPHERE VOLUME (Inner Gradient) ---
+                // We use a radial gradient shifted top-left to simulate a light source
+                const volumeGrad = ctx.createRadialGradient(-30, shieldY - 100, 20, 0, shieldY, 300);
+                volumeGrad.addColorStop(0, `rgba(165, 243, 252, ${0.4 * shieldAlpha})`); // Highlight color
+                volumeGrad.addColorStop(0.4, `rgba(34, 211, 238, ${0.15 * shieldAlpha})`); // Main color
+                volumeGrad.addColorStop(1, `rgba(8, 51, 68, ${0.05 * shieldAlpha})`); // Dark side
+
+                ctx.fillStyle = volumeGrad;
+                ctx.beginPath();
+                ctx.ellipse(0, shieldY, shieldWidth, shieldHeight, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // --- C. RIM LIGHTING (Fresnel Effect) ---
+                ctx.strokeStyle = `rgba(165, 243, 252, ${0.8 * shieldAlpha})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.ellipse(0, shieldY, shieldWidth, shieldHeight, 0, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Inner soft rim
+                ctx.strokeStyle = `rgba(34, 211, 238, ${0.3 * shieldAlpha})`;
+                ctx.lineWidth = 15;
+                ctx.beginPath();
+                ctx.ellipse(0, shieldY, shieldWidth - 8, shieldHeight - 8, 0, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // --- D. HEXAGONAL STRETCHED GRID (3D Masked) ---
+                ctx.save();
+                // Clip to the shield shape
+                ctx.beginPath();
+                ctx.ellipse(0, shieldY, shieldWidth, shieldHeight, 0, 0, Math.PI * 2);
+                ctx.clip();
+
+                const hexSize = 25;
+                const gridScroll = (tick * 0.5) % 80;
+                ctx.strokeStyle = `rgba(165, 243, 252, ${0.15 * shieldAlpha})`;
+                ctx.lineWidth = 1;
+
+                // Draw hexagons
+                for (let r = -12; r < 12; r++) {
+                    for (let c = -8; c < 8; c++) {
+                        const hx = c * hexSize * 1.5;
+                        const hy = shieldY + r * hexSize * 1.73 + (c % 2 ? hexSize * 0.86 : 0) + gridScroll;
+
+                        ctx.beginPath();
+                        for (let s = 0; s < 6; s++) {
+                            const angle = (Math.PI / 3) * s;
+                            const px = hx + Math.cos(angle) * hexSize * 0.6;
+                            const py = hy + Math.sin(angle) * hexSize * 0.6;
+                            if (s === 0) ctx.moveTo(px, py);
+                            else ctx.lineTo(px, py);
+                        }
+                        ctx.closePath();
+                        ctx.stroke();
+                    }
+                }
+                ctx.restore();
+
+                // --- E. SPECULAR HIGHLIGHT (Glass Look) ---
+                const specular = ctx.createLinearGradient(0, shieldY - shieldHeight * 0.8, 0, shieldY);
+                specular.addColorStop(0, `rgba(255, 255, 255, ${0.2 * shieldAlpha})`);
+                specular.addColorStop(1, 'transparent');
+                ctx.fillStyle = specular;
+                ctx.beginPath();
+                ctx.ellipse(0, shieldY - shieldHeight * 0.5, shieldWidth * 0.7, shieldHeight * 0.3, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // --- F. ELECTRICAL DISCHARGES (Lightning) ---
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.strokeStyle = `rgba(207, 250, 254, ${0.6 * shieldAlpha})`;
+                ctx.lineWidth = 1.5;
+                if (tick % 10 < 3) { // Occasional jumps
+                    ctx.beginPath();
+                    let lx = (Math.random() - 0.5) * shieldWidth;
+                    let ly = shieldY - shieldHeight;
+                    ctx.moveTo(lx, ly);
+                    for (let i = 0; i < 8; i++) {
+                        lx += (Math.random() - 0.5) * 60;
+                        ly += shieldHeight / 4;
+                        ctx.lineTo(lx, ly);
+                    }
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            };
+            drawShield();
 
             ctx.restore();
         };

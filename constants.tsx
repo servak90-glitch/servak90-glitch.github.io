@@ -1,5 +1,5 @@
 
-import { Biome, DrillPart, EnginePart, CoolerPart, HullPart, LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, CargoBayPart, DroneDefinition, MergeRecipe, TunnelPropDef, DroneType, ResourceType } from './types';
+import { Biome, DrillPart, EnginePart, CoolerPart, HullPart, LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, ShieldPart, CargoBayPart, DroneDefinition, MergeRecipe, TunnelPropDef, DroneType, ResourceType } from './types';
 
 export const BIOMES: Biome[] = [
   {
@@ -209,6 +209,25 @@ export const POWER_CORES: PowerCorePart[] = [
 ];
 
 
+export const SHIELD_GENERATORS: ShieldPart[] = [
+  { id: 'shd_1', tier: 1, mass: 20, rarity: 'Common', name: { RU: 'Искрящий виток', EN: 'Sparking Coil' }, description: { RU: 'Щит: 50. Эфф: 5%. Энергия: 1.', EN: 'Shield: 50. Eff: 5%. Energy: 1.' }, cost: { clay: 30 }, baseStats: { maxShield: 50, efficiency: 0.05, rechargeMult: 1.0, energyCost: 1 } },
+  { id: 'shd_2', tier: 2, mass: 35, rarity: 'Common', name: { RU: 'Медная сетка', EN: 'Copper Mesh' }, description: { RU: 'Щит: 100. Эфф: 10%. Энергия: 3.', EN: 'Shield: 100. Eff: 10%. Energy: 3.' }, cost: { copper: 100 }, baseStats: { maxShield: 100, efficiency: 0.10, rechargeMult: 1.2, energyCost: 3 } },
+  { id: 'shd_3', tier: 3, mass: 55, rarity: 'Common', name: { RU: 'Стальной купол', EN: 'Steel Dome' }, description: { RU: 'Щит: 150. Эфф: 15%. Энергия: 6.', EN: 'Shield: 150. Eff: 15%. Energy: 6.' }, cost: { iron: 300 }, baseStats: { maxShield: 150, efficiency: 0.15, rechargeMult: 1.5, energyCost: 6 } },
+  { id: 'shd_4', tier: 4, mass: 80, rarity: 'Rare', name: { RU: 'Кварцевый барьер', EN: 'Quartz Barrier' }, description: { RU: 'Щит: 200. Эфф: 20%. Энергия: 10.', EN: 'Shield: 200. Eff: 20%. Energy: 10.' }, cost: { silver: 600 }, baseStats: { maxShield: 200, efficiency: 0.20, rechargeMult: 2.0, energyCost: 10 } },
+  { id: 'shd_5', tier: 5, mass: 110, rarity: 'Rare', name: { RU: 'Плазменный зонт', EN: 'Plasma Umbrella' }, description: { RU: 'Щит: 250. Эфф: 25%. Энергия: 15.', EN: 'Shield: 250. Eff: 25%. Energy: 15.' }, cost: { gold: 1200 }, baseStats: { maxShield: 250, efficiency: 0.25, rechargeMult: 2.5, energyCost: 15 } },
+  { id: 'shd_6', tier: 6, mass: 145, rarity: 'Rare', name: { RU: 'Ионный кокон', EN: 'Ionic Cocoon' }, description: { RU: 'Щит: 350. Эфф: 30%. Энергия: 22.', EN: 'Shield: 350. Eff: 30%. Energy: 22.' }, cost: { diamonds: 10, titanium: 1500 }, baseStats: { maxShield: 350, efficiency: 0.30, rechargeMult: 3.0, energyCost: 22 } },
+  { id: 'shd_7', tier: 7, mass: 185, rarity: 'Epic', name: { RU: 'Грави-призма', EN: 'Gravi-Prism' }, description: { RU: 'Щит: 500. Эфф: 35%. Энергия: 30.', EN: 'Shield: 500. Eff: 35%. Energy: 30.' }, cost: { titanium: 3000, rubies: 15 }, blueprintId: 'blueprint_shield_tech', baseStats: { maxShield: 500, efficiency: 0.35, rechargeMult: 4.0, energyCost: 30 } },
+  { id: 'shd_8', tier: 8, mass: 230, rarity: 'Epic', name: { RU: 'Поле Фарадея-Икс', EN: 'Faraday Field-X' }, description: { RU: 'Щит: 750. Эфф: 40%. Энергия: 45.', EN: 'Shield: 750. Eff: 40%. Energy: 45.' }, cost: { uranium: 1200, emeralds: 25 }, blueprintId: 'blueprint_shield_tech', baseStats: { maxShield: 750, efficiency: 0.40, rechargeMult: 5.5, energyCost: 45 } },
+  { id: 'shd_9', tier: 9, mass: 280, rarity: 'Epic', name: { RU: 'Фотонная кожа', EN: 'Photonic Skin' }, description: { RU: 'Щит: 1000. Эфф: 50%. Энергия: 65.', EN: 'Shield: 1000. Eff: 50%. Energy: 65.' }, cost: { ancientTech: 20, nanoSwarm: 50 }, blueprintId: 'blueprint_shield_tech', baseStats: { maxShield: 1000, efficiency: 0.50, rechargeMult: 7.0, energyCost: 65 } },
+  { id: 'shd_10', tier: 10, mass: 335, rarity: 'Legendary', name: { RU: 'Зеркальный щит', EN: 'Mirror Shield' }, description: { RU: 'Щит: 1500. Эфф: 60%. Энергия: 90.', EN: 'Shield: 1500. Eff: 60%. Energy: 90.' }, cost: { ancientTech: 150, emeralds: 50, nanoSwarm: 200 }, blueprintId: 'blueprint_quantum_shield', baseStats: { maxShield: 1500, efficiency: 0.60, rechargeMult: 9.0, energyCost: 90 } },
+  { id: 'shd_11', tier: 11, mass: 395, rarity: 'Legendary', name: { RU: 'Квантовый страж', EN: 'Quantum Sentry' }, description: { RU: 'Щит: 2000. Эфф: 70%. Энергия: 130.', EN: 'Shield: 2000. Eff: 70%. Energy: 130.' }, cost: { ancientTech: 400, diamonds: 50, nanoSwarm: 500 }, blueprintId: 'blueprint_quantum_shield', baseStats: { maxShield: 2000, efficiency: 0.70, rechargeMult: 12.0, energyCost: 130 } },
+  { id: 'shd_12', tier: 12, mass: 460, rarity: 'Legendary', name: { RU: 'Сдвиг Реальности', EN: 'Reality Shift' }, description: { RU: 'Щит: 3000. Эфф: 80%. Энергия: 200.', EN: 'Shield: 3000. Eff: 80%. Energy: 200.' }, cost: { ancientTech: 1000, nanoSwarm: 1500 }, blueprintId: 'blueprint_quantum_shield', baseStats: { maxShield: 3000, efficiency: 0.80, rechargeMult: 15.0, energyCost: 200 } },
+  // FUSION ONLY
+  { id: 'shd_13', tier: 13, mass: 530, rarity: 'Godly', name: { RU: 'Сингулярный барьер', EN: 'Singular Barrier' }, description: { RU: 'Щит: 5000. Эфф: 85%. Энергия: 350.', EN: 'Shield: 5000. Eff: 85%. Energy: 350.' }, cost: { ancientTech: 3000, diamonds: 500, nanoSwarm: 3000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxShield: 5000, efficiency: 0.85, rechargeMult: 20.0, energyCost: 350 } },
+  { id: 'shd_14', tier: 14, mass: 605, rarity: 'Godly', name: { RU: 'Горизонт событий', EN: 'Event Horizon' }, description: { RU: 'Щит: 10000. Эфф: 90%. Энергия: 600.', EN: 'Shield: 10000. Eff: 90%. Energy: 600.' }, cost: { ancientTech: 8000, nanoSwarm: 5000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxShield: 10000, efficiency: 0.90, rechargeMult: 30.0, energyCost: 600 } },
+  { id: 'shd_15', tier: 15, mass: 685, rarity: 'Godly', name: { RU: 'Небытие', EN: 'Non-existence' }, description: { RU: 'Щит: 50000. Эфф: 99%. Энергия: 1000.', EN: 'Shield: 50000. Eff: 99%. Energy: 1000.' }, cost: { ancientTech: 20000, diamonds: 1000, nanoSwarm: 10000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxShield: 50000, efficiency: 0.99, rechargeMult: 60.0, energyCost: 1000 } }
+];
+
 export const ARMORS: ArmorPart[] = [
   { id: 'arm_1', tier: 1, mass: 150, rarity: 'Common', name: { RU: 'Фольга', EN: 'Foil' }, description: { RU: 'Защита 1%. 0 энергии.', EN: 'Defense 1%. 0 energy.' }, cost: { clay: 50 }, baseStats: { defense: 1, energyCost: 0, hazardResist: 0 } },
   { id: 'arm_2', tier: 2, mass: 280, rarity: 'Common', name: { RU: 'Листы стали', EN: 'Steel Sheets' }, description: { RU: '5%', EN: '5%' }, cost: { iron: 200 }, baseStats: { defense: 5, energyCost: 2, hazardResist: 0 } },
@@ -359,6 +378,33 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     componentBId: 'hull_14',
     catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 10000 },
     description: { RU: 'Две Оболочки создают Несокрушимый', EN: 'Two Shells create Indestructible' }
+  },
+
+  // === SHIELD ===
+  {
+    id: 'fusion_shield_13',
+    resultId: 'shd_13',
+    componentAId: 'shd_12',
+    componentBId: 'shd_12',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2000 },
+    condition: { type: 'NO_DAMAGE', target: 200, description: { RU: 'Слияние при 200% щита (Overcharge)', EN: 'Fusion at 200% Shield (Overcharge)' } },
+    description: { RU: 'Два Сдвига Реальности создают Сингулярный барьер', EN: 'Two Reality Shifts create Singular Barrier' }
+  },
+  {
+    id: 'fusion_shield_14',
+    resultId: 'shd_14',
+    componentAId: 'shd_13',
+    componentBId: 'shd_13',
+    catalyst: { resource: ResourceType.NANO_SWARM, amount: 4000 },
+    description: { RU: 'Два Сингулярных барьера создают Горизонт событий', EN: 'Two Singular Barriers create Event Horizon' }
+  },
+  {
+    id: 'fusion_shield_15',
+    resultId: 'shd_15',
+    componentAId: 'shd_14',
+    componentBId: 'shd_14',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 12000 },
+    description: { RU: 'Два Горизонта событий создают Небытие', EN: 'Two Event Horizons create Non-existence' }
   },
 
   // === LOGIC ===

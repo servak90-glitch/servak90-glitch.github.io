@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { audioEngine } from '../services/audioEngine';
 import { EquipmentCard } from './equipment/EquipmentCard';
@@ -7,10 +7,101 @@ import { EquipmentDoll } from './equipment/EquipmentDoll';
 import { DrillSlot, InventoryItem } from '../types';
 import { ARTIFACTS, getArtifactColor } from '../services/artifactRegistry';
 import { t, TL } from '../services/localization';
+import { ArtifactTooltip } from './ArtifactTooltip';
 
 interface EquipmentInventoryViewProps {
     onClose: () => void;
 }
+
+// Подкомпонент для ячейки быстрого доступа
+const QuickSlotItem: React.FC<{
+    slotKey: string;
+    artifact: InventoryItem | null;
+    onUnequip: (id: string) => void;
+    lang: Language;
+}> = ({ slotKey, artifact, onUnequip, lang }) => {
+    const ref = useRef<HTMLDivElement>(null);
+    const def = artifact ? ARTIFACTS.find(a => a.id === artifact.defId) : null;
+
+    return (
+        <div
+            ref={ref}
+            onClick={() => artifact && onUnequip(artifact.instanceId)}
+            className={`bg-gray-800/50 border ${artifact ? 'border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'border-gray-700/50'} rounded flex items-center justify-center relative group overflow-hidden cursor-pointer hover:bg-gray-700/50 transition-all`}
+        >
+            <span className="absolute top-0.5 left-1 text-[8px] text-gray-500 font-mono">{slotKey}</span>
+            {artifact && def ? (
+                <>
+                    <div className="flex items-center gap-2">
+                        <span className="text-lg">{def.icon}</span>
+                        <span className="text-[10px] text-white font-bold hidden md:block truncate max-w-[60px]">{t(def.name, lang)}</span>
+                    </div>
+                    <ArtifactTooltip
+                        artifact={def}
+                        isIdentified={true}
+                        isAnalyzing={false}
+                        targetRef={ref}
+                        lang={lang}
+                        colorScheme="green"
+                    />
+                </>
+            ) : (
+                <span className="text-gray-600 text-[10px] uppercase font-bold group-hover:text-gray-400 transition-colors">
+                    {t(TL.ui.empty_label, lang)}
+                </span>
+            )}
+        </div>
+    );
+};
+
+// Подкомпонент для карточки артефакта в инвентаре
+const ArtifactItem: React.FC<{
+    item: InventoryItem;
+    analyzerState: any;
+    startAnalysis: (id: string) => void;
+    equipArtifact: (id: string) => void;
+    lang: Language;
+}> = ({ item, analyzerState, startAnalysis, equipArtifact, lang }) => {
+    const ref = useRef<HTMLDivElement>(null);
+    const def = ARTIFACTS.find(a => a.id === item.defId);
+    if (!def) return null;
+
+    const isAnalyzing = item.instanceId === analyzerState.activeItemInstanceId;
+    const rarityStyle = item.isIdentified ? getArtifactColor(def.rarity) : 'border-zinc-700 text-zinc-600';
+
+    return (
+        <div
+            ref={ref}
+            onClick={() => {
+                if (!item.isIdentified && !isAnalyzing) startAnalysis(item.instanceId);
+                else if (item.isIdentified && !item.isEquipped) equipArtifact(item.instanceId);
+            }}
+            className={`aspect-square border-2 relative group transition-all flex flex-col items-center justify-center p-2 cursor-pointer active:scale-95 bg-zinc-900/50 rounded-lg ${rarityStyle} ${isAnalyzing ? 'animate-pulse' : ''} ${item.isEquipped ? 'ring-2 ring-green-500' : ''}`}
+        >
+            <div className="text-2xl md:text-3xl mb-1">{item.isIdentified ? def.icon : '❓'}</div>
+            <div className="text-[9px] font-bold text-center truncate w-full uppercase">
+                {item.isIdentified ? t(def.name, lang).split(' ')[0] : '???'}
+            </div>
+
+            {isAnalyzing && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg">
+                    <div className="w-8 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-cyan-500" style={{ width: `${((analyzerState.maxTime - analyzerState.timeLeft) / analyzerState.maxTime) * 100}%` }} />
+                    </div>
+                </div>
+            )}
+
+            <ArtifactTooltip
+                artifact={def}
+                isIdentified={item.isIdentified}
+                isAnalyzing={isAnalyzing}
+                targetRef={ref}
+                lang={lang}
+                colorScheme="cyan"
+            />
+        </div>
+    );
+};
 
 export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ onClose }) => {
     const [selectedSlot, setSelectedSlot] = React.useState<DrillSlot | null>(null);
@@ -92,26 +183,15 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                         {['Q', 'E', 'R', 'F'].map((key, idx) => {
                             const artifactInstanceId = equippedArtifacts[idx];
                             const artifact = artifactInstanceId ? artifactInventory[artifactInstanceId] : null;
-                            const def = artifact ? ARTIFACTS.find(a => a.id === artifact.defId) : null;
 
                             return (
-                                <div
+                                <QuickSlotItem
                                     key={key}
-                                    onClick={() => artifact && unequipArtifact(artifact.instanceId)}
-                                    className={`bg-gray-800/50 border ${artifact ? 'border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'border-gray-700/50'} rounded flex items-center justify-center relative group overflow-hidden cursor-pointer hover:bg-gray-700/50 transition-all`}
-                                >
-                                    <span className="absolute top-0.5 left-1 text-[8px] text-gray-500 font-mono">{key}</span>
-                                    {artifact && def ? (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-lg">{def.icon}</span>
-                                            <span className="text-[10px] text-white font-bold hidden md:block truncate max-w-[60px]">{t(def.name, lang)}</span>
-                                        </div>
-                                    ) : (
-                                        <span className="text-gray-600 text-[10px] uppercase font-bold group-hover:text-gray-400 transition-colors">
-                                            {t(TL.ui.empty_label, lang)}
-                                        </span>
-                                    )}
-                                </div>
+                                    slotKey={key}
+                                    artifact={artifact}
+                                    onUnequip={unequipArtifact}
+                                    lang={lang}
+                                />
                             );
                         })}
                     </div>
@@ -165,53 +245,16 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                             </>
                         ) : (
                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                                {filteredArtifacts.map(item => {
-                                    const def = ARTIFACTS.find(a => a.id === item.defId);
-                                    if (!def) return null;
-                                    const isAnalyzing = item.instanceId === analyzerState.activeItemInstanceId;
-                                    const rarityStyle = item.isIdentified ? getArtifactColor(def.rarity) : 'border-zinc-700 text-zinc-600';
-
-                                    return (
-                                        <div
-                                            key={item.instanceId}
-                                            onClick={() => {
-                                                if (!item.isIdentified && !isAnalyzing) startAnalysis(item.instanceId);
-                                                else if (item.isIdentified && !item.isEquipped) equipArtifact(item.instanceId);
-                                            }}
-                                            className={`aspect-square border-2 relative group transition-all flex flex-col items-center justify-center p-2 cursor-pointer active:scale-95 bg-zinc-900/50 rounded-lg ${rarityStyle} ${isAnalyzing ? 'animate-pulse' : ''} ${item.isEquipped ? 'ring-2 ring-green-500' : ''}`}
-                                        >
-                                            <div className="text-2xl md:text-3xl mb-1">{item.isIdentified ? def.icon : '❓'}</div>
-                                            <div className="text-[9px] font-bold text-center truncate w-full uppercase">
-                                                {item.isIdentified ? t(def.name, lang).split(' ')[0] : '???'}
-                                            </div>
-
-                                            {isAnalyzing && (
-                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg">
-                                                    <div className="w-8 h-1 bg-zinc-800 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-cyan-500" style={{ width: `${((analyzerState.maxTime - analyzerState.timeLeft) / analyzerState.maxTime) * 100}%` }} />
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Tooltip */}
-                                            <div className="hidden group-hover:block absolute z-[100] top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-zinc-950 border border-zinc-700 p-3 rounded shadow-2xl pointer-events-none">
-                                                {item.isIdentified ? (
-                                                    <>
-                                                        <p className="text-[10px] font-bold text-cyan-400 mb-1 uppercase">{t(def.name, lang)}</p>
-                                                        <p className="text-[9px] text-zinc-400 italic mb-2">"{t(def.loreDescription, lang)}"</p>
-                                                        <div className="border-t border-zinc-800 pt-1 text-[9px] text-green-400 font-bold">
-                                                            {t(def.effectDescription, lang)}
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <p className="text-[10px] text-zinc-500 italic">
-                                                        {isAnalyzing ? t(TL.ui.analyzing, lang) : t(TL.ui.analysisRequired, lang)}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {filteredArtifacts.map(item => (
+                                    <ArtifactItem
+                                        key={item.instanceId}
+                                        item={item}
+                                        analyzerState={analyzerState}
+                                        startAnalysis={startAnalysis}
+                                        equipArtifact={equipArtifact}
+                                        lang={lang}
+                                    />
+                                ))}
                             </div>
                         )}
                     </div>

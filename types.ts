@@ -336,6 +336,10 @@ export interface Stats {
   // Using simplified types for mods to avoid huge interface duplication
   skillMods: Record<string, number>;
   artifactMods: Record<string, number>;
+  // Shield Specific
+  shieldEfficiency?: number;
+  maxShield?: number;
+  shieldRechargeMult?: number;
 }
 
 export interface CombatMinigame {
@@ -376,6 +380,7 @@ export interface ArtifactDefinition {
     clickPowerPct?: number;
     luckPct?: number;
     shopDiscountPct?: number;
+    shieldEfficiencyPct?: number;
   };
 }
 
@@ -399,6 +404,7 @@ export enum DrillSlot {
   GEARBOX = 'gearbox',
   POWER = 'power',
   ARMOR = 'armor',
+  SHIELD = 'shield',
   CARGO_BAY = 'cargoBay'
 }
 
@@ -485,6 +491,15 @@ export interface ArmorPart extends BaseDrillPart {
   };
 }
 
+export interface ShieldPart extends BaseDrillPart {
+  baseStats: {
+    maxShield: number;
+    efficiency: number; // Reduces discharge rate (0.0 to 1.0)
+    rechargeMult: number; // Multiplier for recharge speed
+    energyCost: number;
+  };
+}
+
 export interface CargoBayPart extends BaseDrillPart {
   baseStats: {
     cargoCapacity: number;
@@ -502,6 +517,7 @@ export interface DrillState {
   [DrillSlot.GEARBOX]: GearboxPart;
   [DrillSlot.POWER]: PowerCorePart;
   [DrillSlot.ARMOR]: ArmorPart;
+  [DrillSlot.SHIELD]: ShieldPart;
   [DrillSlot.CARGO_BAY]: CargoBayPart;
 }
 
