@@ -1,10 +1,11 @@
-
 import React, { useEffect, useRef } from 'react';
 import { VisualEffectType, ResourceType } from '../types';
 import { TUNNEL_PROPS, BIOMES } from '../constants';
 import { useGameStore } from '../store/gameStore';
 import { ARTIFACTS } from '../services/artifactRegistry';
 import { calculateStats, RESOURCE_WEIGHTS } from '../services/gameMath';
+import { performanceMonitor } from '../services/performanceMonitor';
+
 
 interface DrillRendererProps {
     // No data props, component reads directly from store for performance
@@ -117,16 +118,50 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
         let frameId = 0;
         let tick = 0;
 
+        // [DEV_CONTEXT: OPTIMIZATION v5.2] Кэш для статов и state - обновляется не каждый кадр
+        let cachedState = useGameStore.getState();
+        let cachedStats = calculateStats(
+            cachedState.drill,
+            cachedState.skillLevels,
+            cachedState.equippedArtifacts,
+            cachedState.inventory,
+            cachedState.depth,
+            cachedState.activeEffects
+        );
+        let lastStatsUpdate = 0;
+
         const render = () => {
             frameId = requestAnimationFrame(render);
             tick++;
 
-            // [DEV_CONTEXT: DIRECT ACCESS] Bypass React State for 60FPS
-            const state = useGameStore.getState();
-            const { heat, drill, isDrilling, activeEffects, depth, selectedBiome, inventory, equippedArtifacts, isShielding, shieldCharge, resources, skillLevels } = state;
+            // [DEV_CONTEXT: OPTIMIZATION v5.2] Адаптивный интервал обновления на основе FPS
+            const statsInterval = performanceMonitor.getStatsUpdateInterval();
 
-            // Stats calculation for cargo capacity
-            const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth, activeEffects);
+            // Обновляем state и stats только раз в N кадров
+            if (tick - lastStatsUpdate >= statsInterval) {
+                cachedState = useGameStore.getState();
+                cachedStats = calculateStats(
+                    cachedState.drill,
+                    cachedState.skillLevels,
+                    cachedState.equippedArtifacts,
+                    cachedState.inventory,
+                    cachedState.depth,
+                    cachedState.activeEffects
+                );
+                lastStatsUpdate = tick;
+            }
+
+            // Быстрые поля — читаем каждый кадр (дёшево)
+            const liveState = useGameStore.getState();
+            const heat = liveState.heat;
+            const isDrilling = liveState.isDrilling;
+            const depth = liveState.depth;
+            const isShielding = liveState.isShielding;
+            const shieldCharge = liveState.shieldCharge;
+
+            // Медленные поля — из кэша
+            const { drill, activeEffects, selectedBiome, inventory, equippedArtifacts, resources, skillLevels } = cachedState;
+            const stats = cachedStats;
 
             // [DEV_CONTEXT: WARP SYNC] Detect large depth changes (admin jump) and sync visuals
             if (Math.abs(depth - prevDepthRef.current) > 500) {
@@ -137,6 +172,7 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             const spinning = isDrilling;
 
             const activeBuffIds = activeEffects.map(e => e.id.split('_')[1] || e.id);
+
 
             const activeVisualEffects: VisualEffectType[] = [];
             equippedArtifacts.forEach(id => {

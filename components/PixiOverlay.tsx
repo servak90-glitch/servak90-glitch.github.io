@@ -5,6 +5,8 @@ import { CRTFilter, RGBSplitFilter, BloomFilter, AdjustmentFilter } from 'pixi-f
 import { useGameStore } from '../store/gameStore';
 import { DroneType } from '../types'; // [DEV_CONTEXT: HARDENING]
 import { tunnelAtmosphere } from '../services/systems/TunnelAtmosphere'; // [DEV_CONTEXT: ATMOSPHERE]
+import { performanceMonitor } from '../services/performanceMonitor'; // [DEV_CONTEXT: OPTIMIZATION v5.2]
+
 
 // [DEV_CONTEXT: PATTERN] Persistent Singleton for PixiJS v8
 let globalApp: Application | null = null;
@@ -326,17 +328,29 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                 const cx = screenW / 2;
                                 const cy = screenH * 0.35;
 
-                                const state = useGameStore.getState();
-                                const { activeDrones, droneLevels, flyingObjects, heat, integrity, depth, settings } = state;
+                                // [DEV_CONTEXT: OPTIMIZATION v5.2] Кэшированный state с throttle
+                                // Обновляем полный state каждые 3 кадра для экономии, но
+                                // критичные поля (heat, flyingObjects) читаем каждый кадр
+                                const liveState = useGameStore.getState();
+                                const { activeDrones, droneLevels, flyingObjects, heat, integrity, depth, settings } = liveState;
                                 const quality = settings?.graphicsQuality || 'high';
+
+                                // [DEV_CONTEXT: OPTIMIZATION v5.2] FPS-адаптивное управление фильтрами
+                                if (performanceMonitor.shouldDisableFilters() && app.stage.filters && app.stage.filters.length > 0) {
+                                    console.log('[PixiOverlay] Auto-disabling filters due to low FPS');
+                                    app.stage.filters = [];
+                                }
 
                                 // [OPTIMIZATION] Early exit if nothing rendering-intensive is active
                                 const hasParticles = globalParticles.length > 0;
                                 const hasDrones = activeDrones.length > 0;
                                 const hasObjects = flyingObjects.length > 0;
 
-                                // [DEV_CONTEXT: GRAPHICS] Update particles per frame budget
-                                const frameMaxParticles = quality === 'low' ? 50 : (quality === 'medium' ? 150 : 300);
+                                // [DEV_CONTEXT: OPTIMIZATION v5.2] FPS-адаптивный лимит частиц
+                                const particleMult = performanceMonitor.getParticleMultiplier();
+                                const baseMaxParticles = quality === 'low' ? 50 : (quality === 'medium' ? 150 : 300);
+                                const frameMaxParticles = Math.floor(baseMaxParticles * particleMult);
+
                                 if (globalParticles.length > frameMaxParticles) {
                                     const removed = globalParticles.splice(0, globalParticles.length - frameMaxParticles);
                                     removed.forEach(p => p.sprite.destroy());
@@ -344,6 +358,7 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                 if (!hasParticles && !hasDrones && !hasObjects && !tunnelAtmosphere.hasActiveHazard()) {
                                     // We can skip most of the logic if nothing is happening, but we still update dust for ambiance
                                 }
+
 
                                 const isDrillingActive = hasParticles;
                                 const atmosphereShake = tunnelAtmosphere.update(dt, depth, isDrillingActive);
@@ -553,12 +568,19 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
     useImperativeHandle(ref, () => ({
         emitParticle: (x, y, colorStr, type, count) => {
             if (!globalApp || !globalTextures || !globalParticleLayer) return;
+
+            // [DEV_CONTEXT: OPTIMIZATION v5.2] Пропускаем генерацию частиц при низком FPS
+            if (performanceMonitor.shouldSkipHeavyOperation()) return;
+
             const isMobile = window.innerWidth < 768;
             const quality = useGameStore.getState().settings.graphicsQuality || 'high';
 
-            // [DEV_CONTEXT: GRAPHICS] Particle count scale
+            // [DEV_CONTEXT: OPTIMIZATION v5.2] FPS-адаптивный множитель
+            const fpsMult = performanceMonitor.getParticleMultiplier();
             let countMultiplier = quality === 'low' ? 0.2 : (quality === 'medium' ? 0.6 : 1.0);
+            countMultiplier *= fpsMult; // Дополнительное масштабирование по FPS
             const actualCount = Math.max(1, Math.floor(count * countMultiplier * (isMobile ? 0.5 : 1.0)));
+
 
             let color = 0xffffff;
             if (colorStr.startsWith('#')) color = parseInt(colorStr.replace('#', ''), 16);
