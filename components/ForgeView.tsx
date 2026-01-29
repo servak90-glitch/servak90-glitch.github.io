@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import { audioEngine } from '../services/audioEngine';
 import { TL, t, TEXT_IDS } from '../services/localization';
 import { DrillSlot, LocalizedString } from '../types';
-import { BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS } from '../constants';
+import { BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS, SHIELD_GENERATORS } from '../constants';
 import { useDrillStats, useForgeState, useCraftActions } from '../store/selectors';
 import { UpgradeCard, FusionTab, DronesTab } from './forge';
 import { ConsumablesTab } from './forge/ConsumablesTab';
@@ -93,6 +93,7 @@ const ForgeView: React.FC = () => {
                         <UpgradeCard title={t(TL.ui.structuralHull, lang)} current={drill.hull} next={getNextAvailablePart(DrillSlot.HULL, drill.hull, HULLS)} type={DrillSlot.HULL} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
                         <UpgradeCard title={t(TL.ui.powerCore, lang)} current={drill.power} next={getNextAvailablePart(DrillSlot.POWER, drill.power, POWER_CORES)} type={DrillSlot.POWER} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
                         <UpgradeCard title={t(TL.ui.armorPlating, lang)} current={drill.armor} next={getNextAvailablePart(DrillSlot.ARMOR, drill.armor, ARMORS)} type={DrillSlot.ARMOR} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
+                        <UpgradeCard title={t(TL.ui.shield, lang)} current={drill.shield} next={getNextAvailablePart(DrillSlot.SHIELD, drill.shield, SHIELD_GENERATORS)} type={DrillSlot.SHIELD} resources={resources} onStartCraft={startCraft} craftingQueue={craftingQueue} />
                     </div>
                 );
             case 'SUPPLY':

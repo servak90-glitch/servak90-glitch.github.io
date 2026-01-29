@@ -23,7 +23,8 @@ export const EquipmentDoll: React.FC<EquipmentDollProps> = ({ selectedSlot, onSl
         DrillSlot.GEARBOX,
         DrillSlot.POWER,
         DrillSlot.ARMOR,
-        DrillSlot.CARGO_BAY
+        DrillSlot.CARGO_BAY,
+        DrillSlot.SHIELD
     ];
 
     return (
@@ -42,7 +43,7 @@ export const EquipmentDoll: React.FC<EquipmentDollProps> = ({ selectedSlot, onSl
                 )}
             </div>
 
-            <div className="flex-1 grid grid-cols-5 grid-rows-2 gap-2">
+            <div className="flex-1 grid grid-cols-6 gap-2">
                 {slots.map(slot => (
                     <DrillSlotItem
                         key={slot}

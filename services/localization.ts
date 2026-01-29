@@ -336,6 +336,7 @@ export const TL = {
     controlUnit: { RU: "БЛОК УПРАВЛЕНИЯ", EN: "CONTROL UNIT" },
     cargoBay: { RU: "ГРУЗОВОЙ ОТСЕК", EN: "CARGO BAY" },
     gearbox: { RU: "КОРОБКА ПЕРЕДАЧ", EN: "GEARBOX" },
+    shield: { RU: "ГЕНЕРАТОР ЩИТА", EN: "SHIELD GENERATOR" },
     structuralHull: { RU: "КОРПУС", EN: "STRUCTURAL HULL" },
     powerCore: { RU: "ЭНЕРГОБЛОК", EN: "POWER CORE" },
     armorPlating: { RU: "БРОНЕПЛАСТИНЫ", EN: "ARMOR PLATING" },

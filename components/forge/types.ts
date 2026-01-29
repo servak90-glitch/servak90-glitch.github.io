@@ -4,13 +4,13 @@
 
 import {
     Resources, DrillPart, EnginePart, CoolerPart, HullPart,
-    LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, CargoBayPart,
+    LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, CargoBayPart, ShieldPart,
     DrillSlot, InventoryItem, DrillState
 } from '../../types';
 
 // Объединение всех типов частей бура
 export type AnyDrillPart = DrillPart | EnginePart | CoolerPart | HullPart |
-    LogicPart | ControlPart | GearboxPart | PowerCorePart | ArmorPart | CargoBayPart;
+    LogicPart | ControlPart | GearboxPart | PowerCorePart | ArmorPart | CargoBayPart | ShieldPart;
 
 export type ForgeTab = 'DRILL' | 'SYSTEMS' | 'HULL' | 'FUSION' | 'DRONES' | 'SUPPLY';
 
@@ -49,6 +49,7 @@ export interface HullTabProps {
         hull: HullPart;
         power: PowerCorePart;
         armor: ArmorPart;
+        shield: ShieldPart;
     };
     resources: Resources;
     onStartCraft: (partId: string, type: DrillSlot | 'CONSUMABLE') => void;
