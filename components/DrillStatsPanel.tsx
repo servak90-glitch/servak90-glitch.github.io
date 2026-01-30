@@ -59,7 +59,7 @@ export const DrillStatsPanel: React.FC = () => {
                 onClick={() => setIsOpen(false)}
             />
 
-            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-80 md:w-72 bg-gray-950 border-l border-cyan-500/50 z-[200] flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.9)] animate-in slide-in-from-right duration-300 pointer-events-auto">
+            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-80 md:w-96 bg-gray-950 border-l border-cyan-500/50 z-[200] flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.9)] animate-in slide-in-from-right duration-300 pointer-events-auto">
                 {/* Header */}
                 <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-cyan-950/20">
                     <div className="flex items-center gap-3">
@@ -67,8 +67,8 @@ export const DrillStatsPanel: React.FC = () => {
                             <Terminal className="w-4 h-4 text-cyan-400" />
                         </div>
                         <div className="flex flex-col">
-                            <h3 className="text-[11px] font-black text-cyan-400 uppercase tracking-widest leading-none">MK-IV COMPUTER</h3>
-                            <span className="text-[8px] text-zinc-500 mt-1 uppercase">DRIL-OS v5.1.0</span>
+                            <h3 className="text-[11px] md:text-sm font-black text-cyan-400 uppercase tracking-widest leading-none">MK-IV COMPUTER</h3>
+                            <span className="text-[8px] md:text-xs text-zinc-500 mt-1 uppercase">DRIL-OS v5.1.0</span>
                         </div>
                     </div>
                     <button
@@ -92,7 +92,7 @@ export const DrillStatsPanel: React.FC = () => {
                     <div className="h-px bg-zinc-800/50" />
 
                     <section>
-                        <h4 className="text-[9px] text-zinc-500 font-bold mb-2 uppercase tracking-widest">Производительность</h4>
+                        <h4 className="text-[9px] md:text-sm font-bold mb-2 uppercase tracking-widest">Производительность</h4>
                         <div className="space-y-1.5">
                             <StatRow label="Мощность бурения" value={formatCompactNumber(stats.totalDamage)} sub="ед/с" color="text-red-400" />
                             <StatRow label="Скорость проходки" value={formatCompactNumber(stats.totalSpeed)} sub="м/с" color="text-green-400" />
@@ -102,7 +102,7 @@ export const DrillStatsPanel: React.FC = () => {
                     </section>
 
                     <section>
-                        <h4 className="text-[9px] text-zinc-500 font-bold mb-2 uppercase tracking-widest">Активные модификаторы</h4>
+                        <h4 className="text-[9px] md:text-sm font-bold mb-2 uppercase tracking-widest">Активные модификаторы</h4>
                         <div className="space-y-1.5">
                             {stats.skillMods.clickPowerPct > 0 && <BonusRow label="Нейро-линк" value={`+${stats.skillMods.clickPowerPct}%`} color="text-amber-500" />}
                             {stats.skillMods.autoSpeedPct > 0 && <BonusRow label="Привод" value={`+${stats.skillMods.autoSpeedPct}%`} color="text-cyan-500" />}
@@ -113,10 +113,10 @@ export const DrillStatsPanel: React.FC = () => {
 
                     {activeEffects.length > 0 && (
                         <section>
-                            <h4 className="text-[9px] text-cyan-500 font-bold mb-2 uppercase tracking-widest">Временные усиления</h4>
+                            <h4 className="text-[9px] md:text-sm text-cyan-500 font-bold mb-2 uppercase tracking-widest">Временные усиления</h4>
                             <div className="space-y-1.5">
                                 {activeEffects.map(e => (
-                                    <div key={e.id} className="flex justify-between items-center text-[9px] bg-cyan-950/20 p-1 border border-cyan-900/30">
+                                    <div key={e.id} className="flex justify-between items-center text-[9px] md:text-sm bg-cyan-950/20 p-1 border border-cyan-900/30">
                                         <span className="text-cyan-300 font-bold">{t(e.name, lang)}</span>
                                         <span className="text-zinc-500 font-mono">{Math.ceil(e.duration / 10)}с</span>
                                     </div>
@@ -126,7 +126,7 @@ export const DrillStatsPanel: React.FC = () => {
                     )}
 
                     <section className="pt-2">
-                        <h4 className="text-[9px] text-yellow-600 font-bold mb-2 uppercase tracking-widest">Утилизация и выживание</h4>
+                        <h4 className="text-[9px] md:text-sm text-yellow-600 font-bold mb-2 uppercase tracking-widest">Утилизация и выживание</h4>
                         <div className="grid grid-cols-1 gap-2">
                             <ActionButton icon="🔨" title="Полевой ремонт" desc="+5% Integrity прямо в шахте" cost="500 Stone, 50 Scrap" disabled={resources.stone < 500 || resources.scrap < 50} onClick={() => handleRecycle('repair')} />
                             <ActionButton icon="🧪" title="Смазочный концентрат" desc="-20% нагрева на 2 минуты" cost="300 Clay, 50 Ice" disabled={resources.clay < 300 || resources.ice < 50} onClick={() => handleRecycle('lubricate')} />
@@ -139,7 +139,7 @@ export const DrillStatsPanel: React.FC = () => {
                     <div className="pt-4 pb-2">
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="w-full py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 font-bold text-[10px] uppercase tracking-[0.2em] rounded active:scale-[0.98] transition-all"
+                            className="w-full py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 font-bold text-[10px] md:text-sm uppercase tracking-[0.2em] rounded active:scale-[0.98] transition-all"
                         >
                             ЗАКРЫТЬ
                         </button>
@@ -147,7 +147,7 @@ export const DrillStatsPanel: React.FC = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="p-2 bg-zinc-950 text-[7px] font-mono text-zinc-600 text-center border-t border-zinc-900 uppercase">
+                <div className="p-2 bg-zinc-950 text-[7px] md:text-xs font-mono text-zinc-600 text-center border-t border-zinc-900 uppercase">
                     Hardware: v5.1.0 // Core: DRILL-MK-IV
                 </div>
             </div>
@@ -159,7 +159,7 @@ const ProgressBar = ({ label, current, max, unit = "", color, bgColor }: any) =>
     const percent = Math.min(100, Math.max(0, (current / max) * 100));
     return (
         <div className="space-y-1">
-            <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-tighter">
+            <div className="flex justify-between items-center text-[9px] md:text-sm font-bold uppercase tracking-tighter">
                 <span className="text-zinc-500">{label}</span>
                 <span className="text-zinc-300 font-mono">{current}/{max}{unit}</span>
             </div>
@@ -175,16 +175,16 @@ const ProgressBar = ({ label, current, max, unit = "", color, bgColor }: any) =>
 
 const StatRow = ({ label, value, sub, color }: any) => (
     <div className="flex justify-between items-end">
-        <span className="text-[10px] text-zinc-400">{label}</span>
+        <span className="text-[10px] md:text-sm text-zinc-400">{label}</span>
         <div className="text-right">
-            <span className={`text-xs font-bold font-mono ${color}`}>{value}</span>
-            <span className="text-[8px] text-zinc-600 ml-0.5">{sub}</span>
+            <span className={`text-xs md:text-base font-bold font-mono ${color}`}>{value}</span>
+            <span className="text-[8px] md:text-xs text-zinc-600 ml-0.5">{sub}</span>
         </div>
     </div>
 );
 
 const BonusRow = ({ label, value, color }: any) => (
-    <div className="flex justify-between items-center text-[9px]">
+    <div className="flex justify-between items-center text-[9px] md:text-sm">
         <span className="text-zinc-500">{label}</span>
         <span className={`font-bold ${color}`}>{value}</span>
     </div>
@@ -198,9 +198,9 @@ const ActionButton = ({ icon, title, desc, cost, disabled, onClick }: any) => (
     >
         <div className="flex items-center gap-2 mb-1">
             <span className="text-xs">{icon}</span>
-            <span className="text-[9px] font-extrabold text-zinc-200 group-hover:text-yellow-500">{title}</span>
+            <span className="text-[9px] md:text-sm font-extrabold text-zinc-200 group-hover:text-yellow-500">{title}</span>
         </div>
-        <p className="text-[8px] text-zinc-500 leading-tight mb-1">{desc}</p>
-        <div className="text-[7px] font-mono text-zinc-600">REQUIRED: {cost}</div>
+        <p className="text-[8px] md:text-xs text-zinc-500 leading-tight mb-1">{desc}</p>
+        <div className="text-[7px] md:text-[11px] font-mono text-zinc-600">REQUIRED: {cost}</div>
     </button>
 );

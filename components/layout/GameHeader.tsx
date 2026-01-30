@@ -139,7 +139,7 @@ export const RareResourcesMenu: React.FC<{
                 <div className="px-6 pt-12 pb-6 md:px-4 md:pt-3 md:pb-3 border-b border-white/5 flex items-center justify-between bg-white/5 md:bg-transparent">
                     <div className="flex items-center gap-3">
                         <Diamond className="w-5 md:w-3.5 h-5 md:h-3.5 text-cyan-400" />
-                        <h4 className="text-base md:text-[10px] font-black md:font-bold text-white uppercase tracking-[0.2em] font-technical">
+                        <h4 className="text-base md:text-sm font-black md:font-bold text-white uppercase tracking-[0.2em] font-technical">
                             {t(TEXT_IDS.HEADER_RARE_RESOURCES, lang)}
                         </h4>
                     </div>
@@ -156,15 +156,15 @@ export const RareResourcesMenu: React.FC<{
                     <div className="px-4 md:px-3">
                         <div className="flex items-center gap-2 mb-3 opacity-30">
                             <Coins className="w-3 h-3" />
-                            <span className="text-[9px] font-black uppercase tracking-[0.3em] font-technical">{lang === 'RU' ? 'ВАЛЮТА' : 'CURRENCY'}</span>
+                            <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] font-technical">{lang === 'RU' ? 'ВАЛЮТА' : 'CURRENCY'}</span>
                         </div>
                         <div className="grid grid-cols-1 gap-2">
                             <div className="flex justify-between items-center p-4 glass-panel border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 transition-colors">
                                 <div className="flex items-center gap-3">
                                     <Coins className="w-5 h-5 text-cyan-400" />
-                                    <span className="text-sm font-technical text-white/80 uppercase tracking-wider">{lang === 'RU' ? 'КРЕДИТЫ' : 'CREDITS'}</span>
+                                    <span className="text-sm md:text-base font-technical text-white/80 uppercase tracking-wider">{lang === 'RU' ? 'КРЕДИТЫ' : 'CREDITS'}</span>
                                 </div>
-                                <span className="text-xl font-technical font-black text-cyan-400">{formatCompactNumber(resources.credits || 0)}</span>
+                                <span className="text-xl md:text-2xl font-technical font-black text-cyan-400">{formatCompactNumber(resources.credits || 0)}</span>
                             </div>
                         </div>
                     </div>
@@ -173,15 +173,15 @@ export const RareResourcesMenu: React.FC<{
                     <div className="px-4 md:px-3">
                         <div className="flex items-center gap-2 mb-3 opacity-30">
                             <Box className="w-3 h-3" />
-                            <span className="text-[9px] font-black uppercase tracking-[0.3em] font-technical">Base Assets</span>
+                            <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] font-technical">Base Assets</span>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
                             {COMMON_RESOURCES.map(key => (
                                 <div key={key} className="flex flex-col p-2.5 glass-panel border-white/5 bg-white/5 hover:bg-white/10 transition-colors group">
-                                    <span className="text-[8px] font-technical text-white/30 group-hover:text-white/50 uppercase tracking-tighter mb-1 truncate">
+                                    <span className="text-[8px] md:text-[10px] font-technical text-white/30 group-hover:text-white/50 uppercase tracking-tighter mb-1 truncate">
                                         {t(getResourceLabel(key), lang)}
                                     </span>
-                                    <span className="text-[11px] font-technical font-bold text-white">
+                                    <span className="text-[11px] md:text-sm font-technical font-bold text-white">
                                         {formatCompactNumber(resources[key] || 0)}
                                     </span>
                                 </div>
@@ -193,7 +193,7 @@ export const RareResourcesMenu: React.FC<{
                     <div className="px-4 md:px-3">
                         <div className="flex items-center gap-2 mb-3 opacity-30">
                             <Activity className="w-3 h-3" />
-                            <span className="text-[9px] font-black uppercase tracking-[0.3em] font-technical">Fuel & Energy</span>
+                            <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] font-technical">Fuel & Energy</span>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             {FUEL_RESOURCES.map(key => (
@@ -201,7 +201,7 @@ export const RareResourcesMenu: React.FC<{
                                     <span className="text-[8px] font-technical text-white/30 group-hover:text-white/50 uppercase tracking-tighter mb-1 truncate">
                                         {t(getResourceLabel(key), lang)}
                                     </span>
-                                    <span className="text-[11px] font-technical font-bold text-cyan-400">
+                                    <span className="text-[11px] md:text-sm font-technical font-bold text-cyan-400">
                                         {formatCompactNumber(resources[key] || 0)}
                                     </span>
                                 </div>
@@ -213,7 +213,7 @@ export const RareResourcesMenu: React.FC<{
                     <div className="px-4 md:px-3">
                         <div className="flex items-center gap-2 mb-3 opacity-30">
                             <Settings2 className="w-3 h-3" />
-                            <span className="text-[9px] font-black uppercase tracking-[0.3em] font-technical">Drill Supplies</span>
+                            <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] font-technical">Drill Supplies</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                             {SUPPLY_RESOURCES.map(key => (
@@ -221,7 +221,7 @@ export const RareResourcesMenu: React.FC<{
                                     <span className="text-[8px] font-technical text-white/30 group-hover:text-white/50 uppercase tracking-tighter mb-1 truncate">
                                         {t(getResourceLabel(key), lang)}
                                     </span>
-                                    <span className="text-[11px] font-technical font-bold text-amber-400">
+                                    <span className="text-[11px] md:text-sm font-technical font-bold text-amber-400">
                                         {formatCompactNumber(resources[key] || 0)}
                                     </span>
                                 </div>
@@ -233,7 +233,7 @@ export const RareResourcesMenu: React.FC<{
                     <div className="px-4 md:px-3 pb-8 md:pb-4">
                         <div className="flex items-center gap-2 mb-3 opacity-30">
                             <Gem className="w-3 h-3" />
-                            <span className="text-[9px] font-black uppercase tracking-[0.3em] font-technical">Rare Assets</span>
+                            <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] font-technical">Rare Assets</span>
                         </div>
                         <div className="space-y-1">
                             {RARE_RESOURCES.map(key => (
@@ -242,11 +242,11 @@ export const RareResourcesMenu: React.FC<{
                                     className="flex justify-between items-center px-3 py-3 md:py-2 hover:bg-white/5 transition-all outline-none rounded-sm group border-b border-white/5 md:border-b-0"
                                 >
                                     <div className="flex flex-col">
-                                        <span className="text-[12px] md:text-[10px] font-technical text-white/40 group-hover:text-white/60 uppercase tracking-tighter">
+                                        <span className="text-[12px] md:text-xs font-technical text-white/40 group-hover:text-white/60 uppercase tracking-tighter">
                                             {t(getResourceLabel(key), lang)}
                                         </span>
                                     </div>
-                                    <span className={`text-[14px] md:text-[11px] font-technical font-black ${['rubies', 'emeralds', 'diamonds'].includes(key) ? 'neon-text-purple' : 'text-cyan-400'}`}>
+                                    <span className={`text-[14px] md:text-base font-technical font-black ${['rubies', 'emeralds', 'diamonds'].includes(key) ? 'neon-text-purple' : 'text-cyan-400'}`}>
                                         {formatCompactNumber(resources[key] || 0)}
                                     </span>
                                 </div>

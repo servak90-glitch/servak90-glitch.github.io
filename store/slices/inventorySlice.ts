@@ -11,7 +11,7 @@ import {
     BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS,
     GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS
 } from '../../constants';
-import { calculateStats } from '../../services/gameMath';
+import { calculateStats, recalculateCargoWeight } from '../../services/gameMath';
 
 export interface InventoryActions {
     // Artifacts
@@ -119,7 +119,12 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
             const newInv = { ...s.inventory };
             delete newInv[instanceId];
 
-            set({ resources: newRes, inventory: newInv });
+            set({
+                resources: newRes,
+                inventory: newInv,
+                // [BUG FIX] Пересчитываем вес груза после добавления ancientTech
+                currentCargoWeight: recalculateCargoWeight(newRes)
+            });
             audioEngine.playLog();
         }
     },
@@ -314,6 +319,8 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
         set({
             equipmentInventory: newInventory,
             resources: newResources,
+            // [BUG FIX] Пересчитываем вес груза после добавления scrap
+            currentCargoWeight: recalculateCargoWeight(newResources),
             actionLogQueue: pushLogs(s, [successEvent])
         });
 
@@ -348,6 +355,8 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
         set({
             equipmentInventory: newInventory,
             resources: newResources,
+            // [BUG FIX] Пересчитываем вес груза (credits не имеют веса, но для консистентности)
+            currentCargoWeight: recalculateCargoWeight(newResources),
             actionLogQueue: pushLogs(s, [successEvent])
         });
 
@@ -513,12 +522,17 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
         }
 
         if (msg) {
-            set((state: any) => ({
-                resources: { ...state.resources, ...resUpdate },
-                ...(integrityUpdate !== undefined ? { integrity: integrityUpdate } : {}),
-                ...(effect ? { activeEffects: [...state.activeEffects, effect] } : {}),
-                actionLogQueue: pushLogs(state, [{ type: 'LOG', msg, color }])
-            }));
+            set((state: any) => {
+                const updatedResources = { ...state.resources, ...resUpdate };
+                return {
+                    resources: updatedResources,
+                    // [BUG FIX] Пересчитываем вес груза после изменения ресурсов
+                    currentCargoWeight: recalculateCargoWeight(updatedResources),
+                    ...(integrityUpdate !== undefined ? { integrity: integrityUpdate } : {}),
+                    ...(effect ? { activeEffects: [...state.activeEffects, effect] } : {}),
+                    actionLogQueue: pushLogs(state, [{ type: 'LOG', msg, color }])
+                };
+            });
             audioEngine.playUpgrade ? audioEngine.playUpgrade() : audioEngine.playCollect();
         } else {
             audioEngine.playUIError();

@@ -154,6 +154,12 @@ const App: React.FC = () => {
     const { isDrilling, isOverheated, setDrilling, manualClick, manualRechargeShield } = useDrillActions();
 
     const { currentBoss, combatMinigame, eventQueue, isCoolingGameActive, clickFlyingObject } = useCombatState();
+
+    // [BUG FIX] Единая проверка перегруза склада для предотвращения рассинхронизации
+    const isCargoOverloaded = useMemo(() =>
+        currentCargoWeight > totalCargoCapacity && !isZeroWeight,
+        [currentCargoWeight, totalCargoCapacity, isZeroWeight]
+    );
     const { handleEventOption, completeCombatMinigame, setCoolingGame, forceVentHeat, triggerOverheat } = useCombatActions();
 
     const { skillLevels, equippedArtifacts, inventory, discoveredArtifacts } = useCityState();
@@ -161,6 +167,20 @@ const App: React.FC = () => {
 
     const { setLanguage, updateSettings, resetProgress, selectBiome, selectedBiome } = useSettingsActions();
     const { aiState } = useAIState();
+
+    // [DEBUG] Логирование изменений перегруза для отладки
+    useEffect(() => {
+        // Включаем логирование только в dev режиме (localhost)
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+            console.log('[CARGO DEBUG]', {
+                currentWeight: Math.floor(currentCargoWeight),
+                maxCapacity: Math.floor(totalCargoCapacity),
+                isOverloaded: isCargoOverloaded,
+                percentage: ((currentCargoWeight / totalCargoCapacity) * 100).toFixed(1) + '%'
+            });
+        }
+    }, [currentCargoWeight, totalCargoCapacity, isCargoOverloaded]);
+
 
 
     // --- LOCAL STATE ---
@@ -356,7 +376,6 @@ const App: React.FC = () => {
 
         // energyProd and totalCargoCapacity are already available from useStatsProperty (Phase 4.1)
         const energyLoadValue = energyProd > 0 ? (energyCons / energyProd) * 100 : 100;
-        const isCargoFull = currentCargoWeight > totalCargoCapacity && !isZeroWeight;
         const totalFuel = calculateTotalFuel(resources);
 
         if (totalFuel < 1) {
@@ -373,7 +392,7 @@ const App: React.FC = () => {
             return;
         }
 
-        if ((energyLoadValue > 100 && !isInfiniteEnergy) || isCargoFull) {
+        if ((energyLoadValue > 100 && !isInfiniteEnergy) || isCargoOverloaded) {
             let x = 0, y = 0;
             if ('touches' in e) {
                 x = e.touches[0].clientX;
@@ -514,7 +533,7 @@ const App: React.FC = () => {
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto flex items-center justify-center">
                             <button
                                 className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center justify-center pixel-text text-sm md:text-lg font-black tracking-widest transition-transform active:scale-95 touch-none select-none relative
-                                ${isLowPower || (currentCargoWeight > totalCargoCapacity && !isZeroWeight)
+                                ${isLowPower || isCargoOverloaded
                                         ? 'bg-zinc-900 border-orange-600 text-orange-500 cursor-not-allowed opacity-90 animate-pulse'
                                         : isOverheated
                                             ? 'bg-zinc-800 border-red-900 text-red-500 cursor-not-allowed opacity-80'
@@ -529,7 +548,7 @@ const App: React.FC = () => {
                                 onPointerUp={handleDrillEnd}
                                 onPointerLeave={handleDrillEnd}
                             >
-                                {calculateTotalFuel(resources) < 1 ? 'НЕТ ТОПЛИВА' : isLowPower ? 'ПЕРЕГРУЗКА!' : (currentCargoWeight > totalCargoCapacity && !isZeroWeight) ? 'СКЛАД ПОЛОН' : isOverheated ? 'ОСТЫВАНИЕ' : (heat > 90 ? '!!!' : 'БУРИТЬ')}
+                                {calculateTotalFuel(resources) < 1 ? 'НЕТ ТОПЛИВА' : isLowPower ? 'ПЕРЕГРУЗКА!' : isCargoOverloaded ? 'СКЛАД ПОЛОН' : isOverheated ? 'ОСТЫВАНИЕ' : (heat > 90 ? '!!!' : 'БУРИТЬ')}
 
                                 <svg className="absolute inset-0 w-full h-full pointer-events-none -rotate-90 scale-110" viewBox="0 0 100 100">
                                     <circle cx="50" cy="50" r="48" fill="none" stroke="#222" strokeWidth="3" />

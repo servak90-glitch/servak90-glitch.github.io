@@ -18,6 +18,10 @@ const DevTools: React.FC = () => {
   const [selectedArtifactId, setSelectedArtifactId] = useState(ARTIFACTS[0]?.id || '');
   const [customDepth, setCustomDepth] = useState('');
 
+  // [ENHANCED] Состояния для добавления ресурсов
+  const [selectedResource, setSelectedResource] = useState<string>('stone');
+  const [resourceAmount, setResourceAmount] = useState<string>('1000');
+
   // --- MOUSE HANDLERS (Desktop) ---
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent text selection
@@ -119,9 +123,80 @@ const DevTools: React.FC = () => {
 
         {activeTab === 'RES' && (
           <div className="space-y-4">
+            {/* RESOURCE ADDER */}
+            <div className="border border-green-800 p-2">
+              <div className="text-green-500 mb-2 text-[10px]">📦 ADD RESOURCE</div>
+
+              {/* Выбор ресурса */}
+              <select
+                value={selectedResource}
+                onChange={(e) => setSelectedResource(e.target.value)}
+                className="w-full bg-black border border-green-700 text-green-400 text-[10px] p-1 mb-2"
+              >
+                <optgroup label="COMMON">
+                  <option value="stone">Stone (Камень)</option>
+                  <option value="clay">Clay (Глина)</option>
+                  <option value="sand">Sand (Песок)</option>
+                  <option value="ice">Ice (Лёд)</option>
+                  <option value="scrap">Scrap (Металлолом)</option>
+                </optgroup>
+                <optgroup label="RARE">
+                  <option value="iron">Iron (Железо)</option>
+                  <option value="copper">Copper (Медь)</option>
+                  <option value="silver">Silver (Серебро)</option>
+                  <option value="gold">Gold (Золото)</option>
+                  <option value="titanium">Titanium (Титан)</option>
+                  <option value="platinum">Platinum (Платина)</option>
+                  <option value="uranium">Uranium (Уран)</option>
+                  <option value="diamond">Diamond (Алмаз)</option>
+                </optgroup>
+                <optgroup label="FUEL">
+                  <option value="coal">Coal (Уголь)</option>
+                  <option value="oil">Oil (Нефть)</option>
+                  <option value="gas">Gas (Газ)</option>
+                </optgroup>
+                <optgroup label="SPECIAL">
+                  <option value="credits">Credits (Кредиты)</option>
+                  <option value="repairKit">Repair Kit (Рем. набор)</option>
+                  <option value="coolantPaste">Coolant Paste (Охл. паста)</option>
+                  <option value="advancedCoolant">Advanced Coolant (Продв. охл.)</option>
+                </optgroup>
+              </select>
+
+              {/* Ввод количества */}
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="number"
+                  value={resourceAmount}
+                  onChange={(e) => setResourceAmount(e.target.value)}
+                  placeholder="AMOUNT"
+                  className="flex-1 bg-black border border-green-700 text-green-400 text-[10px] px-2 outline-none focus:border-green-500"
+                />
+                <button
+                  onClick={() => {
+                    const amount = parseInt(resourceAmount);
+                    if (!isNaN(amount) && amount > 0) {
+                      store.resources[selectedResource as keyof typeof store.resources] =
+                        (store.resources[selectedResource as keyof typeof store.resources] || 0) + amount;
+                    }
+                  }}
+                  className="border border-green-700 hover:bg-green-900 px-3 font-bold"
+                >
+                  ADD
+                </button>
+              </div>
+
+              {/* Быстрые кнопки */}
+              <div className="grid grid-cols-4 gap-1">
+                <button onClick={() => setResourceAmount('100')} className="border border-green-700/50 hover:bg-green-900/30 p-1 text-[8px]">100</button>
+                <button onClick={() => setResourceAmount('1000')} className="border border-green-700/50 hover:bg-green-900/30 p-1 text-[8px]">1K</button>
+                <button onClick={() => setResourceAmount('10000')} className="border border-green-700/50 hover:bg-green-900/30 p-1 text-[8px]">10K</button>
+                <button onClick={() => setResourceAmount('100000')} className="border border-green-700/50 hover:bg-green-900/30 p-1 text-[8px]">100K</button>
+              </div>
+            </div>
+
+            {/* QUICK ACTIONS */}
             <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => store.adminAddResources(1000000, 0)} className="border border-green-700 hover:bg-green-900 p-2 text-[9px]">+1M COM</button>
-              <button onClick={() => store.adminAddResources(0, 1000)} className="border border-green-700 hover:bg-green-900 p-2 text-[9px]">+1K RARE</button>
               <button onClick={() => store.adminAddXP(1000000)} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-2 text-[9px]">+1M XP</button>
               <button onClick={() => store.adminAddLevel(1)} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-2 text-[9px]">+1 LVL</button>
               <button onClick={store.adminIdentifyAll} className="border border-purple-700 text-purple-400 hover:bg-purple-900/30 p-2 text-[9px]">ID ALL ARTIF.</button>
