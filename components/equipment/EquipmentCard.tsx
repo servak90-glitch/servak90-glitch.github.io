@@ -35,49 +35,60 @@ export const EquipmentCard: React.FC<EquipmentCardProps> = ({ item }) => {
     return (
         <div
             ref={cardRef}
-            className="relative bg-gray-900 border border-gray-700 rounded p-2 hover:border-[#3b82f6]/50 transition-all flex flex-col items-center"
+            className="relative bg-gray-900 border border-gray-700 rounded p-2 md:p-3 hover:border-[#3b82f6]/50 transition-all flex flex-col items-center"
         >
-            <EquipmentIcon
-                iconPath={iconPath}
-                name={name}
-                tier={item.tier}
-                size={64}
-                className="mb-2"
-            />
+            <div className="hidden md:block">
+                <EquipmentIcon
+                    iconPath={iconPath}
+                    name={name}
+                    tier={item.tier}
+                    size={80}
+                    className="mb-3"
+                />
+            </div>
+            <div className="md:hidden">
+                <EquipmentIcon
+                    iconPath={iconPath}
+                    name={name}
+                    tier={item.tier}
+                    size={64}
+                    className="mb-2"
+                />
+            </div>
 
             {/* Название и Тир */}
-            <div className="text-[10px] font-bold text-white text-center leading-tight mb-1 truncate w-full">
+            <div className="text-[10px] md:text-xs font-bold text-white text-center leading-tight mb-1 md:mb-2 truncate w-full uppercase tracking-tighter">
                 {t(name, lang)}
             </div>
 
             {/* Цена разбора/продажи (мелко) */}
-            <div className="text-[8px] text-gray-500 mb-2">
-                Scrap: {item.scrapValue}
+            <div className="text-[8px] md:text-[10px] text-gray-500 mb-2 md:mb-3 font-mono">
+                SCRAP: {item.scrapValue}
             </div>
 
             {/* Кнопки действий */}
             <div className="flex gap-1 w-full mt-auto">
                 <button
                     onClick={() => equipEquipment(item.instanceId)}
-                    className="flex-1 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-[9px] font-bold py-1 px-2 rounded uppercase transition-colors"
+                    className="flex-1 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-[9px] md:text-xs font-black py-1 px-2 rounded uppercase transition-colors"
                 >
                     Equip
                 </button>
 
                 <button
                     onClick={() => scrapEquipment(item.instanceId)}
-                    className="bg-orange-600/30 hover:bg-orange-600/50 text-orange-400 p-1 rounded transition-colors"
+                    className="bg-orange-600/30 hover:bg-orange-600/50 text-orange-400 p-1 md:p-1.5 rounded transition-colors"
                     title="Scrap for parts"
                 >
-                    <Trash2 size={12} />
+                    <Trash2 size={14} className="md:w-4 md:h-4 w-3 h-3" />
                 </button>
 
                 <button
                     onClick={() => sellEquipment(item.instanceId)}
-                    className="bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-500 p-1 rounded transition-colors"
+                    className="bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-500 p-1 md:p-1.5 rounded transition-colors"
                     title="Sell for credits"
                 >
-                    <Coins size={12} />
+                    <Coins size={14} className="md:w-4 md:h-4 w-3 h-3" />
                 </button>
             </div>
 

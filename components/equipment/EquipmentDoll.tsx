@@ -30,7 +30,7 @@ export const EquipmentDoll: React.FC<EquipmentDollProps> = ({ selectedSlot, onSl
     return (
         <div className="h-full flex flex-col">
             <div className="flex justify-between items-center mb-2 px-1">
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                <span className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">
                     КОНФИГУРАЦИЯ БУРА
                 </span>
                 {selectedSlot && (

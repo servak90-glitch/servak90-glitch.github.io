@@ -58,7 +58,7 @@ export const CraftingJobCard: React.FC<CraftingJobCardProps> = ({ job, onCollect
             <div className="flex justify-between items-start mb-3">
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-technical text-white/40 uppercase tracking-tighter">
+                        <span className="text-[10px] md:text-xs font-technical text-white/40 uppercase tracking-tighter">
                             {t(TL.ui[`tab${job.slotType.charAt(0) + job.slotType.slice(1).toLowerCase() as any}` as any] || TL.ui.module_label, lang)}
                         </span>
                         {isReady ? (
@@ -67,12 +67,12 @@ export const CraftingJobCard: React.FC<CraftingJobCardProps> = ({ job, onCollect
                             <Loader2 className="w-3 h-3 text-cyan-400 animate-spin" />
                         )}
                     </div>
-                    <span className="text-white font-bold font-technical text-sm tracking-wide">{displayName.toUpperCase()}</span>
+                    <span className="text-white font-bold font-technical text-sm md:text-base tracking-wide">{displayName.toUpperCase()}</span>
                 </div>
 
                 <div className="flex items-center gap-1.5 glass-panel py-1 px-2 border-white/5 bg-black/40">
                     <Clock className="w-3 h-3 text-white/40" />
-                    <span className={`text-xs font-technical font-bold ${isReady ? 'text-green-400' : 'text-cyan-400'}`}>
+                    <span className={`text-xs md:text-sm font-technical font-bold ${isReady ? 'text-green-400' : 'text-cyan-400'}`}>
                         {isReady ? t(TL.ui.ready, lang) : timeStr}
                     </span>
                 </div>
@@ -80,7 +80,7 @@ export const CraftingJobCard: React.FC<CraftingJobCardProps> = ({ job, onCollect
 
             {/* Progress Area */}
             <div className="mb-4">
-                <div className="flex justify-between text-[9px] font-technical text-white/30 uppercase mb-1">
+                <div className="flex justify-between text-[9px] md:text-xs font-technical text-white/30 uppercase mb-1">
                     <span>{t(TL.ui.assemblyState, lang)}</span>
                     <span>{Math.round(progress * 100)}%</span>
                 </div>
@@ -100,7 +100,7 @@ export const CraftingJobCard: React.FC<CraftingJobCardProps> = ({ job, onCollect
                 {isReady ? (
                     <button
                         onClick={onCollect}
-                        className="flex-1 bg-green-500/10 border border-green-500/50 hover:bg-green-500 hover:text-black py-2 rounded font-bold font-technical text-[10px] tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+                        className="flex-1 bg-green-500/10 border border-green-500/50 hover:bg-green-500 hover:text-black py-2 rounded font-bold font-technical text-[10px] md:text-xs tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
                     >
                         <Package className="w-3.5 h-3.5" />
                         {t(TL.ui.collectItem, lang)}
@@ -108,7 +108,7 @@ export const CraftingJobCard: React.FC<CraftingJobCardProps> = ({ job, onCollect
                 ) : (
                     <button
                         onClick={onCancel}
-                        className="flex-1 bg-white/5 border border-white/10 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-400 py-2 rounded font-technical text-[10px] tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 group/cancel"
+                        className="flex-1 bg-white/5 border border-white/10 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-400 py-2 rounded font-technical text-[10px] md:text-xs tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 group/cancel"
                     >
                         <XCircle className="w-3.5 h-3.5 text-white/20 group-hover/cancel:text-red-400" />
                         {t(TL.ui.abortOperation, lang)}

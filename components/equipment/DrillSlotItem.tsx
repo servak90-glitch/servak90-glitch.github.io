@@ -45,7 +45,7 @@ export const DrillSlotItem: React.FC<DrillSlotItemProps> = ({ slotType, isSelect
             ref={slotRef}
             onClick={onClick}
             className={`
-                relative flex flex-col items-center justify-center p-2 rounded border-2 transition-all cursor-pointer
+                relative flex flex-col items-center justify-center p-2 md:p-3 rounded border-2 transition-all cursor-pointer
                 ${isSelected
                     ? 'bg-[#3b82f6]/20 border-[#3b82f6] shadow-[0_0_15px_rgba(59,130,246,0.4)]'
                     : 'bg-gray-900/50 border-gray-700 hover:border-gray-500'
@@ -53,23 +53,34 @@ export const DrillSlotItem: React.FC<DrillSlotItemProps> = ({ slotType, isSelect
             `}
         >
             {/* Название слота (маленькое сверху) */}
-            <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#0a0e17] px-1 text-[8px] text-gray-400 font-bold uppercase tracking-tighter">
+            <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#0a0e17] px-1 text-[8px] md:text-[9px] text-gray-400 font-bold uppercase tracking-tighter">
                 {slotType}
             </div>
 
             {/* Иконка оборудования */}
-            <div className="mb-1">
-                <EquipmentIcon
-                    iconPath={iconPath}
-                    name={part.name}
-                    tier={part.tier}
-                    size={48}
-                    className="rounded"
-                />
+            <div className="mb-1 md:mb-2">
+                <div className="hidden md:block">
+                    <EquipmentIcon
+                        iconPath={iconPath}
+                        name={part.name}
+                        tier={part.tier}
+                        size={64}
+                        className="rounded"
+                    />
+                </div>
+                <div className="md:hidden">
+                    <EquipmentIcon
+                        iconPath={iconPath}
+                        name={part.name}
+                        tier={part.tier}
+                        size={48}
+                        className="rounded"
+                    />
+                </div>
             </div>
 
             {/* Имя детали */}
-            <div className="text-[9px] font-bold text-white text-center leading-tight truncate w-full">
+            <div className="text-[9px] md:text-[11px] font-bold text-white text-center leading-tight truncate w-full uppercase">
                 {t(part.name, lang)}
             </div>
 

@@ -32,7 +32,7 @@ export const WeightBar: React.FC = () => {
 
     return (
         <div className="mb-2">
-            <div className="flex justify-between text-xs font-mono mb-1">
+            <div className="flex justify-between text-xs md:text-sm font-mono mb-1">
                 <span className="text-gray-400">ЗАГРУЗКА СКЛАДА (Payload)</span>
                 <span className={textColor}>
                     {Math.round(payload)}kg / {maxCapacity}kg ({percentage.toFixed(1)}%)

@@ -25,9 +25,9 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
     if (!next) return (
         <div className="glass-panel p-4 opacity-50 flex flex-col justify-between min-h-[220px] bg-white/5 border-white/5 grayscale">
             <div>
-                <h3 className="text-white/40 font-bold mb-2 font-technical text-xs tracking-widest">{title}</h3>
-                <div className="text-[11px] text-white/20 font-technical mb-2 uppercase">{t(TL.ui.protocolMax, lang)}</div>
-                <div className="flex items-center gap-1.5 text-xs text-white/30 font-technical">
+                <h3 className="text-white/40 font-bold mb-2 font-technical text-xs md:text-sm tracking-widest">{title}</h3>
+                <div className="text-[11px] md:text-xs text-white/20 font-technical mb-2 uppercase">{t(TL.ui.protocolMax, lang)}</div>
+                <div className="flex items-center gap-1.5 text-xs md:text-sm text-white/30 font-technical">
                     <span className="bg-white/5 px-2 py-0.5 rounded border border-white/5">{t(TL.ui.level_label, lang)} {current.tier}</span>
                 </div>
             </div>
@@ -50,8 +50,8 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
         `}>
             <div>
                 <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-cyan-400 font-bold font-technical text-sm tracking-widest leading-none truncate group-hover:text-white transition-colors">{title}</h3>
-                    <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded border border-white/5 text-[10px] font-technical text-white/40">
+                    <h3 className="text-cyan-400 font-bold font-technical text-sm md:text-base tracking-widest leading-none truncate group-hover:text-white transition-colors">{title}</h3>
+                    <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded border border-white/5 text-[10px] md:text-xs font-technical text-white/40">
                         <span>{current.tier}</span>
                         <ChevronRight className="w-3 h-3 text-cyan-500/50" />
                         <span className="text-white font-bold">{next.tier}</span>
@@ -60,7 +60,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
 
                 <div className="bg-white/5 rounded-sm p-3 mb-4 border border-white/5 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-bl from-cyan-500/10 to-transparent pointer-events-none" />
-                    <p className="text-[10px] text-white/50 italic leading-snug mb-3 font-medium">
+                    <p className="text-[10px] md:text-xs text-white/50 italic leading-snug mb-3 font-medium">
                         "{t(next.description, lang)}"
                     </p>
 
@@ -161,8 +161,8 @@ const renderStat = (label: string, val: any, color: string) => {
     if (val === undefined || val === 0) return null;
     return (
         <div className="flex justify-between items-center bg-black/20 px-1.5 py-0.5 rounded border border-white/[0.03]">
-            <span className="text-[9px] text-white/30 font-technical uppercase">{label}</span>
-            <span className={`text-[10px] font-technical font-bold ${color}`}>
+            <span className="text-[9px] md:text-[10px] text-white/30 font-technical uppercase">{label}</span>
+            <span className={`text-[10px] md:text-xs font-technical font-bold ${color}`}>
                 {val}{typeof val === 'number' && val > 0 && label === 'TRQ' ? '%' : ''}
             </span>
         </div>
