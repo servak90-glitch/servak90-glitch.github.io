@@ -251,11 +251,6 @@ export const InteractiveWorldMap: React.FC<InteractiveWorldMapProps> = ({
             </div>
 
             {/* Подсказка */}
-            <div className="absolute top-4 left-4 glass-panel px-3 py-2 border-white/10 bg-black/60 z-20">
-                <span className="text-[8px] md:text-[9px] font-black text-white/40 uppercase tracking-widest">
-                    {lang === 'RU' ? 'Перетащите для перемещения • Колесо/Pinch для зума' : 'Drag to move • Wheel/Pinch to zoom'}
-                </span>
-            </div>
         </div>
     );
 };

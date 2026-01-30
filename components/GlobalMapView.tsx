@@ -22,7 +22,6 @@ import {
     Map as MapIcon,
     ShoppingBag,
     Truck,
-    ScrollText,
     Crown,
     Package,
     Fuel,
@@ -113,7 +112,7 @@ const TravelOverlay = ({ travel, lang }: { travel: any, lang: string }) => {
 };
 
 export const GlobalMapView = () => {
-    const [activeTab, setActiveTab] = useState<'map' | 'market' | 'caravans' | 'quests' | 'factions'>('map');
+    const [activeTab, setActiveTab] = useState<'map' | 'market' | 'caravans' | 'factions'>('map');
     const [selectedRegion, setSelectedRegion] = useState<RegionId | null>(null);
     const [selectedFuel, setSelectedFuel] = useState<ResourceType>(ResourceType.COAL);
     const [isBuildModalOpen, setIsBuildModalOpen] = useState(false);
@@ -361,14 +360,6 @@ export const GlobalMapView = () => {
                             {/* CENTER STAGE: ISOMETRIC SCANNER */}
                             <div className="lg:col-span-8 glass-panel border-white/10 bg-black/60 relative overflow-hidden flex flex-col bento-glow shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] min-h-[150px] md:min-h-0 order-first md:order-none">
                                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none" />
-                                <div className="absolute top-3 left-3 md:top-6 md:left-6 z-20 flex items-center gap-3">
-                                    <div className="px-2 py-1 md:px-4 md:py-2 glass-panel border-cyan-500/30 bg-black/60 flex items-center gap-2 md:gap-3">
-                                        <div className="flex flex-col">
-                                            <span className="text-[6px] md:text-[8px] font-black font-technical text-white/30 uppercase tracking-widest">{t(TL.ui.globalCoordLink, lang)}</span>
-                                            <span className="text-[8px] md:text-[10px] font-black font-technical text-cyan-400 uppercase leading-none">{t(TL.ui.syncOk, lang)} <span className="hidden sm:inline">// 84.192.X</span></span>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 <InteractiveWorldMap
                                     activeRegion={selectedRegion || currentRegion}
