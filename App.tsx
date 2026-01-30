@@ -53,7 +53,7 @@ import { PredictionAlert } from './components/PredictionAlert';
 import { DrillStatsPanel } from './components/DrillStatsPanel';
 import { StartupBackground } from './components/StartupBackground';
 
-const GAME_VERSION = "v5.6.0 (HUB_ONLY_QUESTS)";
+const GAME_VERSION = "v5.6.1 (VISUAL_HOTFIX)";
 
 const TravelProgressMini = ({ travel, lang }: { travel: any, lang: string }) => {
     const [progress, setProgress] = useState(0);

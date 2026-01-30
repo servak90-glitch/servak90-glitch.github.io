@@ -196,6 +196,8 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             const h = canvas.height;
             const cx = w / 2;
 
+            // [DEV_CONTEXT: LAYOUT] Responsive Scaling
+            // Using window dimensions to ensure consistency across layers
             const scale = Math.min(w / 400, h / 800);
             const cy = h * 0.35;
 
@@ -666,6 +668,28 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             };
             drawShroud();
 
+            // 2.5.1 LAMP BODIES (Drawn after shroud so they stay on top)
+            const drawLampBodies = () => {
+                const tier = drill.control.tier;
+                const theme = getThemeForTier(tier);
+                const ly = 230;
+                const lx = 65;
+                const numLights = tier <= 9 ? 2 : 4;
+
+                for (let i = 0; i < numLights; i++) {
+                    const x = numLights === 2 ? (i === 0 ? -lx : lx) : (-lx - 15 + i * 45);
+                    const y = ly;
+
+                    // Lamp Body
+                    ctx.fillStyle = theme.darkMetal; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
+                    // Bulb
+                    ctx.fillStyle = theme.highlight; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+                }
+            };
+            drawLampBodies();
+
+            // 2.6 HEAVY BIT (Tiered)
+
             // 2.6 HEAVY BIT (Tiered)
             const drawBitRef = () => {
                 const tier = drill.bit.tier;
@@ -752,11 +776,10 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             };
             drawBitRef();
 
-            // 2.7 LIGHTS (Lamps - Tiered)
-            const drawLights = () => {
+            // 2.7 LIGHTS & BEAMS (Lamps - Tiered)
+            const drawLightBeams = () => {
                 const tier = drill.control.tier;
-                const theme = getThemeForTier(tier);
-                const ly = 20;
+                const ly = 230; // LOWERED: was 20, now near the bit
                 const lx = 65;
                 const numLights = tier <= 9 ? 2 : 4;
 
@@ -764,10 +787,7 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                     const x = numLights === 2 ? (i === 0 ? -lx : lx) : (-lx - 15 + i * 45);
                     const y = ly;
 
-                    // Lamp Body
-                    ctx.fillStyle = theme.darkMetal; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
-
-                    // Glow / Beam
+                    // Glow / Beam (Behind the drill body)
                     const gLight = ctx.createRadialGradient(x, y, 0, x, y + 120, 250);
                     const beamColor = tier <= 5 ? '255, 247, 173' : (tier <= 9 ? '0, 245, 212' : '255, 0, 110');
                     gLight.addColorStop(0, `rgba(${beamColor}, 0.5)`);
@@ -775,12 +795,9 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
 
                     ctx.fillStyle = gLight;
                     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 80, y + 300); ctx.lineTo(x + 80, y + 300); ctx.closePath(); ctx.fill();
-
-                    // Bulb
-                    ctx.fillStyle = theme.highlight; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
                 }
             };
-            drawLights();
+            drawLightBeams();
 
             // [PHASE 6] OVERLOAD RADIANCE
             const drawOverloadEffect = () => {
@@ -790,16 +807,21 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                 const pulse = Math.sin(tick * 0.15) * 0.5 + 0.5;
                 ctx.save();
                 ctx.globalCompositeOperation = 'screen';
-                const gOverload = ctx.createRadialGradient(0, 0, 100, 0, 0, 400);
-                gOverload.addColorStop(0, `rgba(239, 35, 60, ${0.4 * pulse})`); // Red-ish glow
+                // SOFT RADIANCE: Start from 0 to avoid solid red core
+                const gOverload = ctx.createRadialGradient(0, 0, 0, 0, 0, 450);
+                gOverload.addColorStop(0, `rgba(239, 35, 60, ${0.4 * pulse})`);
+                gOverload.addColorStop(0.3, `rgba(239, 35, 60, ${0.15 * pulse})`);
+                gOverload.addColorStop(0.8, `rgba(239, 35, 60, 0.02)`); // Fade out more before edge
                 gOverload.addColorStop(1, 'transparent');
                 ctx.fillStyle = gOverload;
                 ctx.beginPath();
-                ctx.arc(0, 0, 400, 0, Math.PI * 2);
+                ctx.arc(0, 0, 450, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
             };
             drawOverloadEffect();
+
+            // (Draw Shield after beams/radiance)
 
             // 2.8 ENERGY SHIELD (Phase 4.2 Professional 3D Visuals)
             const drawShield = () => {
@@ -918,10 +940,9 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
         render();
 
         const handleResize = () => {
-            if (canvas.parentElement) {
-                canvas.width = canvas.parentElement.clientWidth;
-                canvas.height = canvas.parentElement.clientHeight;
-            }
+            // [DEV_CONTEXT: RESIZE] Synchronize with viewport
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         };
         window.addEventListener('resize', handleResize);
         handleResize();
@@ -932,7 +953,7 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
         };
     }, []); // Dependencies empty: updates happen via store subscription inside RAF
 
-    return <canvas ref={canvasRef} className="w-full h-full block" />;
+    return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />;
 });
 
 export default DrillRenderer;
