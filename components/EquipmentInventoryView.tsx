@@ -145,7 +145,7 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-0 md:p-4">
             <div
-                className="bg-[#0a0e17] md:border-2 md:border-[#3b82f6] md:rounded-lg p-4 md:p-6 w-full h-full md:max-w-6xl md:h-[90vh] flex flex-col overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.3)]"
+                className="bg-[#0a0e17] md:border-2 md:border-[#3b82f6] md:rounded-lg p-4 md:p-6 w-full h-full md:max-w-6xl md:h-[90vh] flex flex-col md:overflow-hidden overflow-y-auto shadow-[0_0_40px_rgba(59,130,246,0.3)] custom-scrollbar"
             >
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6 md:mb-4 shrink-0">
@@ -215,7 +215,7 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                         </button>
                     </div>
 
-                    <div className="flex-1 bg-gray-950/50 border border-gray-800 rounded-lg rounded-tl-none p-3 overflow-y-auto custom-scrollbar">
+                    <div className="md:flex-1 bg-gray-950/50 border border-gray-800 rounded-lg rounded-tl-none p-3 md:overflow-y-auto custom-scrollbar">
                         {tab === 'EQUIPMENT' ? (
                             <>
                                 <WeightBar />
