@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drill Bits Icons Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0e17 0%, #1a1f2e 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #9ca3af;
+            margin-bottom: 40px;
+            font-size: 1.2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .card.common { border-color: #6b7280; }
+        .card.rare { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+        .card.epic { border-color: #8b5cf6; box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
+        .card.legendary { border-color: #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
+        .card.godly { border-color: #ffffff; box-shadow: 0 0 25px rgba(255, 255, 255, 0.5); }
+
+        .icon-container {
+            width: 128px;
+            height: 128px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .icon-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .tier-badge {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .name {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .name-en {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+
+        .rarity {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .rarity.common { background: #6b7280; }
+        .rarity.rare { background: #3b82f6; }
+        .rarity.epic { background: #8b5cf6; }
+        .rarity.legendary { background: #eab308; }
+        .rarity.godly { background: linear-gradient(45deg, #ffffff, #a855f7); }
+
+        .stats {
+            margin-top: 40px;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+
+        .stats h2 {
+            margin-bottom: 15px;
+            color: #3b82f6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            padding: 15px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔩 Drill Bits Icons</h1>
+        <p class="subtitle">Cosmic Excavator: Void-Piercer - Equipment Icon System</p>
+
+        <div class="grid" id="icons-grid"></div>
+
+        <div class="stats">
+            <h2>📊 Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">15</div>
+                    <div class="stat-label">Total Icons</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Common (T1-3)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Rare (T4-6)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Epic (T7-9)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Legendary (T10-12)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Godly (T13-15)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const bits = [
+            { tier: 1, nameRU: 'Ржавое жало', nameEN: 'Rusty Sting', rarity: 'common' },
+            { tier: 2, nameRU: 'Стальной крот', nameEN: 'Steel Mole', rarity: 'common' },
+            { tier: 3, nameRU: 'Клык мамонта', nameEN: 'Mammoth Tooth', rarity: 'common' },
+            { tier: 4, nameRU: 'Видиевое сверло', nameEN: 'Widia Drill', rarity: 'rare' },
+            { tier: 5, nameRU: 'Титановый клык', nameEN: 'Titanium Fang', rarity: 'rare' },
+            { tier: 6, nameRU: 'Алмазный конус', nameEN: 'Diamond Cone', rarity: 'rare' },
+            { tier: 7, nameRU: 'Вибро-сверчок', nameEN: 'Vibro-Cricket', rarity: 'epic' },
+            { tier: 8, nameRU: 'Лазерное зубило', nameEN: 'Laser Chisel', rarity: 'epic' },
+            { tier: 9, nameRU: 'Плазменный резак', nameEN: 'Plasma Cutter', rarity: 'epic' },
+            { tier: 10, nameRU: 'Молекулярный дезинтегратор', nameEN: 'Molecular Disintegrator', rarity: 'legendary' },
+            { tier: 11, nameRU: 'Гравитационный бур', nameEN: 'Gravitational Drill', rarity: 'legendary' },
+            { tier: 12, nameRU: 'Антиматериевый наконечник', nameEN: 'Antimatter Nib', rarity: 'legendary' },
+            { tier: 13, nameRU: 'Разлом реальности', nameEN: 'Reality Breach', rarity: 'godly' },
+            { tier: 14, nameRU: 'Спираль судьбы', nameEN: 'Spiral of Fate', rarity: 'godly' },
+            { tier: 15, nameRU: 'Пронзающий Пустоту', nameEN: 'Void Piercer', rarity: 'godly' }
+        ];
+
+        const grid = document.getElementById('icons-grid');
+
+        bits.forEach(bit => {
+            const card = document.createElement('div');
+            card.className = `card ${bit.rarity}`;
+            card.innerHTML = `
+                <div class="icon-container">
+                    <img src="/equipment/bits/bit_${bit.tier}.png" alt="${bit.nameRU}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22128%22 height=%22128%22><rect width=%22128%22 height=%22128%22 fill=%22%23374151%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2224%22 font-weight=%22bold%22>T${bit.tier}</text></svg>'">
+                    <div class="tier-badge">T${bit.tier}</div>
+                </div>
+                <div class="name">${bit.nameRU}</div>
+                <div class="name-en">${bit.nameEN}</div>
+                <span class="rarity ${bit.rarity}">${bit.rarity}</span>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+</body>
+</html>

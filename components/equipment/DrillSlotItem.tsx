@@ -7,6 +7,7 @@ import React from 'react';
 import { DrillSlot } from '../../types';
 import { useGameStore } from '../../store/gameStore';
 import { t } from '../../services/localization';
+import { EquipmentIcon } from './EquipmentIcon';
 
 interface DrillSlotItemProps {
     slotType: DrillSlot;
@@ -24,6 +25,9 @@ export const DrillSlotItem: React.FC<DrillSlotItemProps> = ({ slotType, isSelect
 
     if (!part) return null;
 
+    // Безопасное получение iconPath
+    const iconPath = 'iconPath' in part ? part.iconPath : undefined;
+
     return (
         <div
             onClick={onClick}
@@ -40,17 +44,21 @@ export const DrillSlotItem: React.FC<DrillSlotItemProps> = ({ slotType, isSelect
                 {slotType}
             </div>
 
+            {/* Иконка оборудования */}
+            <div className="mb-1">
+                <EquipmentIcon
+                    iconPath={iconPath}
+                    name={part.name}
+                    tier={part.tier}
+                    size={48}
+                    className="rounded"
+                />
+            </div>
+
             {/* Имя детали */}
-            <div className="text-[10px] font-bold text-white text-center leading-tight truncate w-full">
+            <div className="text-[9px] font-bold text-white text-center leading-tight truncate w-full">
                 {t(part.name, lang)}
             </div>
-
-            {/* Тир */}
-            <div className="text-[9px] text-yellow-400 font-mono mt-1">
-                TIER {part.tier}
-            </div>
-
-            {/* Тултип или индикатор статуса можно добавить сюда */}
         </div>
     );
 };

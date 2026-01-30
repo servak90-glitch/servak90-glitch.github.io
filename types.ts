@@ -410,6 +410,7 @@ export enum DrillSlot {
 
 export interface BaseDrillPart {
   id: string;
+  iconPath?: string; // Путь к иконке оборудования
   name: LocalizedString;
   tier: number;
   rarity: ItemRarity;

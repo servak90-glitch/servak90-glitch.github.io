@@ -11,6 +11,7 @@ import type { EquipmentItem } from '../../types';
 import { ComparisonTooltip } from './ComparisonTooltip';
 import { getPartDefinition } from '../../store/slices/craftSlice';
 import { t } from '../../services/localization';
+import { EquipmentIcon } from './EquipmentIcon';
 
 interface EquipmentCardProps {
     item: EquipmentItem;
@@ -28,15 +29,29 @@ export const EquipmentCard: React.FC<EquipmentCardProps> = ({ item }) => {
     const partDef = getPartDefinition(item.partId);
     const displayName = partDef ? t(partDef.name, lang) : item.partId;
 
+    // Безопасное получение iconPath (есть только у BaseDrillPart)
+    const iconPath = partDef && 'iconPath' in partDef ? partDef.iconPath : undefined;
+    const partName = partDef?.name || { RU: item.partId, EN: item.partId };
+
     return (
         <div
-            className="relative bg-gray-900 border border-gray-700 rounded p-2 hover:border-[#3b82f6]/50 transition-all"
+            className="relative bg-gray-900 border border-gray-700 rounded p-2 hover:border-[#3b82f6]/50 transition-all flex flex-col items-center"
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
         >
-            {/* Карточка */}
-            <div className="text-sm font-bold text-white mb-1">{displayName}</div>
-            <div className="text-xs text-yellow-400 mb-1">Tier {item.tier}</div>
+            {/* Иконка оборудования */}
+            <div className="mb-2">
+                <EquipmentIcon
+                    iconPath={iconPath}
+                    name={partName}
+                    tier={item.tier}
+                    size={64}
+                    className="rounded"
+                />
+            </div>
+
+            {/* Название */}
+            <div className="text-xs font-bold text-white mb-1 text-center truncate w-full">{displayName}</div>
 
             {item.isEquipped && (
                 <span className="text-green-400 text-xs block mb-2">✓ УСТАНОВЛЕНО</span>
@@ -48,7 +63,7 @@ export const EquipmentCard: React.FC<EquipmentCardProps> = ({ item }) => {
 
             {/* Кнопки */}
             {!item.isEquipped && (
-                <div className="flex gap-1">
+                <div className="flex gap-1 w-full">
                     <button
                         onClick={() => equipEquipment(item.instanceId)}
                         className="flex-1 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-xs py-1 rounded transition-colors font-bold"
