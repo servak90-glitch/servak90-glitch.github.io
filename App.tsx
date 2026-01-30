@@ -148,6 +148,28 @@ const App: React.FC = () => {
     // Извлекаем только нужные поля из stats атомарно, чтобы App не ререндерился на каждом тике
     const totalCargoCapacity = useStatsProperty('totalCargoCapacity');
     const energyProd = useStatsProperty('energyProd');
+
+    // --- TELEGRAM MINI APP INITIALIZATION ---
+    useEffect(() => {
+        if (window.Telegram?.WebApp) {
+            const tg = window.Telegram.WebApp;
+            try {
+                tg.ready();
+                tg.expand();
+
+                // Настройка визуальных параметров под стиль игры
+                tg.setHeaderColor('#000000');
+                tg.setBackgroundColor('#000000');
+
+                // Включаем подтверждение закрытия, чтобы игрок случайно не вышел
+                tg.enableClosingConfirmation();
+
+                console.log("🚀 Telegram WebApp initialized:", tg.initDataUnsafe?.user?.username);
+            } catch (e) {
+                console.error("❌ Telegram SDK initialization failed:", e);
+            }
+        }
+    }, []);
     const energyCons = useStatsProperty('energyCons');
     const maxIntegrity = useStatsProperty('integrity');
 

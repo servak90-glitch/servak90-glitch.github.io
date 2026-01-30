@@ -1,4 +1,5 @@
 import { ResourceType } from '../types';
+import { telegramService } from './telegramService';
 
 export enum MusicMode {
   SURFACE = 'SURFACE',
@@ -813,7 +814,9 @@ export class AudioEngine {
   // --- SFX API ---
 
   playClick(x?: number) {
-    if (!this.ctx || !this.sfxBus || !this.checkCooldown('click', 50)) return;
+    if (!this.checkCooldown('click', 50)) return;
+    telegramService.haptic('light');
+    if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
@@ -903,7 +906,8 @@ export class AudioEngine {
   }
 
   playLegendary(x?: number) {
-    if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
+    if (!this.ctx || !this.sfxBus || !this.sfxReverbBus || !this.sfxDelayBus) return;
+    telegramService.notification('success');
     const now = this.ctx.currentTime;
 
     const pan = this.getPanValue(x);
@@ -1095,6 +1099,7 @@ export class AudioEngine {
   }
 
   playError() {
+    telegramService.notification('error');
     if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -1181,6 +1186,7 @@ export class AudioEngine {
   }
 
   playAchievement() {
+    telegramService.notification('success');
     if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
     const t = this.ctx.currentTime;
 
@@ -1371,6 +1377,7 @@ export class AudioEngine {
   }
 
   playHazardDamage() {
+    telegramService.notification('error');
     if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -1437,6 +1444,7 @@ export class AudioEngine {
   }
 
   playPlayerHit() {
+    telegramService.notification('error');
     if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
     const noise = this.ctx.createBufferSource();
@@ -1682,7 +1690,9 @@ export class AudioEngine {
   }
 
   playUIError() {
-    if (!this.ctx || !this.sfxBus || !this.checkCooldown('error', 200)) return;
+    if (!this.checkCooldown('error', 200)) return;
+    telegramService.notification('warning');
+    if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
@@ -1698,6 +1708,7 @@ export class AudioEngine {
   }
 
   playMarketTrade() {
+    telegramService.haptic('medium');
     if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
     const t = this.ctx.currentTime;
 
