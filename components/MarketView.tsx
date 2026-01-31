@@ -117,9 +117,9 @@ export const MarketView = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl w-full mx-auto flex flex-col gap-6 md:gap-10 flex-1 min-h-0 relative">
+            <div className="max-w-7xl w-full mx-auto flex flex-col gap-6 md:gap-10 md:flex-1 relative">
                 {/* MARKET LISTING */}
-                <div className="flex flex-col gap-4 md:gap-6 min-h-0 flex-1">
+                <div className="flex flex-col gap-4 md:gap-6 md:flex-1">
                     {/* Tabs Framework */}
                     <div className="flex gap-1 md:gap-2 glass-panel p-1 md:p-2 border-white/5 bg-black/60 shrink-0 overflow-x-auto scrollbar-hide touch-pan-x">
                         <TabBtn active={activeTab === 'regular'} onClick={() => setActiveTab('regular')} icon={<BarChart3 className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.market} lang={lang} color="cyan" />
@@ -127,7 +127,7 @@ export const MarketView = () => {
                         <TabBtn active={activeTab === 'exchange'} onClick={() => setActiveTab('exchange')} icon={<RefreshCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.exchange} lang={lang} color="amber" />
                     </div>
 
-                    <div className="flex-1 md:overflow-y-auto pr-0 md:pr-4 scrollbar-hide space-y-4 md:space-y-6 pb-24 touch-pan-y">
+                    <div className="md:flex-1 md:overflow-y-auto pr-0 md:pr-4 scrollbar-hide space-y-4 md:space-y-6 pb-24 touch-pan-y">
                         <AnimatePresence mode="wait">
                             {activeTab === 'regular' && (
                                 <motion.div
