@@ -83,7 +83,7 @@ export const MarketView = () => {
     const canAfford = (resources.credits || 0) >= totalBuyCost;
 
     return (
-        <div className="flex-1 flex flex-col p-0 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 md:h-full md:overflow-hidden relative z-10 font-technical">
+        <div className="flex-1 flex flex-col p-0 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 h-full overflow-hidden relative z-10 font-technical">
             <div className="absolute inset-0 mesh-bg opacity-20 pointer-events-none" />
 
             {/* Header Hub Dashboard - compact on mobile */}
@@ -119,7 +119,7 @@ export const MarketView = () => {
 
             <div className="max-w-7xl w-full mx-auto flex flex-col gap-6 md:gap-10 flex-1 min-h-0 relative">
                 {/* MARKET LISTING */}
-                <div className="flex flex-col gap-4 md:gap-6 min-h-0">
+                <div className="flex flex-col gap-4 md:gap-6 min-h-0 flex-1">
                     {/* Tabs Framework */}
                     <div className="flex gap-1 md:gap-2 glass-panel p-1 md:p-2 border-white/5 bg-black/60 shrink-0 overflow-x-auto scrollbar-hide touch-pan-x">
                         <TabBtn active={activeTab === 'regular'} onClick={() => setActiveTab('regular')} icon={<BarChart3 className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.market} lang={lang} color="cyan" />
@@ -127,7 +127,7 @@ export const MarketView = () => {
                         <TabBtn active={activeTab === 'exchange'} onClick={() => setActiveTab('exchange')} icon={<RefreshCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.exchange} lang={lang} color="amber" />
                     </div>
 
-                    <div className="flex-1 md:overflow-y-auto pr-0 md:pr-4 scrollbar-hide space-y-4 md:space-y-6 pb-24">
+                    <div className="flex-1 overflow-y-auto pr-0 md:pr-4 scrollbar-hide space-y-4 md:space-y-6 pb-24 touch-pan-y">
                         <AnimatePresence mode="wait">
                             {activeTab === 'regular' && (
                                 <motion.div
@@ -302,9 +302,9 @@ export const MarketView = () => {
                             {activeTab === 'black_market' && (
                                 <motion.div
                                     key="black-market" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-                                    className="space-y-6"
+                                    className="space-y-4 md:space-y-6"
                                 >
-                                    <div className="glass-panel p-8 border-purple-500/20 bg-purple-500/5 relative overflow-hidden flex items-center justify-between group">
+                                    <div className="glass-panel p-4 md:p-8 border-purple-500/20 bg-purple-500/5 relative overflow-hidden flex items-center justify-between group">
                                         <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                                             <ShieldAlert className="w-32 h-32" />
                                         </div>
@@ -372,10 +372,10 @@ export const MarketView = () => {
                             {activeTab === 'exchange' && (
                                 <motion.div
                                     key="exchange-market" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                                    className="glass-panel p-10 border-amber-500/20 bg-amber-500/5 relative overflow-hidden"
+                                    className="glass-panel p-4 md:p-10 border-amber-500/20 bg-amber-500/5 relative"
                                 >
                                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
-                                    <div className="max-w-2xl mx-auto space-y-12 py-8">
+                                    <div className="max-w-2xl mx-auto space-y-8 md:space-y-12 py-4 md:py-8">
                                         <div className="text-center space-y-4">
                                             <div className="w-20 h-20 glass-panel border-amber-500/30 bg-amber-500/10 flex items-center justify-center rounded-3xl mx-auto rotate-12 group-hover:rotate-0 transition-transform">
                                                 <RefreshCcw className="w-10 h-10 text-amber-500" />
