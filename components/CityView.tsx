@@ -100,7 +100,7 @@ const CityView: React.FC<CityViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#050505] relative overflow-hidden h-full pointer-events-auto">
+    <div className="flex-1 flex flex-col bg-[#050505] relative md:overflow-hidden h-full pointer-events-auto overflow-y-auto no-scrollbar scroll-smooth">
       {/* PREMIUM BACKGROUND EFFECTS */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[150px] rounded-full animate-pulse" />
@@ -115,7 +115,7 @@ const CityView: React.FC<CityViewProps> = ({
       </div>
 
       {/* HEADER: SCI-FI GLASSMOPHISM 2.0 */}
-      <div className="p-4 md:p-6 border-b border-white/10 bg-black/40 backdrop-blur-xl z-10 relative flex justify-between items-start">
+      <div className="p-4 md:p-6 border-b border-white/10 bg-black/40 backdrop-blur-xl z-10 relative flex justify-between items-start safe-top">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-1">
             <div className="h-1 w-12 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />
@@ -179,7 +179,7 @@ const CityView: React.FC<CityViewProps> = ({
       </div>
 
       {/* CONTENT AREA: WRAPPED IN GLASS CARDS */}
-      <div className="flex-1 p-4 md:p-8 relative z-10 overflow-y-auto no-scrollbar touch-pan-y overscroll-contain bg-gradient-to-b from-black/20 to-transparent">
+      <div className="flex-1 p-4 md:p-8 relative z-10 md:overflow-y-auto no-scrollbar touch-pan-y overscroll-contain bg-gradient-to-b from-black/20 to-transparent">
         <div className="max-w-6xl mx-auto min-h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
           {renderActiveTab()}
         </div>
