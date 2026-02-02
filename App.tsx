@@ -249,6 +249,15 @@ const App: React.FC = () => {
     const [logs, setLogs] = useState<{ msg: string; color?: string; icon?: string; detail?: string; timestamp?: string }[]>([
         { msg: t(TEXT_IDS.AI_INIT, lang), color: 'text-zinc-400', icon: '🤖', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }
     ]);
+
+    // [USER REQUEST] Force open help modal on first run (as soon as app loads)
+    useEffect(() => {
+        const hasSeenManual = localStorage.getItem('HAS_SEEN_OPERATOR_MANUAL');
+        if (!hasSeenManual) {
+            setIsHelpOpen(true);
+            localStorage.setItem('HAS_SEEN_OPERATOR_MANUAL', 'true');
+        }
+    }, []);
     const [bossHitEffect, setBossHitEffect] = useState(false);
     const [visualEffect, setVisualEffect] = useState<string>('NONE'); // VisualEffectType
     const [screenShake, setScreenShake] = useState<{ intensity: number, duration: number, startTime: number } | null>(null);

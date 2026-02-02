@@ -9,11 +9,11 @@ interface AICompanionProps {
   heat: number;
 }
 
-const FACES: Record<AIState, string> = {
-  LUCID: '( O _ O )',
-  MANIC: '( ! _ ! )',
-  DEPRESSED: '( . _ . )',
-  BROKEN: '[ # _ % ]'
+const FACES: Record<AIState, string[]> = {
+  LUCID: ['( O _ O )', '( ^ _ ^ )', '( - _ - )', '( @ _ @ )'],
+  MANIC: ['( ! _ ! )', '( > _ < )', '( ⚡ _ ⚡ )', '( * _ * )'],
+  DEPRESSED: ['( . _ . )', '( , _ , )', '( ; _ ; )', '( u _ u )'],
+  BROKEN: ['[ # _ % ]', '[ X _ X ]', '[ ? _ ! ]', '[ ▓ _ ░ ]']
 };
 
 const COLORS: Record<AIState, string> = {
@@ -35,14 +35,15 @@ const AICompanion: React.FC<AICompanionProps> = ({ state, heat }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const face = FACES[state] || FACES.LUCID;
-  const color = COLORS[state] || COLORS.LUCID;
-
   // Dynamic CSS classes based on state
   let animClass = '';
-  if (state === 'MANIC') animClass = 'animate-bounce';
-  if (state === 'BROKEN') animClass = 'animate-pulse skew-x-12';
-  if (state === 'LUCID' && heat > 50) animClass = 'animate-pulse';
+  if (state === 'MANIC') animClass = 'animate-bounce drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]';
+  if (state === 'BROKEN') animClass = 'animate-pulse skew-x-12 blur-[0.5px]';
+  if (state === 'LUCID' && heat > 50) animClass = 'animate-pulse text-orange-400';
+
+  const faces = FACES[state] || FACES.LUCID;
+  const face = faces[frame % faces.length];
+  const color = COLORS[state] || COLORS.LUCID;
 
   // Breathing effect for Lucid idle state
   const breathing = state === 'LUCID' ? { transform: `scale(${1 + Math.sin(frame * 0.5) * 0.05})` } : {};
@@ -57,6 +58,7 @@ const AICompanion: React.FC<AICompanionProps> = ({ state, heat }) => {
       flex flex-col items-center justify-center 
       z-40 pointer-events-none select-none
       backdrop-blur-md shadow-[0_0_20px_rgba(0,0,0,0.8)]
+      crt-flicker
     `}>
       {/* Scanline */}
       <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[size:100%_4px] opacity-20" />
@@ -67,7 +69,7 @@ const AICompanion: React.FC<AICompanionProps> = ({ state, heat }) => {
 
       {/* Face */}
       <div
-        className={`text-xs md:text-2xl font-black pixel-text ${color} ${animClass} whitespace-nowrap`}
+        className={`text-xs md:text-2xl font-black pixel-text ${color} ${animClass} ${state === 'BROKEN' ? 'glitch-text-anim' : ''} whitespace-nowrap`}
         style={breathing}
       >
         {state === 'BROKEN' ? (Math.random() > 0.5 ? face : t(TEXT_IDS.AI_ERROR, lang)) : face}
