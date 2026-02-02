@@ -140,7 +140,7 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
     // Проверяем каждые 10 тиков (1 секунда)
     // Poisson: P(at least 1) = 1 - e^(-λt)
     // λ = базовая частота событий в секунду
-    const BASE_LAMBDA = 0.005;  // ~1 событие каждые 200 секунд (~3.3 минуты)
+    const BASE_LAMBDA = 0.002;  // ~1 событие каждые 500 секунд (~8.3 минуты), снижено с 0.005
     const CHECK_INTERVAL_TICKS = 10;
 
     if (eventCheckTick >= CHECK_INTERVAL_TICKS && eventQueue.length === 0 && !state.currentBoss && !state.combatMinigame?.active) {

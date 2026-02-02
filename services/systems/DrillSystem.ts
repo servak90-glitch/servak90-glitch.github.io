@@ -214,7 +214,7 @@ export function processDrilling(
             ? BIOMES.find(b => (typeof b.name === 'string' ? b.name : b.name.EN) === state.selectedBiome) || BIOMES[0]
             : BIOMES.slice().reverse().find(b => depth >= b.depth) || BIOMES[0];
 
-        const resToAdd = drillPower * 1.0 * resMult * (1 + stats.artifactMods.resourceMultPct / 100) * dt; // Увеличено с 0.3 до 1.0 + Artifacts
+        const resToAdd = drillPower * 1.0 * resMult * (1 + stats.artifactMods.resourceMultPct / 100) * dt; // Восстановлено до 1.0 по просьбе пользователя
         resourceChanges[currentBiome.resource] = (resourceChanges[currentBiome.resource] || 0) + resToAdd;
 
         // [POLISHING] Rare Resource Feedback
@@ -240,7 +240,7 @@ export function processDrilling(
 
         // [BALANCE v0.5] Consumable Drops (Prospector Luck)
 
-        // Базовый шанс: 0.05% в секунду (уменьшено в 4 раза)
+        // Базовый шанс: 0.05% в секунду (восстановлено)
         if (Math.random() < 0.0005 * dropMult * dt * 60) {
             const dropRoll = Math.random();
             const consumableType = dropRoll < 0.6 ? ResourceType.SCRAP : ResourceType.ICE;
@@ -272,8 +272,7 @@ export function processDrilling(
             });
         }
 
-        // [BALANCE v0.4] Secondary Loot (Ice, Scrap)
-        // Шанс найти вторичные ресурсы: ~4% в секунду
+        // Шанс найти вторичные ресурсы: ~4% в секунду (восстановлено)
         if (Math.random() < 0.04 * dt) {
             const secondaryRoll = Math.random();
 

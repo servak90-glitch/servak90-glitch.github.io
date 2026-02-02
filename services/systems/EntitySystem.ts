@@ -23,7 +23,7 @@ export function processEntities(state: GameState): { update: EntityUpdate; event
 
     // Спавн новых объектов
     if (!state.currentBoss && !state.combatMinigame && !state.isCoolingGameActive && flyingObjects.length < 3) {
-        if (Math.random() < 0.04) { // Increased spawn rate from 0.015 to 0.04
+        if (Math.random() < 0.015) { // Adjusted from 0.04 to 0.015 for better balance
             const rand = Math.random();
             const rarity = rand > 0.95 ? 'EPIC' : (rand > 0.70 ? 'RARE' : 'COMMON');
 

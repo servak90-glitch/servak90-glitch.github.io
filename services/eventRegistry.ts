@@ -58,10 +58,10 @@ export const EVENTS: GameEvent[] = [
         cooldown: 90,
         instantResource: {
             type: 'stone',
-            amountMean: 100,
-            amountStdDev: 20,
-            amountMin: 50,
-            amountMax: 200
+            amountMean: 40,
+            amountStdDev: 10,
+            amountMin: 20,
+            amountMax: 80
         },
         options: [
             {
@@ -168,10 +168,10 @@ export const EVENTS: GameEvent[] = [
         cooldown: 60,
         instantResource: {
             type: 'coal',
-            amountMean: 75,
-            amountStdDev: 25,
-            amountMin: 30,
-            amountMax: 150
+            amountMean: 30,
+            amountStdDev: 10,
+            amountMin: 15,
+            amountMax: 60
         },
         options: [
             {

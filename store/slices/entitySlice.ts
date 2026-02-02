@@ -58,29 +58,32 @@ export const createEntitySlice: SliceCreator<EntityActions> = (set, get) => ({
                 }
             } else if (obj.type === 'GEODE_SMALL') {
                 // Gems & Stone
-                const stoneAmount = (Math.floor(Math.random() * 10) + 5) * multiplier;
+                const stoneAmount = (Math.floor(Math.random() * 6) + 3) * multiplier; // Снижено (было 10+5)
                 newRes.stone += stoneAmount;
                 logs.push({ type: 'TEXT', x, y, text: `+${stoneAmount} ${t(getResourceLabel('stone'), lang)}`, style: 'RESOURCE' });
 
-                if (Math.random() < 0.3 * multiplier) {
-                    newRes.rubies += 1 * multiplier;
-                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${1 * multiplier} ${t(getResourceLabel('rubies'), lang)}`, style: 'CRIT' });
+                if (Math.random() < 0.2 * multiplier) { // Шанс снижен с 0.3
+                    const rubyAmount = Math.ceil(multiplier / 2); // Было 1 * multiplier (5 для EPIC)
+                    newRes.rubies += rubyAmount;
+                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${rubyAmount} ${t(getResourceLabel('rubies'), lang)}`, style: 'CRIT' });
                 }
             } else if (obj.type === 'GEODE_LARGE') {
                 // Rare Gems & Tech
-                const rareAmount = Math.floor(Math.random() * 2) + 1;
-                newRes.diamonds += rareAmount; // Guaranteed diamond for Large
-                logs.push({ type: 'TEXT', x, y, text: `+${rareAmount} ${t(getResourceLabel('diamonds'), lang)}`, style: 'CRIT' });
+                const rareAmount = Math.random() < 0.3 ? 1 : 0; // Теперь не гарантирован (было 1-2)
+                if (rareAmount > 0) {
+                    newRes.diamonds += rareAmount;
+                    logs.push({ type: 'TEXT', x, y, text: `+${rareAmount} ${t(getResourceLabel('diamonds'), lang)}`, style: 'CRIT' });
+                }
 
                 if (Math.random() < 0.4) {
-                    const techAmount = 1 * multiplier;
+                    const techAmount = Math.max(1, Math.floor(multiplier / 2)); // Было 1 * multiplier
                     newRes.ancientTech += techAmount;
                     logs.push({ type: 'TEXT', x, y: y - 20, text: `+${techAmount} ${t(getResourceLabel('ancientTech'), lang)}`, style: 'CRIT' });
                 }
             }
 
             // XP Gain
-            const xpGain = (Math.floor(Math.random() * 11) + 10) * multiplier;
+            const xpGain = (Math.floor(Math.random() * 6) + 5) * multiplier; // Снижено вдвое (было 11+10)
             logs.push({ type: 'TEXT', x, y: y - 40, text: `+${xpGain} XP`, style: 'INFO' });
 
             set({

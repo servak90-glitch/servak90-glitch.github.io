@@ -36,10 +36,10 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' |
         baseRisk: 0,
         rewards: {
             resources: [
-                { type: 'copper', min: 20, max: 50 },
-                { type: 'iron', min: 10, max: 30 },
-                { type: 'ice', min: 5, max: 20 },
-                { type: 'scrap', min: 3, max: 15 }
+                { type: 'copper', min: 10, max: 25 },
+                { type: 'iron', min: 5, max: 15 },
+                { type: 'ice', min: 2, max: 10 },
+                { type: 'scrap', min: 2, max: 8 }
             ],
             artifactChance: 0.05,
             techChance: 0.1,
@@ -56,8 +56,8 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' |
         baseRisk: 0.4,
         rewards: {
             resources: [
-                { type: 'ice', min: 20, max: 50 },
-                { type: 'scrap', min: 10, max: 30 }
+                { type: 'ice', min: 10, max: 25 },
+                { type: 'scrap', min: 5, max: 15 }
             ],
             artifactChance: 0.3,
             techChance: 0.5,
@@ -74,9 +74,9 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' |
         baseRisk: 0.2,
         rewards: {
             resources: [
-                { type: 'rubies', min: 5, max: 15 },
-                { type: 'emeralds', min: 2, max: 8 },
-                { type: 'diamonds', min: 1, max: 3 }
+                { type: 'rubies', min: 2, max: 6 },
+                { type: 'emeralds', min: 1, max: 4 },
+                { type: 'diamonds', min: 0.5, max: 1.5 }
             ],
             artifactChance: 0.4,
             techChance: 0.2,
@@ -93,10 +93,10 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' |
         baseRisk: 0.6,
         rewards: {
             resources: [
-                { type: 'coal', min: 100, max: 300 },
-                { type: 'iron', min: 50, max: 150 },
-                { type: 'gold', min: 10, max: 30 },
-                { type: 'scrap', min: 20, max: 60 }
+                { type: 'coal', min: 40, max: 120 },
+                { type: 'iron', min: 20, max: 60 },
+                { type: 'gold', min: 5, max: 15 },
+                { type: 'scrap', min: 10, max: 30 }
             ],
             artifactChance: 0.2,
             techChance: 0.8,
@@ -113,7 +113,7 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' |
         baseRisk: 0.8,
         rewards: {
             resources: [
-                { type: 'nanoSwarm', min: 50, max: 200 }
+                { type: 'nanoSwarm', min: 20, max: 80 }
             ],
             artifactChance: 0.6,
             techChance: 0.4,
