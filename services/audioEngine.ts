@@ -150,6 +150,8 @@ export class AudioEngine {
   // CD System (Anti-Spam)
   private sfxCooldowns: Map<string, number> = new Map();
 
+  private isExternalMuted: boolean = false;
+
   public get isReady(): boolean {
     return this._isReady && !!this.ctx && this.ctx.state === 'running';
   }
@@ -169,6 +171,18 @@ export class AudioEngine {
         console.warn("[AudioEngine] Resume Failed", e);
       }
     }
+  }
+
+  /**
+   * Внешнее управление "мастер-мьютом" (например, при потере фокуса вкладки).
+   * Не влияет на настройки пользователя, а просто приглушает мастер-шину.
+   */
+  setMasterMute(muted: boolean) {
+    this.isExternalMuted = muted;
+    if (!this.ctx || !this.masterBus) return;
+    const t = this.ctx.currentTime;
+    this.masterBus.gain.setTargetAtTime(muted ? 0 : 1.0, t, 0.1);
+    console.log(`[AudioEngine] External Mute: ${muted}`);
   }
 
   async init(initialMusicVol: number = 0.5, initialSfxVol: number = 0.5, initialDrillVol: number = 0.5, musicMuted: boolean = false, sfxMuted: boolean = false, drillMuted: boolean = false) {

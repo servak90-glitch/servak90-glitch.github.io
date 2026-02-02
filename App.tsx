@@ -150,26 +150,52 @@ const App: React.FC = () => {
     const energyProd = useStatsProperty('energyProd');
 
     // --- TELEGRAM MINI APP INITIALIZATION ---
+    // --- TAB VISIBILITY & FOCUS AUDIO CONTROL ---
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                audioEngine.setMasterMute(true);
+            } else {
+                audioEngine.setMasterMute(false);
+            }
+        };
+
+        const handleBlur = () => {
+            audioEngine.setMasterMute(true);
+        };
+
+        const handleFocus = () => {
+            audioEngine.setMasterMute(false);
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleBlur);
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('blur', handleBlur);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, []);
+
+    // --- TELEGRAM MINI APP INITIALIZATION ---
     useEffect(() => {
         if (window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp;
             try {
                 tg.ready();
                 tg.expand();
-
-                // Настройка визуальных параметров под стиль игры
                 tg.setHeaderColor('#000000');
                 tg.setBackgroundColor('#000000');
-
-                // Включаем подтверждение закрытия, чтобы игрок случайно не вышел
                 tg.enableClosingConfirmation();
-
                 console.log("🚀 Telegram WebApp initialized:", tg.initDataUnsafe?.user?.username);
             } catch (e) {
                 console.error("❌ Telegram SDK initialization failed:", e);
             }
         }
     }, []);
+
     const energyCons = useStatsProperty('energyCons');
     const maxIntegrity = useStatsProperty('integrity');
 
