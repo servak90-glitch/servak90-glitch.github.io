@@ -8,6 +8,7 @@
 
 import { GameState, VisualEvent, Resources, ResourceType } from '../types';
 import { calculateStats, recalculateCargoWeight } from './gameMath';
+import { calculateTotalMass } from './mathEngine';
 import { narrativeManager } from './narrativeManager';
 import { BIOMES } from '../constants';
 
@@ -401,9 +402,7 @@ export class GameEngine {
 
                 // Ресурсы и HP
                 resources: newResources,
-                currentCargoWeight: Object.keys(resourceChanges).length > 0
-                    ? recalculateCargoWeight(newResources)
-                    : state.currentCargoWeight,
+                currentCargoWeight: calculateTotalMass(state.drill, newResources, state.equipmentInventory).payload,
                 integrity,
                 xp: (combatResult.update.xp ?? state.xp), // Combat XP updates
 

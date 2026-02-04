@@ -12,7 +12,8 @@ import {
     useCityActions,
     useSettingsActions,
     useAIState,
-    useStatsProperty
+    useStatsProperty,
+    useCargoStatus,
 } from './store/selectors';
 import { View, Language } from './types';
 import { calculateStats, calculateShieldRechargeCost, formatCompactNumber, calculateTotalFuel } from './services/gameMath';
@@ -205,10 +206,7 @@ const App: React.FC = () => {
     const { currentBoss, combatMinigame, eventQueue, isCoolingGameActive, clickFlyingObject } = useCombatState();
 
     // [BUG FIX] Единая проверка перегруза склада для предотвращения рассинхронизации
-    const isCargoOverloaded = useMemo(() =>
-        currentCargoWeight > totalCargoCapacity && !isZeroWeight,
-        [currentCargoWeight, totalCargoCapacity, isZeroWeight]
-    );
+    const { isOverloaded: isCargoOverloaded, percent: cargoPercentage, currentWeight: currentWeightCargo, maxCapacity: totalCargoCapacityCargo } = useCargoStatus();
     const { handleEventOption, completeCombatMinigame, setCoolingGame, forceVentHeat, triggerOverheat } = useCombatActions();
 
     const { skillLevels, equippedArtifacts, inventory, discoveredArtifacts } = useCityState();
@@ -222,13 +220,13 @@ const App: React.FC = () => {
         // Включаем логирование только в dev режиме (localhost)
         if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
             console.log('[CARGO DEBUG]', {
-                currentWeight: Math.floor(currentCargoWeight),
-                maxCapacity: Math.floor(totalCargoCapacity),
+                currentWeight: Math.floor(currentWeightCargo),
+                maxCapacity: Math.floor(totalCargoCapacityCargo),
                 isOverloaded: isCargoOverloaded,
-                percentage: ((currentCargoWeight / totalCargoCapacity) * 100).toFixed(1) + '%'
+                percentage: cargoPercentage.toFixed(1) + '%'
             });
         }
-    }, [currentCargoWeight, totalCargoCapacity, isCargoOverloaded]);
+    }, [currentWeightCargo, totalCargoCapacityCargo, isCargoOverloaded, cargoPercentage]);
 
 
 

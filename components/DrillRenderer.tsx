@@ -639,6 +639,76 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             };
             drawMechanicals();
 
+            // 2.4.1 SHIELD GENERATOR MODULE (Physical Module on Chassis)
+            const drawShieldGenerator = () => {
+                const tier = drill.shield.tier;
+                if (!tier) return; // No shield installed
+
+                const theme = getThemeForTier(tier);
+                const sy = -100;
+                const sw = 40; const sh = 60;
+
+                const drawModule = (side: number) => {
+                    ctx.save();
+                    ctx.translate(side * 80, sy);
+
+                    // Main Container
+                    ctx.fillStyle = theme.darkMetal;
+                    ctx.strokeStyle = theme.highlight;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.roundRect(-sw / 2, -sh / 2, sw, sh, 5);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Glowing Core
+                    const pulse = Math.sin(tick * 0.1) * 0.2 + 0.8;
+                    const coreColor = isShielding ? theme.highlight : 'rgba(50,50,50,0.5)';
+
+                    ctx.shadowBlur = isShielding ? 15 * pulse : 0;
+                    ctx.shadowColor = theme.glow;
+                    ctx.fillStyle = coreColor;
+                    ctx.beginPath();
+                    if (tier >= 10) {
+                        // Hexagonal core for high tier
+                        for (let i = 0; i < 6; i++) {
+                            const angle = (Math.PI / 3) * i;
+                            const px = Math.cos(angle) * 12;
+                            const py = Math.sin(angle) * 12;
+                            if (i === 0) ctx.moveTo(px, py);
+                            else ctx.lineTo(px, py);
+                        }
+                        ctx.closePath();
+                    } else {
+                        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+                    }
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    // Antenna / Dish for high tiers
+                    if (tier >= 6) {
+                        ctx.strokeStyle = theme.highlight;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(side * sw / 2, 0);
+                        ctx.lineTo(side * (sw / 2 + 15), -10);
+                        ctx.stroke();
+
+                        // Small tip glow
+                        ctx.fillStyle = theme.accent;
+                        ctx.beginPath();
+                        ctx.arc(side * (sw / 2 + 15), -10, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    ctx.restore();
+                };
+
+                drawModule(-1); // Left
+                drawModule(1);  // Right
+            };
+            drawShieldGenerator();
+
             // 2.5 SHROUD (Skirt - Tiered)
             const drawShroud = () => {
                 const tier = drill.hull.tier;

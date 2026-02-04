@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from '../../store/gameStore';
 import { calculateTotalFuel } from '../../services/gameMath';
 import { calculateTotalMass } from '../../services/mathEngine';
+import { useCargoStatus } from '../../store/selectors';
 import {
     Activity,
     Flame,
@@ -35,10 +36,12 @@ const StatusStrip: React.FC = () => {
     const fuelPercent = Math.min(100, (totalFuelUnits / maxFuelUnits) * 100);
     const isLowFuel = totalFuelUnits < 500;
 
-    const cargoCapacity = stats.totalCargoCapacity || 5000;
-    const { payload } = useMemo(() => calculateTotalMass(drill, resources, equipmentInventory), [drill, resources, equipmentInventory]);
-    const isCargoOverloaded = payload > cargoCapacity;
-    const cargoPercent = Math.min(100, (payload / cargoCapacity) * 100);
+    const {
+        currentWeight: payload,
+        maxCapacity: cargoCapacity,
+        isOverloaded: isCargoOverloaded,
+        percent: cargoPercent
+    } = useCargoStatus();
 
     return (
         <div className="w-full h-10 glass-panel border-x-0 border-t-0 rounded-none flex items-stretch z-40 relative pointer-events-none p-0.5 overflow-hidden">

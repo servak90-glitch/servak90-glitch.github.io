@@ -8,7 +8,7 @@ import { DrillSlot, VisualEvent } from '../../types';
 import { calculateCraftTime } from '../../services/mathEngine';
 import {
     BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS,
-    GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS
+    GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS, SHIELD_GENERATORS
 } from '../../constants';
 import { audioEngine } from '../../services/audioEngine';
 
@@ -65,7 +65,7 @@ export function getPartDefinition(partId: string) {
     const allParts = [
         ...BITS, ...ENGINES, ...COOLERS, ...HULLS,
         ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES,
-        ...POWER_CORES, ...ARMORS, ...CARGO_BAYS
+        ...POWER_CORES, ...ARMORS, ...CARGO_BAYS, ...SHIELD_GENERATORS
     ];
 
     // Добавляем дефайны расходников для крафта (временное решение, пока нет общего реестра)

@@ -9,7 +9,7 @@ import { audioEngine } from '../../services/audioEngine';
 import { getActivePerkIds } from '../../services/factionLogic';
 import {
     BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS,
-    GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS
+    GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS, SHIELD_GENERATORS
 } from '../../constants';
 import { calculateStats, recalculateCargoWeight } from '../../services/gameMath';
 
@@ -187,7 +187,7 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
         const s = get();
 
         // Найти definition детали
-        const allParts = [...BITS, ...ENGINES, ...COOLERS, ...HULLS, ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES, ...POWER_CORES, ...ARMORS, ...CARGO_BAYS];
+        const allParts = [...BITS, ...ENGINES, ...COOLERS, ...HULLS, ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES, ...POWER_CORES, ...ARMORS, ...CARGO_BAYS, ...SHIELD_GENERATORS];
         const partDef = allParts.find((p: any) => p.id === partId);
 
         if (!partDef) {
@@ -244,7 +244,7 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
         );
 
         // Получить новую деталь definition
-        const allParts = [...BITS, ...ENGINES, ...COOLERS, ...HULLS, ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES, ...POWER_CORES, ...ARMORS, ...CARGO_BAYS];
+        const allParts = [...BITS, ...ENGINES, ...COOLERS, ...HULLS, ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES, ...POWER_CORES, ...ARMORS, ...CARGO_BAYS, ...SHIELD_GENERATORS];
         const newPartDef = allParts.find((p: any) => p.id === item.partId);
 
         if (!newPartDef) {

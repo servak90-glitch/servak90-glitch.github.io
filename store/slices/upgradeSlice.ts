@@ -6,7 +6,7 @@ import { SliceCreator, pushLogs } from './types';
 import { Resources, ResourceType, DrillSlot, DroneType, VisualEvent, BaseDrillPart } from '../../types';
 import {
     BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS,
-    GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS, DRONES, FUSION_RECIPES
+    GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS, DRONES, FUSION_RECIPES, SHIELD_GENERATORS
 } from '../../constants';
 import { SKILLS, getSkillCost } from '../../services/skillRegistry';
 import { audioEngine } from '../../services/audioEngine';
@@ -32,7 +32,8 @@ export const createUpgradeSlice: SliceCreator<UpgradeActions> = (set, get) => ({
                             slot === DrillSlot.CONTROL ? CONTROL_UNITS :
                                 slot === DrillSlot.GEARBOX ? GEARBOXES :
                                     slot === DrillSlot.POWER ? POWER_CORES :
-                                        slot === DrillSlot.ARMOR ? ARMORS : CARGO_BAYS;
+                                        slot === DrillSlot.ARMOR ? ARMORS :
+                                            slot === DrillSlot.SHIELD ? SHIELD_GENERATORS : CARGO_BAYS;
 
         const idx = list.findIndex(p => p.id === part.id);
         if (idx === -1 || idx === list.length - 1) return;
@@ -76,7 +77,7 @@ export const createUpgradeSlice: SliceCreator<UpgradeActions> = (set, get) => ({
         const recipe = FUSION_RECIPES.find(r => r.id === recipeId);
         if (!recipe) return;
 
-        const lists = [BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS];
+        const lists = [BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS, SHIELD_GENERATORS];
         let resultPart: BaseDrillPart | null = null;
         let slot: DrillSlot | null = null;
 
@@ -94,6 +95,7 @@ export const createUpgradeSlice: SliceCreator<UpgradeActions> = (set, get) => ({
                 else if (list === POWER_CORES) slot = DrillSlot.POWER;
                 else if (list === ARMORS) slot = DrillSlot.ARMOR;
                 else if (list === CARGO_BAYS) slot = DrillSlot.CARGO_BAY;
+                else if (list === SHIELD_GENERATORS) slot = DrillSlot.SHIELD;
                 break;
             }
         }

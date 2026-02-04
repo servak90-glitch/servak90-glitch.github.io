@@ -9,6 +9,7 @@
 import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from './gameStore';
 import { GameState, DrillState, Stats } from '../types';
+import { calculateTotalMass } from '../services/mathEngine';
 
 // === ATOMIC SELECTORS  ===
 
@@ -224,4 +225,29 @@ export const useMapActions = () => useGameStore(
         travelToRegion: s.travelToRegion,
         buildBase: s.buildBase,
     }))
+);
+
+/**
+ * [CARGO SYSTEM] Унифицированный селектор статуса груза
+ * Гарантирует идентичность данных в App.tsx, StatusStrip и других компонентах.
+ */
+export const useCargoStatus = () => useGameStore(
+    useShallow(s => {
+        const { payload } = calculateTotalMass(s.drill, s.resources, s.equipmentInventory);
+        const capacity = s.stats.totalCargoCapacity || 5000;
+
+        // Математически точное определение перегрузки
+        // Учитываем погрешность плавающей точки (минимальный порог)
+        const isOverloaded = payload > (capacity + 0.01);
+        const percent = Math.min(100, (payload / capacity) * 100);
+
+        return {
+            currentWeight: payload,
+            maxCapacity: capacity,
+            isOverloaded,
+            percent,
+            // Для обратной совместимости или специфичных проверок
+            isZeroWeight: payload < 0.1
+        };
+    })
 );
