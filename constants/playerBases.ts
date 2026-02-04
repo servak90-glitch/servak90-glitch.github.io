@@ -10,15 +10,15 @@ import { RegionId, type BaseType, type Resources } from '../types';
 export const BASE_COSTS: Record<BaseType, { credits: number; materials: Partial<Resources> }> = {
     outpost: {
         credits: 1000,
-        materials: { clay: 30, stone: 20 }
+        materials: { clay: 300, stone: 200 }
     },
     camp: {
-        credits: 2000,
-        materials: { iron: 100, copper: 100 }
+        credits: 3000,
+        materials: { iron: 100, copper: 100, rubies: 10 }
     },
     station: {
-        credits: 5000,
-        materials: { titanium: 500, uranium: 10 }
+        credits: 8000,
+        materials: { titanium: 500, uranium: 10, rubies: 25, emeralds: 15 }
     }
 };
 

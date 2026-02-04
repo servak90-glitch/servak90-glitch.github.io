@@ -63,10 +63,10 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
         // Проверка 2: Хватает ресурсов?
         const cost = BASE_COSTS[baseType];
 
-        if (s.resources.rubies < cost.credits) {
+        if (s.resources.credits < cost.credits) {
             const event: VisualEvent = {
                 type: 'LOG',
-                msg: `💎 НЕДОСТАТОЧНО РУБИНОВ! Требуется: ${cost.credits}`,
+                msg: `💰 НЕДОСТАТОЧНО КРЕДИТОВ! Требуется: ${cost.credits}`,
                 color: 'text-red-500'
             };
             set({ actionLogQueue: pushLog(s, event) });
@@ -87,8 +87,9 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
         }
 
         // ✅ Оплата
-        const newResources = { ...s.resources, rubies: s.resources.rubies - cost.credits };
+        const newResources = { ...s.resources, credits: s.resources.credits - cost.credits };
         for (const [resource, amount] of Object.entries(cost.materials)) {
+            if (resource === 'credits') continue; // Уже сняли выше, хотя в материалах их быть не должно
             newResources[resource as keyof typeof newResources] -= (amount || 0);
         }
 
@@ -187,8 +188,8 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
         }
 
         // Проверка кредитов
-        if (s.resources.rubies < creditsDiff) {
-            const event: VisualEvent = { type: 'LOG', msg: `💎 НЕДОСТАТОЧНО РУБИНОВ ДЛЯ АПГРЕЙДА!`, color: 'text-red-500' };
+        if (s.resources.credits < creditsDiff) {
+            const event: VisualEvent = { type: 'LOG', msg: `💰 НЕДОСТАТОЧНО КРЕДИТОВ ДЛЯ АПГРЕЙДА!`, color: 'text-red-500' };
             set({ actionLogQueue: pushLog(s, event) });
             return;
         }
@@ -203,7 +204,7 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
         }
 
         // ✅ Оплата
-        const newResources = { ...s.resources, rubies: s.resources.rubies - creditsDiff };
+        const newResources = { ...s.resources, credits: s.resources.credits - creditsDiff };
         for (const [res, amount] of Object.entries(materialsDiff)) {
             newResources[res as keyof Resources] -= (amount || 0);
         }
@@ -261,7 +262,7 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
 
         // Проверка возможности постройки
         // Используем старую функцию-валидатор, но она работает с FacilityId
-        const validation = canBuildFacility(base.facilities || [], facilityId, s.resources.rubies);
+        const validation = canBuildFacility(base.facilities || [], facilityId, s.resources.credits);
         if (!validation.canBuild) {
             const event: VisualEvent = {
                 type: 'LOG',
@@ -288,7 +289,7 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
         };
 
         set({
-            resources: { ...s.resources, rubies: s.resources.rubies - facility.cost },
+            resources: { ...s.resources, credits: s.resources.credits - facility.cost },
             playerBases: updatedBases,
             actionLogQueue: pushLog(s, successEvent)
         });

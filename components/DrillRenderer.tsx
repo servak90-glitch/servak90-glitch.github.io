@@ -73,13 +73,13 @@ interface TierTheme {
 }
 
 const THEMES: Record<string, TierTheme> = {
-    scrap: { metal: '#34251e', darkMetal: '#1a1412', rust: '#5c2e14', highlight: '#555', accent: '#a52a2a', glow: 'transparent', detallLevel: 0 },
-    iron: { metal: '#555555', darkMetal: '#2a2a2e', rust: '#444', highlight: '#888', accent: '#ccc', glow: 'rgba(255,255,255,0.05)', detallLevel: 1 },
-    heavy: { metal: '#2a2a2e', darkMetal: '#0f0f12', highlight: '#555', accent: '#1e1e21', glow: 'rgba(50,50,60,0.2)', detallLevel: 2 },
+    scrap: { metal: '#34251e', darkMetal: '#1a1412', rust: '#5c2e14', highlight: '#555555', accent: '#a52a2a', glow: 'transparent', detallLevel: 0 },
+    iron: { metal: '#555555', darkMetal: '#2a2a2e', rust: '#444444', highlight: '#888888', accent: '#cccccc', glow: 'rgba(255,255,255,0.05)', detallLevel: 1 },
+    heavy: { metal: '#2a2a2e', darkMetal: '#0f0f12', highlight: '#555555', accent: '#1e1e21', glow: 'rgba(50,50,60,0.2)', detallLevel: 2 },
     tech: { metal: '#1a1a1f', darkMetal: '#050508', highlight: '#00f5d4', accent: '#00b4d8', glow: 'rgba(0,245,212,0.3)', detallLevel: 3 },
     energy: { metal: '#1c1917', darkMetal: '#0c0a09', highlight: '#ff9100', accent: '#fbbf24', glow: 'rgba(251,191,36,0.4)', detallLevel: 3 },
     void: { metal: '#0a0510', darkMetal: '#020104', highlight: '#ff006e', accent: '#7000ff', glow: 'rgba(112,0,255,0.5)', detallLevel: 4 },
-    divine: { metal: '#f8fafc', darkMetal: '#cbd5e1', highlight: '#fbbf24', accent: '#fff', glow: 'rgba(251,191,36,0.6)', detallLevel: 4 },
+    divine: { metal: '#f8fafc', darkMetal: '#cbd5e1', highlight: '#fbbf24', accent: '#ffffff', glow: 'rgba(251,191,36,0.6)', detallLevel: 4 },
 };
 
 const getThemeForTier = (tier: number): TierTheme => {
@@ -205,6 +205,11 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             const baseSpeed = spinning ? (heat >= 100 ? 0 : (20 + (drill.engine.tier * 2))) : 0;
             scrollRef.current += baseSpeed;
 
+            // [DEV_CONTEXT: GPU RESET] Reset transform, blend mode and alpha to prevent state leakage
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1.0;
+
             // Clear Canvas
             ctx.fillStyle = '#050505';
             ctx.fillRect(0, 0, w, h);
@@ -225,7 +230,6 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                 bgGrad.addColorStop(1, '#000');
                 ctx.fillStyle = bgGrad;
                 ctx.fillRect(0, 0, w, h);
-                // ... rest of drawTunnel as is ...
 
                 const segmentHeight = 200;
                 const scrollY = scrollRef.current % segmentHeight;
@@ -266,6 +270,39 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                     ctx.lineTo(w - wallWidth - noiseArr[noiseIdx] * 35, y);
                 }
                 ctx.lineTo(w, h); ctx.lineTo(w, 0); ctx.fill();
+
+                // --- TUNNEL PROPS (Flying Objects: Fossils, Pipes, Crystals) ---
+                const propSegmentHeight = 400;
+                const propSegments = Math.ceil(h / propSegmentHeight) + 2;
+                const propOffset = Math.floor(scrollRef.current / propSegmentHeight);
+                const propScroll = scrollRef.current % propSegmentHeight;
+
+                for (let i = -1; i < propSegments; i++) {
+                    const depthIdx = propOffset + i;
+                    const prop = getPropAtDepth(depthIdx);
+                    if (prop) {
+                        const y = (i * propSegmentHeight) - propScroll + (propSegmentHeight / 2);
+                        // Deterministic X based on depthIdx
+                        const propX = (Math.sin(depthIdx * 0.5) * 0.5 + 0.5) * (w * 0.4) + (w * 0.3);
+
+                        ctx.save();
+                        ctx.fillStyle = prop.color;
+                        ctx.globalAlpha = 0.6;
+                        if (prop.type === 'FOSSIL') {
+                            ctx.beginPath(); ctx.arc(propX, y, 15, 0, Math.PI * 2); ctx.fill();
+                        } else if (prop.type === 'PIPE') {
+                            ctx.fillRect(propX - 40, y - 5, 80, 10);
+                        } else if (prop.type === 'CRYSTAL') {
+                            ctx.beginPath(); ctx.moveTo(propX, y - 20); ctx.lineTo(propX + 15, y + 10); ctx.lineTo(propX - 15, y + 10); ctx.closePath(); ctx.fill();
+                        } else if (prop.type === 'RUIN') {
+                            ctx.strokeRect(propX - 20, y - 20, 40, 40);
+                            ctx.fillRect(propX - 10, y - 10, 20, 20);
+                        } else {
+                            ctx.fillRect(propX - 10, y - 10, 20, 20);
+                        }
+                        ctx.restore();
+                    }
+                }
             };
             drawTunnel();
 
@@ -759,8 +796,6 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             drawLampBodies();
 
             // 2.6 HEAVY BIT (Tiered)
-
-            // 2.6 HEAVY BIT (Tiered)
             const drawBitRef = () => {
                 const tier = drill.bit.tier;
                 const theme = getThemeForTier(tier);
@@ -897,18 +932,22 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             const drawShield = () => {
                 if (!isShielding) return;
 
+                const tier = drill.shield.tier || 1;
+                const theme = getThemeForTier(tier);
+
                 const shieldAlpha = Math.min(1, (shieldCharge / 100) * 1.5); // Boost alpha for better visibility
                 const pulse = Math.sin(tick * 0.08) * 4;
                 const shieldWidth = 260 + pulse;
                 const shieldHeight = 600 + pulse;
-                const shieldY = 80; // Stretched and lowered to cover the drill bit tip
+                const shieldY = 80;
 
                 ctx.save();
 
                 // --- A. BACK GLOW (Aura around the shield) ---
                 ctx.globalCompositeOperation = 'screen';
+                const baseGlowColor = theme.glow !== 'transparent' ? theme.accent : '#22d3ee';
                 const backGlow = ctx.createRadialGradient(0, shieldY, 50, 0, shieldY, 350);
-                backGlow.addColorStop(0, `rgba(34, 211, 238, ${0.15 * shieldAlpha})`);
+                backGlow.addColorStop(0, `${baseGlowColor}${Math.floor(0.15 * shieldAlpha * 255).toString(16).padStart(2, '0')}`);
                 backGlow.addColorStop(1, 'transparent');
                 ctx.fillStyle = backGlow;
                 ctx.beginPath();
@@ -916,11 +955,11 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                 ctx.fill();
 
                 // --- B. 3D SPHERE VOLUME (Inner Gradient) ---
-                // We use a radial gradient shifted top-left to simulate a light source
                 const volumeGrad = ctx.createRadialGradient(-30, shieldY - 100, 20, 0, shieldY, 300);
-                volumeGrad.addColorStop(0, `rgba(165, 243, 252, ${0.4 * shieldAlpha})`); // Highlight color
-                volumeGrad.addColorStop(0.4, `rgba(34, 211, 238, ${0.15 * shieldAlpha})`); // Main color
-                volumeGrad.addColorStop(1, `rgba(8, 51, 68, ${0.05 * shieldAlpha})`); // Dark side
+                // Dynamically adjust highlight and main color based on theme
+                volumeGrad.addColorStop(0, `${theme.highlight}${Math.floor(0.4 * shieldAlpha * 255).toString(16).padStart(2, '0')}`);
+                volumeGrad.addColorStop(0.4, `${theme.accent}${Math.floor(0.15 * shieldAlpha * 255).toString(16).padStart(2, '0')}`);
+                volumeGrad.addColorStop(1, `rgba(8, 51, 68, ${0.05 * shieldAlpha})`);
 
                 ctx.fillStyle = volumeGrad;
                 ctx.beginPath();
@@ -928,14 +967,14 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                 ctx.fill();
 
                 // --- C. RIM LIGHTING (Fresnel Effect) ---
-                ctx.strokeStyle = `rgba(165, 243, 252, ${0.8 * shieldAlpha})`;
+                ctx.strokeStyle = `${theme.highlight}${Math.floor(0.8 * shieldAlpha * 255).toString(16).padStart(2, '0')}`;
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.ellipse(0, shieldY, shieldWidth, shieldHeight, 0, 0, Math.PI * 2);
                 ctx.stroke();
 
                 // Inner soft rim
-                ctx.strokeStyle = `rgba(34, 211, 238, ${0.3 * shieldAlpha})`;
+                ctx.strokeStyle = `${theme.accent}${Math.floor(0.3 * shieldAlpha * 255).toString(16).padStart(2, '0')}`;
                 ctx.lineWidth = 15;
                 ctx.beginPath();
                 ctx.ellipse(0, shieldY, shieldWidth - 8, shieldHeight - 8, 0, 0, Math.PI * 2);
@@ -943,14 +982,13 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
 
                 // --- D. HEXAGONAL STRETCHED GRID (3D Masked) ---
                 ctx.save();
-                // Clip to the shield shape
                 ctx.beginPath();
                 ctx.ellipse(0, shieldY, shieldWidth, shieldHeight, 0, 0, Math.PI * 2);
                 ctx.clip();
 
                 const hexSize = 25;
                 const gridScroll = (tick * 0.5) % 80;
-                ctx.strokeStyle = `rgba(165, 243, 252, ${0.15 * shieldAlpha})`;
+                ctx.strokeStyle = `${theme.highlight}${Math.floor(0.15 * shieldAlpha * 255).toString(16).padStart(2, '0')}`;
                 ctx.lineWidth = 1;
 
                 // Draw hexagons
@@ -984,7 +1022,7 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
 
                 // --- F. ELECTRICAL DISCHARGES (Lightning) ---
                 ctx.globalCompositeOperation = 'lighter';
-                ctx.strokeStyle = `rgba(207, 250, 254, ${0.6 * shieldAlpha})`;
+                ctx.strokeStyle = `${theme.accent}${Math.floor(0.6 * shieldAlpha * 255).toString(16).padStart(2, '0')}`;
                 ctx.lineWidth = 1.5;
                 if (tick % 10 < 3) { // Occasional jumps
                     ctx.beginPath();
@@ -1002,6 +1040,59 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                 ctx.restore();
             };
             drawShield();
+            // --- 2.9 ARTIFACT VISUAL EFFECTS (Phase 5.0) ---
+            const drawVisualEffects = () => {
+                if (activeVisualEffects.length === 0) return;
+
+                activeVisualEffects.forEach(effect => {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'screen';
+
+                    if (effect === 'GLOW_PURPLE') {
+                        const g = ctx.createRadialGradient(0, 0, 50, 0, 0, 300);
+                        g.addColorStop(0, 'rgba(168, 85, 247, 0.35)');
+                        g.addColorStop(1, 'rgba(168, 85, 247, 0)');
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(0, 0, 300, 0, Math.PI * 2); ctx.fill();
+                    }
+                    else if (effect === 'GLOW_GOLD') {
+                        const g = ctx.createRadialGradient(0, 0, 50, 0, 0, 300);
+                        g.addColorStop(0, 'rgba(251, 191, 36, 0.35)');
+                        g.addColorStop(1, 'rgba(251, 191, 36, 0)');
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(0, 0, 300, 0, Math.PI * 2); ctx.fill();
+                    }
+                    else if (effect === 'MATRIX_GREEN') {
+                        ctx.fillStyle = '#10b981';
+                        ctx.globalAlpha = 0.3 * (Math.sin(tick * 0.1) * 0.5 + 0.5);
+                        for (let i = 0; i < 8; i++) {
+                            const xOff = -120 + i * 30;
+                            const yOff = ((tick * 3 + i * 60) % 500) - 250;
+                            ctx.fillRect(xOff, yOff, 2, 30);
+                        }
+                    }
+                    else if (effect === 'FROST_BLUE') {
+                        ctx.strokeStyle = 'rgba(186, 230, 253, 0.4)';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        for (let i = 0; i < 6; i++) {
+                            const ang = (tick * 0.02) + (i * Math.PI / 3);
+                            ctx.moveTo(0, 0);
+                            ctx.lineTo(Math.cos(ang) * 200, Math.sin(ang) * 200);
+                        }
+                        ctx.stroke();
+                    }
+                    else if (effect === 'GLITCH_RED') {
+                        if (tick % 10 < 3) {
+                            ctx.fillStyle = 'rgba(239, 35, 60, 0.2)';
+                            ctx.fillRect(-150, -300, 300, 600);
+                        }
+                    }
+
+                    ctx.restore();
+                });
+            };
+            drawVisualEffects();
 
             ctx.restore();
         };

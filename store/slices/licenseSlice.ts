@@ -65,10 +65,10 @@ export const createLicenseSlice: SliceCreator<LicenseActions> = (set, get) => ({
         const finalPrice = calculatePermitPrice(basePrice, s.globalReputation);
 
         // Проверка 3: Хватает денег?
-        if (s.resources.rubies < finalPrice) {
+        if (s.resources.credits < finalPrice) {
             const event: VisualEvent = {
                 type: 'LOG',
-                msg: `💎 НЕДОСТАТОЧНО РУБИНОВ! Требуется: ${finalPrice}, есть: ${s.resources.rubies}`,
+                msg: `💰 НЕДОСТАТОЧНО КРЕДИТОВ! Требуется: ${finalPrice}, есть: ${s.resources.credits}`,
                 color: 'text-red-500'
             };
             set({ actionLogQueue: pushLog(s, event) });
@@ -78,12 +78,12 @@ export const createLicenseSlice: SliceCreator<LicenseActions> = (set, get) => ({
         // ✅ Покупка
         const newResources = {
             ...s.resources,
-            rubies: s.resources.rubies - finalPrice
+            credits: s.resources.credits - finalPrice
         };
 
         const successEvent: VisualEvent = {
             type: 'LOG',
-            msg: `✅ ${zone.toUpperCase()} ZONE LICENSE РАЗБЛОКИРОВАНА! (-${finalPrice} 💎)`,
+            msg: `✅ ${zone.toUpperCase()} ZONE LICENSE РАЗБЛОКИРОВАНА! (-${finalPrice} 💰)`,
             color: 'text-green-400 font-bold'
         };
 
@@ -145,10 +145,10 @@ export const createLicenseSlice: SliceCreator<LicenseActions> = (set, get) => ({
         const finalPrice = calculatePermitPrice(basePrice, s.globalReputation);
 
         // Проверка 4: Хватает денег?
-        if (s.resources.rubies < finalPrice) {
+        if (s.resources.credits < finalPrice) {
             const event: VisualEvent = {
                 type: 'LOG',
-                msg: `💎 НЕДОСТАТОЧНО РУБИНОВ! Требуется: ${finalPrice}, есть: ${s.resources.rubies}`,
+                msg: `💰 НЕДОСТАТОЧНО КРЕДИТОВ! Требуется: ${finalPrice}, есть: ${s.resources.credits}`,
                 color: 'text-red-500'
             };
             set({ actionLogQueue: pushLog(s, event) });
@@ -159,13 +159,13 @@ export const createLicenseSlice: SliceCreator<LicenseActions> = (set, get) => ({
         const newPermit = createPermit(regionId, type);
         const newResources = {
             ...s.resources,
-            rubies: s.resources.rubies - finalPrice
+            credits: s.resources.credits - finalPrice
         };
 
         const permitLabel = type === 'temporary' ? 'ВРЕМЕННОЕ (7 дней)' : 'PERMANENT';
         const successEvent: VisualEvent = {
             type: 'LOG',
-            msg: `🎫 ${permitLabel} РАЗРЕШЕНИЕ НА ${regionId.toUpperCase()} ПОЛУЧЕНО! (-${finalPrice} 💎)`,
+            msg: `🎫 ${permitLabel} РАЗРЕШЕНИЕ НА ${regionId.toUpperCase()} ПОЛУЧЕНО! (-${finalPrice} 💰)`,
             color: 'text-green-400 font-bold'
         };
 

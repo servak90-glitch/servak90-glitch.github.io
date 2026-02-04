@@ -32,7 +32,7 @@ export const createCaravanSlice: SliceCreator<CaravanActions> = (set, get) => ({
         const state = get();
 
         // Проверка стоимости
-        if (state.resources.rubies < BASIC_LOGISTICS_UNLOCK_COST) {
+        if (state.resources.credits < BASIC_LOGISTICS_UNLOCK_COST) {
             console.warn(`❌ Недостаточно credits для разблокировки Basic Logistics (нужно ${BASIC_LOGISTICS_UNLOCK_COST})`);
             return;
         }
@@ -47,7 +47,7 @@ export const createCaravanSlice: SliceCreator<CaravanActions> = (set, get) => ({
         set((state) => ({
             resources: {
                 ...state.resources,
-                rubies: state.resources.rubies - BASIC_LOGISTICS_UNLOCK_COST,
+                credits: state.resources.credits - BASIC_LOGISTICS_UNLOCK_COST,
             },
             caravanUnlocks: state.caravanUnlocks.map(u =>
                 u.tier === '1star' ? { ...u, unlocked: true, unlockedAt: Date.now() } : u
