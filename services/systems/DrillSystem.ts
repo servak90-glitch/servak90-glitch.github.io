@@ -154,27 +154,18 @@ export function processDrilling(
         // === ПРОВЕРКА ТОПЛИВА ===
         const fuel = selectBestAvailableFuel(state.resources);
         const isInfiniteFuel = cheats.isInfiniteFuel;
+        let isLowFuelMode = false;
 
         if (!fuel && !isInfiniteFuel) {
-            // Топливо закончилось - блокируем бурение
-            events.push({
-                type: 'LOG',
-                msg: '⚠️ ТОПЛИВО ЗАКОНЧИЛОСЬ! Бурение остановлено. Необходимо coal/oil/gas.',
-                color: 'text-red-500 font-bold'
-            });
-
-            // Не выполнять бурение
-            return {
-                update: {
-                    depth,
-                    forgeUnlocked,
-                    cityUnlocked,
-                    skillsUnlocked,
-                    storageLevel
-                },
-                resourceChanges,
-                events
-            };
+            // Топливо закончилось - включаем режим "ручного" бурения (Survival Mode)
+            isLowFuelMode = true;
+            if (Math.random() < 0.01 * dt * 60) {
+                events.push({
+                    type: 'LOG',
+                    msg: '⚠️ ТОПЛИВО ЗАКОНЧИЛОСЬ! Переход на ручной привод (Скорость -95%).',
+                    color: 'text-orange-500'
+                });
+            }
         }
 
         // Лог предупреждения при низкой эффективности
@@ -195,6 +186,7 @@ export function processDrilling(
 
         // Итоговая мощность бурения
         let drillPower = stats.totalSpeed * speedPenalty * speedMult;
+        if (isLowFuelMode) drillPower *= 0.05; // Штраф за отсутствие топлива
         if (state.isOverdrive) drillPower *= 100;
 
         // === ПОТРЕБЛЕНИЕ ТОПЛИВА ===
