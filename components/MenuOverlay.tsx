@@ -26,7 +26,7 @@ const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, onOpenSettin
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 backdrop-blur-md"
+                    className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 backdrop-blur-md overflow-y-auto touch-pan-y"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}

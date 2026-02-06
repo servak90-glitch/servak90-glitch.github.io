@@ -29,7 +29,7 @@ export const OperatorSelectOverlay: React.FC = () => {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-8 animate-in fade-in duration-700">
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center p-4 md:p-8 animate-in fade-in duration-700 overflow-y-auto touch-pan-y">
             <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('/assets/ui/noise.png')] mix-blend-overlay" />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black pointer-events-none" />
 

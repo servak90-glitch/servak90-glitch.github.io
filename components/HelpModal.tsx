@@ -26,7 +26,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
     return (
         <AnimatePresence>
             <motion.div
-                className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-md p-0 md:p-4"
+                className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-md p-0 md:p-4 overflow-y-auto touch-pan-y"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

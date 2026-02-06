@@ -73,7 +73,7 @@ export const RegionalHubOverlay: React.FC<RegionalHubOverlayProps> = ({ regionId
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md overflow-y-auto touch-pan-y"
         >
             <div className="relative w-full max-w-6xl h-full md:h-[90vh] bg-slate-900 md:border md:border-cyan-500/30 md:shadow-[0_0_50px_rgba(34,211,238,0.2)] flex flex-col overflow-hidden md:rounded-xl">
                 {/* Header */}

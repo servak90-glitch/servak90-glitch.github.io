@@ -132,7 +132,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-void/60 backdrop-blur-3xl p-0 md:p-4">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-void/60 backdrop-blur-3xl p-0 md:p-4 overflow-y-auto touch-pan-y">
             <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}

@@ -63,7 +63,7 @@ export const DialogueOverlay: React.FC = () => {
     if (!node) return null;
 
     return (
-        <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-end justify-center p-4 md:p-8 animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-end justify-center p-4 md:p-8 animate-in fade-in duration-500 overflow-y-auto touch-pan-y">
             {/* Background Glitch Filter */}
             <div className="absolute inset-0 opacity-5 pointer-events-none bg-[url('/assets/ui/noise.png')] mix-blend-overlay" />
 
