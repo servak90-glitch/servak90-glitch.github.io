@@ -130,7 +130,7 @@ const LicenseTab: React.FC<LicenseTabProps> = ({ resources }) => {
                         <div className="h-px flex-1 bg-gradient-to-l from-transparent to-zinc-800" />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto no-scrollbar pr-2 pb-4">
+                    <div className="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto no-scrollbar pr-2 pb-4 touch-pan-y">
                         {permitRegions.map(regionId => {
                             const region = REGIONS[regionId];
                             const permit = activePermits[regionId];

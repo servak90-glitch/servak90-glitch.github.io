@@ -35,7 +35,7 @@ export const ClinicTab: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col h-full bg-gradient-to-b from-zinc-950 to-black p-6 overflow-y-auto">
+        <div className="flex flex-col h-full bg-gradient-to-b from-zinc-950 to-black p-6 overflow-y-auto touch-pan-y">
             {/* Header */}
             <div className="mb-8 border-b border-cyan-900/30 pb-4">
                 <div className="flex items-center gap-3 mb-2">

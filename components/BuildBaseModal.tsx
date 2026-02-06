@@ -70,7 +70,7 @@ export const BuildBaseModal: React.FC<BuildBaseModalProps> = ({ regionId, onClos
     return (
         <AnimatePresence>
             <motion.div
-                className="fixed inset-0 z-[120] flex items-center justify-center bg-void/90 backdrop-blur-xl p-3 md:p-6 overflow-y-auto"
+                className="fixed inset-0 z-[120] flex items-center justify-center bg-void/90 backdrop-blur-xl p-3 md:p-6 overflow-y-auto touch-pan-y"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={onClose}
             >

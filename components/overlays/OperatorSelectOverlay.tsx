@@ -63,7 +63,7 @@ export const OperatorSelectOverlay: React.FC = () => {
             </div>
 
             <div className="relative z-10 flex flex-col lg:flex-row gap-8 w-full max-w-7xl items-center lg:items-stretch">
-                <div className="flex flex-row lg:flex-col gap-4 overflow-x-auto lg:overflow-x-visible pb-4 lg:pb-0 w-full lg:w-1/3">
+                <div className="flex flex-row lg:flex-col gap-4 overflow-x-auto lg:overflow-x-visible pb-4 lg:pb-0 w-full lg:w-1/3 touch-pan-x">
                     {OPERATORS.map((op) => (
                         <button
                             key={op.id}

@@ -174,7 +174,7 @@ export const RareResourcesMenu: React.FC<{
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto scrollbar-hide py-2 px-1 space-y-6 md:space-y-4">
+                <div className="flex-1 overflow-y-auto scrollbar-hide py-2 px-1 space-y-6 md:space-y-4 touch-pan-y">
                     {/* 1. CREDITS (Кредиты) */}
                     <div className="px-4 md:px-3">
                         <div className="flex items-center gap-2 mb-3 opacity-30">

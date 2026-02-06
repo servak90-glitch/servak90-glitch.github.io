@@ -128,7 +128,7 @@ const CodexView: React.FC = () => {
             </div>
 
             {/* TAB NAVIGATOR */}
-            <div className="relative z-10 flex px-6 py-2 gap-2 shrink-0 bg-black/20 border-b border-white/5 overflow-x-auto no-scrollbar">
+            <div className="relative z-10 flex px-6 py-2 gap-2 shrink-0 bg-black/20 border-b border-white/5 overflow-x-auto no-scrollbar touch-pan-x">
                 <button
                     onClick={() => setTab('artifacts')}
                     className={`flex items-center gap-2 py-3 px-4 text-[10px] font-black font-technical transition-all border-b-2 uppercase tracking-[0.2em] whitespace-nowrap
@@ -188,7 +188,7 @@ const CodexView: React.FC = () => {
             </div>
 
             {/* SCROLLABLE GRID / LIST */}
-            <div className="flex-1 overflow-y-auto relative z-10 px-6 py-8 scrolling-auto pb-4 md:pb-8">
+            <div className="flex-1 overflow-y-auto relative z-10 px-6 py-8 scrolling-auto pb-4 md:pb-8 touch-pan-y">
                 <AnimatePresence mode="wait">
                     {tab === 'artifacts' && (
                         <motion.div

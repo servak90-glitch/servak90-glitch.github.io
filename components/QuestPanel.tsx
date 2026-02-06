@@ -81,7 +81,7 @@ const QuestPanel: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex w-full lg:w-auto bg-black/60 backdrop-blur-xl p-1 border border-white/5 rounded-sm shrink-0 overflow-x-auto no-scrollbar">
+                <div className="flex w-full lg:w-auto bg-black/60 backdrop-blur-xl p-1 border border-white/5 rounded-sm shrink-0 overflow-x-auto no-scrollbar touch-pan-x">
                     <div className="flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 transition-all relative overflow-hidden text-black bg-white">
                         <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">{t(TL.quests.tabs.available, lang)}</span>
                         <span className="px-2 py-0.5 rounded-full text-[8px] font-mono border bg-black/10 border-black/20">{allAvailable.length}</span>
@@ -91,7 +91,7 @@ const QuestPanel: React.FC = () => {
             </div>
 
             {/* CONTENT AREA */}
-            <div className="flex-1 md:overflow-y-auto no-scrollbar relative z-10">
+            <div className="flex-1 md:overflow-y-auto no-scrollbar relative z-10 touch-pan-y">
                 <div className="space-y-8">
                     <button
                         onClick={handleRefresh}

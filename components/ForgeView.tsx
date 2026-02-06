@@ -172,7 +172,7 @@ const ForgeView: React.FC = () => {
             )}
 
             {/* MAIN CONTENT AREA */}
-            <div className="md:flex-1 p-4 md:p-8 md:overflow-y-auto scrollbar-hide pb-4 md:pb-8 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.05)_0%,transparent_50%)]">
+            <div className="md:flex-1 p-4 md:p-8 md:overflow-y-auto scrollbar-hide pb-4 md:pb-8 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.05)_0%,transparent_50%)] touch-pan-y">
                 {renderActiveTab()}
             </div>
         </div>

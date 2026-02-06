@@ -236,7 +236,7 @@ const ExpeditionTab: React.FC<ExpeditionTabProps> = ({ base }) => {
                             </div>
                         </div>
 
-                        <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar pr-2">
+                        <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar pr-2 touch-pan-y">
                             {activeExpeditions.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-32 opacity-20 group">
                                     <Radio className="w-16 h-16 mb-4 grayscale group-hover:grayscale-0 transition-all duration-1000" />
@@ -316,7 +316,7 @@ const ExpeditionTab: React.FC<ExpeditionTabProps> = ({ base }) => {
                                         </div>
 
                                         {exp.log.length > 0 && (
-                                            <div className="mt-3 text-[8px] text-zinc-600 font-mono italic px-3 py-2 bg-black/20 border-l-2 border-zinc-800 max-h-12 overflow-y-auto no-scrollbar">
+                                            <div className="mt-3 text-[8px] text-zinc-600 font-mono italic px-3 py-2 bg-black/20 border-l-2 border-zinc-800 max-h-12 overflow-y-auto no-scrollbar touch-pan-y">
                                                 {"> "} {exp.log[exp.log.length - 1]}
                                             </div>
                                         )}

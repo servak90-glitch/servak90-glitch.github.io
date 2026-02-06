@@ -125,7 +125,7 @@ export const MarketView = () => {
 
                 <div className="flex flex-col gap-4 md:gap-6 md:flex-1">
                     {/* Tabs */}
-                    <div className="flex gap-1 md:gap-2 glass-panel p-1 md:p-2 border-white/5 bg-black/60 shrink-0 overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-1 md:gap-2 glass-panel p-1 md:p-2 border-white/5 bg-black/60 shrink-0 overflow-x-auto scrollbar-hide touch-pan-x">
                         <TabBtn active={activeTab === 'regular'} onClick={() => setActiveTab('regular')} icon={<BarChart3 />} label={TL.ui.market} lang={lang} color="cyan" />
                         {hasBlackMarket && <TabBtn active={activeTab === 'black_market'} onClick={() => setActiveTab('black_market')} icon={<Fingerprint />} label={TL.ui.shadow_network} lang={lang} color="purple" />}
                         {hasBlackMarket && <TabBtn active={activeTab === 'smuggling'} onClick={() => setActiveTab('smuggling')} icon={<Zap />} label={{ RU: 'Контрабанда', EN: 'Smuggling' }} lang={lang} color="orange" />}

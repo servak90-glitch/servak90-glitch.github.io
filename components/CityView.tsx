@@ -158,7 +158,7 @@ const CityView: React.FC<CityViewProps> = ({
         </div>
 
         {/* CITY NAVIGATION: DYNAMIC TABS */}
-        <div className="flex bg-black/60 backdrop-blur-md border-b border-white/5 overflow-x-auto no-scrollbar scroll-smooth md:shrink-0">
+        <div className="flex bg-black/60 backdrop-blur-md border-b border-white/5 overflow-x-auto no-scrollbar scroll-smooth md:shrink-0 touch-pan-x">
           {TABS.map(tab => (
             <button
               key={tab.id}

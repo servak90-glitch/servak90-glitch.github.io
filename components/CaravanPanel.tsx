@@ -64,7 +64,7 @@ export const CaravanPanel = () => {
     };
 
     return (
-        <div className="flex-1 flex flex-col gap-0 md:gap-10 font-technical text-white overflow-y-auto pr-0 md:pr-4 scrollbar-hide">
+        <div className="flex-1 flex flex-col gap-0 md:gap-10 font-technical text-white overflow-y-auto pr-0 md:pr-4 scrollbar-hide touch-pan-y">
 
             {/* UNLOCK OVERLAY / LOCK SCREEN */}
             <AnimatePresence>
@@ -269,7 +269,7 @@ export const CaravanPanel = () => {
                                 <h4 className="text-xl font-black uppercase italic tracking-tighter">Event_Log_Stream</h4>
                             </div>
 
-                            <div className="space-y-3 overflow-y-auto pr-2 scrollbar-hide flex-1">
+                            <div className="space-y-3 overflow-y-auto pr-2 scrollbar-hide flex-1 touch-pan-y">
                                 {caravans.filter(c => c.status !== 'in_transit').slice(-10).reverse().map(caravan => {
                                     const fBase = playerBases.find(b => b.id === caravan.fromBaseId);
                                     const tBase = playerBases.find(b => b.id === caravan.toBaseId);

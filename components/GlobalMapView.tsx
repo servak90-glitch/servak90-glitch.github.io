@@ -221,7 +221,7 @@ export const GlobalMapView = () => {
             </div>
 
             {/* MAIN DASHBOARD SCENE */}
-            <div className="max-w-7xl w-full mx-auto px-4 md:px-10 mt-0 md:mt-4 flex-1 flex flex-col gap-0 md:gap-8 overflow-y-auto min-h-0 pb-0 md:pb-32 scrollbar-hide relative z-10 font-technical">
+            <div className="max-w-7xl w-full mx-auto px-4 md:px-10 mt-0 md:mt-4 flex-1 flex flex-col gap-0 md:gap-8 overflow-y-auto min-h-0 pb-0 md:pb-32 scrollbar-hide relative z-10 font-technical touch-pan-y">
                 <AnimatePresence mode="wait">
                     {activeTab === 'map' && (
                         <motion.div
@@ -371,7 +371,7 @@ export const GlobalMapView = () => {
 
                                 {/* BASES QUICK ACCESS BOTTOM OVERLAY */}
                                 <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 z-20 flex justify-between items-end pointer-events-none">
-                                    <div className="flex gap-2 md:gap-3 overflow-x-auto no-scrollbar pointer-events-auto max-w-[70%]">
+                                    <div className="flex gap-2 md:gap-3 overflow-x-auto no-scrollbar pointer-events-auto max-w-[70%] touch-pan-x">
                                         {playerBases.map(base => (
                                             <button
                                                 key={base.id}

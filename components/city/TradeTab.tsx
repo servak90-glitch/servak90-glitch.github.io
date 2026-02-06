@@ -79,7 +79,7 @@ const TradeTab: React.FC<TradeTabProps> = ({ resources, onTrade }) => {
                                 <h3 className="text-sm font-black text-zinc-400 tracking-[0.3em] uppercase italic">{t(TL.ui.industrialCrusher, lang)}</h3>
                             </div>
 
-                            <div className="space-y-3 md:max-h-[300px] md:overflow-y-auto no-scrollbar pr-1">
+                            <div className="space-y-3 md:max-h-[300px] md:overflow-y-auto no-scrollbar pr-1 touch-pan-y">
                                 {REVERSE_TRADES.map((trade, idx) => {
                                     const canSee = resources[trade.source] > 0 || resources[trade.target] > 100;
                                     if (!canSee) return null;
@@ -129,7 +129,7 @@ const TradeTab: React.FC<TradeTabProps> = ({ resources, onTrade }) => {
 
                             <p className="text-[10px] text-cyan-500 font-black uppercase tracking-[0.2em] mb-4">{t(TL.ui.dealerAccepts, lang)}</p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto no-scrollbar pr-2 flex-1 pb-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto no-scrollbar pr-2 flex-1 pb-4 touch-pan-y">
                                 {([
                                     ResourceType.CLAY, ResourceType.STONE, ResourceType.COPPER,
                                     ResourceType.IRON, ResourceType.SILVER, ResourceType.GOLD,

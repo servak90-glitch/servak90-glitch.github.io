@@ -159,7 +159,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
 
             {/* NAV TABS FRAMEWORK */}
             <div className="w-full px-4 md:px-10 mt-4 md:mt-8 shrink-0 relative z-10">
-                <div className="max-w-7xl mx-auto flex gap-1 md:gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1">
+                <div className="max-w-7xl mx-auto flex gap-1 md:gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1 touch-pan-x">
                     {tabs.map(tab => !tab.hidden && (
                         <button
                             key={tab.id}
@@ -179,7 +179,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
             </div>
 
             {/* DASHBOARD CONTENT SCENE */}
-            <div className="max-w-7xl mx-auto w-full px-4 md:px-10 py-6 md:py-10 flex-1 overflow-y-auto scroll-smooth relative z-10">
+            <div className="max-w-7xl mx-auto w-full px-4 md:px-10 py-6 md:py-10 flex-1 overflow-y-auto scroll-smooth relative z-10 touch-pan-y">
                 <AnimatePresence mode="wait">
                     {activeTab === 'storage' && (
                         <motion.div
@@ -222,7 +222,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
                                         <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/60">{t(TL.ui.baseStoredMatrix, lang)}</h3>
                                         <div className="h-px bg-white/5 flex-1" />
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[300px] max-h-[400px] overflow-y-auto scrollbar-hide content-start">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[300px] max-h-[400px] overflow-y-auto scrollbar-hide content-start touch-pan-y">
                                         {Object.entries(base.storedResources).map(([res, amount]) => (amount || 0) > 0 && (
                                             <ResourceTransferCard
                                                 key={res}
@@ -250,7 +250,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
                                         <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/60">{t(TL.ui.drillCargoPayload, lang)}</h3>
                                         <div className="h-px bg-white/5 flex-1" />
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[300px] max-h-[400px] overflow-y-auto scrollbar-hide content-start">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[300px] max-h-[400px] overflow-y-auto scrollbar-hide content-start touch-pan-y">
                                         {Object.entries(resources).map(([res, amount]) => (amount || 0) > 0 && res !== 'credits' && (
                                             <ResourceTransferCard
                                                 key={res}

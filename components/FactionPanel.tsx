@@ -63,7 +63,7 @@ const FactionPanel: React.FC = () => {
             <div className="absolute inset-0 mesh-bg opacity-10 pointer-events-none" />
 
             {/* FACTION SELECTOR HUD */}
-            <div className="flex gap-2 md:gap-4 mb-0 md:mb-10 overflow-x-auto pb-2 md:pb-4 no-scrollbar shrink-0 relative z-10">
+            <div className="flex gap-2 md:gap-4 mb-0 md:mb-10 overflow-x-auto pb-2 md:pb-4 no-scrollbar shrink-0 relative z-10 touch-pan-x">
                 {factions.map(fid => (
                     <button
                         key={fid}
@@ -95,7 +95,7 @@ const FactionPanel: React.FC = () => {
             </div>
 
             {/* DOSSIER PANEL */}
-            <div className="flex-1 overflow-y-auto pr-4 scrollbar-hide relative z-10">
+            <div className="flex-1 overflow-y-auto pr-4 scrollbar-hide relative z-10 touch-pan-y">
                 <AnimatePresence mode='wait'>
                     <motion.div
                         key={selectedFaction}
