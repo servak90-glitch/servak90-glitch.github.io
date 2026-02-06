@@ -3,7 +3,8 @@
  */
 
 import { SliceCreator, pushLog } from './types';
-import type { RegionId, BaseType, PlayerBase, VisualEvent, FacilityId, Resources, DefenseUnitType } from '../../types';
+import type { RegionId, BaseType, PlayerBase, VisualEvent, FacilityId, Resources, DefenseUnitType, BaseModule } from '../../types';
+import { BaseModuleType } from '../../types';
 import { BASE_COSTS, BASE_BUILD_TIMES, BASE_STORAGE_CAPACITY, WORKSHOP_TIER_RANGES } from '../../constants/playerBases';
 import { BASE_FACILITIES } from '../../constants/baseFacilities';
 import { canBuildFacility } from '../../constants/fuelFacilities';
@@ -28,7 +29,17 @@ export interface BaseActions {
     // === NEW: DRONE STATION ACTIONS ===
     refuelDrones: (baseId: string, fuelType: 'coal' | 'oil' | 'gas', amount: number) => void;
     maintainDrones: (baseId: string) => void;
+    unlockBaseModule: (baseId: string, moduleType: BaseModuleType) => void;
+    upgradeBaseModule: (baseId: string, moduleType: BaseModuleType) => void;
 }
+
+const DEFAULT_MODULES: BaseModule[] = [
+    { type: BaseModuleType.SCIENCE, level: 0, unlocked: false, status: 'DISABLED' },
+    { type: BaseModuleType.LOGISTICS, level: 0, unlocked: false, status: 'DISABLED' },
+    { type: BaseModuleType.INDUSTRIAL, level: 0, unlocked: false, status: 'DISABLED' },
+    { type: BaseModuleType.DRONE_COMMAND, level: 0, unlocked: false, status: 'DISABLED' },
+    { type: BaseModuleType.COMMS, level: 0, unlocked: false, status: 'DISABLED' }
+];
 
 export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
     /**
@@ -139,7 +150,10 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
                 activeDrones: 2,
                 maxDrones: 5,
                 maintenanceLevel: 100
-            } : undefined
+            } : undefined,
+
+            // === PHASE 7.2: BASE MODULES ===
+            modules: JSON.parse(JSON.stringify(DEFAULT_MODULES))
         };
 
         const successEvent: VisualEvent = {
@@ -590,5 +604,90 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
             } : b),
             actionLogQueue: pushLog(state, { type: 'LOG', msg: `🛠️ ДРОНЫ ТЕХНИЧЕСКИ ОБСЛУЖЕНЫ`, color: 'text-green-400' })
         }));
+    },
+
+    /**
+     * Разблокировать модуль базы
+     */
+    unlockBaseModule: (baseId, moduleType) => {
+        const s = get();
+        const base = s.playerBases.find(b => b.id === baseId);
+        if (!base) return;
+
+        const modDef = (require('../../constants/baseModules').BASE_MODULES as any)[moduleType];
+        if (!modDef) return;
+
+        // Проверка ресурсов
+        const cost = modDef.baseCost;
+        if (s.resources.credits < (cost.credits || 0)) return;
+        for (const [res, amount] of Object.entries(cost)) {
+            if (res === 'credits') continue;
+            if ((s.resources[res as keyof Resources] || 0) < (amount as number)) return;
+        }
+
+        // Списание
+        const newRes = { ...s.resources, credits: s.resources.credits - (cost.credits || 0) };
+        for (const [res, amount] of Object.entries(cost)) {
+            if (res === 'credits') continue;
+            newRes[res as keyof Resources] -= (amount as number);
+        }
+
+        set({
+            resources: newRes,
+            playerBases: s.playerBases.map(b => b.id === baseId ? {
+                ...b,
+                modules: b.modules.map(m => m.type === moduleType ? { ...m, unlocked: true, level: 1, status: 'ACTIVE' } : m)
+            } : b),
+            actionLogQueue: pushLog(s, { type: 'LOG', msg: `📦 МОДУЛЬ ${modDef.name.RU.toUpperCase()} АКТИВИРОВАН!`, color: 'text-green-400 font-bold' })
+        });
+
+        audioEngine.playBaseBuild();
+    },
+
+    /**
+     * Улучшить модуль базы
+     */
+    upgradeBaseModule: (baseId, moduleType) => {
+        const s = get();
+        const base = s.playerBases.find(b => b.id === baseId);
+        if (!base) return;
+
+        const module = base.modules.find(m => m.type === moduleType);
+        if (!module || !module.unlocked) return;
+
+        const modDef = (require('../../constants/baseModules').BASE_MODULES as any)[moduleType];
+        if (module.level >= modDef.maxLevel) return;
+
+        // Расчет стоимости: base * multiplier^level
+        const multiplier = Math.pow(modDef.costMultiplier, module.level);
+        const cost: Partial<Resources> = {};
+        for (const [res, amount] of Object.entries(modDef.baseCost)) {
+            cost[res as keyof Resources] = Math.ceil((amount as number) * multiplier);
+        }
+
+        // Проверка ресурсов
+        if (s.resources.credits < (cost.credits || 0)) return;
+        for (const [res, amount] of Object.entries(cost)) {
+            if (res === 'credits') continue;
+            if ((s.resources[res as keyof Resources] || 0) < (amount as number)) return;
+        }
+
+        // Списание
+        const newRes = { ...s.resources, credits: s.resources.credits - (cost.credits || 0) };
+        for (const [res, amount] of Object.entries(cost)) {
+            if (res === 'credits') continue;
+            newRes[res as keyof Resources] -= (amount as number);
+        }
+
+        set({
+            resources: newRes,
+            playerBases: s.playerBases.map(b => b.id === baseId ? {
+                ...b,
+                modules: b.modules.map(m => m.type === moduleType ? { ...m, level: m.level + 1 } : m)
+            } : b),
+            actionLogQueue: pushLog(s, { type: 'LOG', msg: `🔼 МОДУЛЬ ${modDef.name.RU.toUpperCase()} УЛУЧШЕН ДО LVL ${module.level + 1}!`, color: 'text-cyan-400' })
+        });
+
+        audioEngine.playUpgrade ? audioEngine.playUpgrade() : audioEngine.playBaseBuild();
     }
 });

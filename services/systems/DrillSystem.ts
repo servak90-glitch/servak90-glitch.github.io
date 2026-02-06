@@ -198,7 +198,12 @@ export function processDrilling(
         if (state.isOverdrive) drillPower *= 100;
 
         // === ПОТРЕБЛЕНИЕ ТОПЛИВА ===
-        const fuelCost = (drillPower * FUEL_CONSUMPTION_RATE * dt * 10) / (fuel?.efficiency || 1);
+        let consumptionMult = 1.0;
+        if (activePerks.includes('SMUGGLER')) {
+            consumptionMult *= 0.8; // -20% consumption
+        }
+
+        const fuelCost = (drillPower * FUEL_CONSUMPTION_RATE * dt * 10 * consumptionMult) / (fuel?.efficiency || 1);
 
         if (!isInfiniteFuel && fuel) {
             resourceChanges[fuel.fuelType] = (resourceChanges[fuel.fuelType] || 0) - fuelCost;

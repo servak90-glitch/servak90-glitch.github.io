@@ -8,6 +8,8 @@ import { DEFENSE_UNITS, BASE_REPAIR_COST } from '../constants/defenseUnits';
 import { TL, t } from '../services/localization';
 import { getResourceLabel } from '../services/gameMath';
 import { BASE_COSTS } from '../constants/playerBases';
+import { BASE_MODULES } from '../constants/baseModules';
+import { BaseModuleType } from '../types';
 import { audioEngine } from '../services/audioEngine';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -51,12 +53,14 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
         buildFacility,
         startDefenseProduction,
         repairBase,
-        upgradeBase
+        upgradeBase,
+        unlockBaseModule,
+        upgradeBaseModule
     } = useGameStore();
 
     const base = useMemo(() => playerBases.find(b => b.id === baseId), [playerBases, baseId]);
     const lang = settings.language as 'RU' | 'EN';
-    const [activeTab, setActiveTab] = useState<'storage' | 'facilities' | 'refinery' | 'workshop' | 'garrison'>('storage');
+    const [activeTab, setActiveTab] = useState<'storage' | 'facilities' | 'refinery' | 'workshop' | 'garrison' | 'modules'>('storage');
 
     const [now, setNow] = useState(Date.now());
     useEffect(() => {
@@ -93,6 +97,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
     const tabs = [
         { id: 'storage', label: t(TL.ui.storage, lang), icon: <Box className="w-4 h-4" /> },
         { id: 'facilities', label: t(TL.ui.facilities, lang), icon: <Factory className="w-4 h-4" /> },
+        { id: 'modules', label: t(TL.ui.baseModules, lang), icon: <Database className="w-4 h-4" /> },
         { id: 'refinery', label: t(TL.ui.refinery, lang), icon: <Zap className="w-4 h-4" />, hidden: !base.facilities.includes('basic_refinery') },
         { id: 'workshop', label: t(TL.ui.workshop, lang), icon: <Hammer className="w-4 h-4" />, hidden: !base.facilities.includes('workshop_facility') && !base.facilities.includes('advanced_workshop') },
         { id: 'garrison', label: t(TL.ui.garrison, lang), icon: <Shield className="w-4 h-4" /> }
@@ -534,6 +539,99 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
                                     })}
                                 </div>
                             </div>
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'modules' && (
+                        <motion.div
+                            key="modules-tab" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                        >
+                            {base.modules.map(module => {
+                                const def = BASE_MODULES[module.type];
+                                if (!def) return null;
+
+                                const isMax = module.level >= def.maxLevel;
+                                const multiplier = Math.pow(def.costMultiplier, module.level);
+                                const cost: Partial<Resources> = {};
+                                Object.entries(def.baseCost).forEach(([res, amt]) => {
+                                    cost[res as keyof Resources] = Math.ceil((amt as number) * multiplier);
+                                });
+
+                                const canAfford = Object.entries(cost).every(([res, amt]) => (resources[res as keyof Resources] || 0) >= (amt || 0));
+
+                                return (
+                                    <div key={module.type} className={`glass-panel p-8 flex flex-col gap-6 relative overflow-hidden group border-2 ${module.unlocked ? 'border-cyan-500/20 bg-cyan-500/5' : 'border-white/5 bg-black/40'}`}>
+                                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                            <span className="text-8xl">{def.icon}</span>
+                                        </div>
+
+                                        <div className="flex justify-between items-start border-b border-white/5 pb-4">
+                                            <div className="flex flex-col">
+                                                <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter">{t(def.name, lang)}</h4>
+                                                <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">
+                                                    {module.unlocked ? `${t(TL.ui.level_label, lang)} ${module.level} / ${def.maxLevel}` : t(TL.ui.locked, lang)}
+                                                </span>
+                                            </div>
+                                            <div className="p-3 glass-panel border-white/10 bg-white/5 text-2xl">{def.icon}</div>
+                                        </div>
+
+                                        <p className="text-xs text-white/40 font-black uppercase tracking-widest leading-relaxed">
+                                            {t(def.description, lang)}
+                                        </p>
+
+                                        {!module.unlocked ? (
+                                            <div className="flex flex-col gap-4">
+                                                <div className="flex flex-wrap gap-2">
+                                                    {Object.entries(cost).map(([res, amt]) => (
+                                                        <div key={res} className="px-3 py-1.5 glass-panel border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+                                                            <span className="opacity-40">{t(getResourceLabel(res), lang)}</span>
+                                                            <span className={(resources[res as keyof Resources] || 0) >= (amt as number) ? 'text-white' : 'text-rose-500'}>{amt}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <button
+                                                    disabled={!canAfford}
+                                                    onClick={() => unlockBaseModule(baseId, module.type)}
+                                                    className={`w-full py-4 font-black uppercase text-[10px] tracking-[0.4em] transition-all
+                                                        ${canAfford ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-white/5 text-white/10 cursor-not-allowed'}
+                                                    `}
+                                                >
+                                                    {t(TL.ui.activateModule, lang)}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col gap-4">
+                                                {!isMax ? (
+                                                    <>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {Object.entries(cost).map(([res, amt]) => (
+                                                                <div key={res} className="px-3 py-1.5 glass-panel border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+                                                                    <span className="opacity-40">{t(getResourceLabel(res), lang)}</span>
+                                                                    <span className={(resources[res as keyof Resources] || 0) >= (amt as number) ? 'text-white' : 'text-rose-500'}>{amt}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <button
+                                                            disabled={!canAfford}
+                                                            onClick={() => upgradeBaseModule(baseId, module.type)}
+                                                            className={`w-full py-4 font-black uppercase text-[10px] tracking-[0.4em] transition-all
+                                                                ${canAfford ? 'bg-cyan-500 text-black hover:bg-cyan-400' : 'bg-white/5 text-white/10 cursor-not-allowed'}
+                                                            `}
+                                                        >
+                                                            {t(TL.ui.upgradeModule_btn, lang)}
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <div className="w-full py-4 bg-white/5 border border-white/10 text-white/40 font-black uppercase text-[10px] tracking-[0.4em] text-center">
+                                                        {t(TL.ui.maxLevel, lang)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </motion.div>
                     )}
                 </AnimatePresence>

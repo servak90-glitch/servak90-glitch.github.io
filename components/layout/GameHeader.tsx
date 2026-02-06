@@ -14,8 +14,12 @@ import {
     Coins,
     Sparkles,
     Trophy,
-    X
+    X,
+    Clock,
+    Calendar
 } from 'lucide-react';
+import { useChronos, useGameSelector } from '../../store/selectors';
+import { formatGameTime } from '../../services/systems/TimeSystem';
 
 const COMMON_RESOURCES: ResourceType[] = [
     ResourceType.CLAY, ResourceType.STONE, ResourceType.COPPER,
@@ -57,6 +61,7 @@ interface GameHeaderProps {
 const GameHeader: React.FC<GameHeaderProps> = ({ onOpenMenu, onOpenInventory, onOpenRare, isRareOpen }) => {
     const resources = useGameStore(s => s.resources);
     const lang = useGameStore(s => s.settings.language);
+    const { chronos } = useChronos();
 
     return (
         <div className="flex glass-panel border-x-0 border-t-0 rounded-none shrink-0 h-11 relative z-[150] bg-black/40 pointer-events-auto">
@@ -74,6 +79,24 @@ const GameHeader: React.FC<GameHeaderProps> = ({ onOpenMenu, onOpenInventory, on
                     {COMMON_RESOURCES.map(key => resources[key] > 0 ? (
                         <ResourceItem key={key} name={key} amount={resources[key]} label={t(getResourceLabel(key), lang)} />
                     ) : null)}
+                </div>
+            </div>
+
+            {/* CENTER: CLOCK & CALENDAR (CHRONOS) */}
+            <div className="flex items-stretch px-4 md:px-8 bg-black/20 border-x border-white/5 group">
+                <div className="flex flex-col items-center justify-center min-w-[70px] md:min-w-[90px]">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                        <Clock className="w-3 h-3 text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+                        <span className="text-[12px] md:text-sm font-black font-technical text-white tracking-widest neon-text-cyan-xs">
+                            {formatGameTime(chronos)}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-30 group-hover:opacity-60 transition-opacity">
+                        <Calendar className="w-2 h-2 text-white" />
+                        <span className="text-[7px] md:text-[8px] font-bold text-white uppercase tracking-tighter">
+                            {lang === 'RU' ? `ДЕНЬ ${chronos.days} НЕД.${chronos.weeks}` : `DAY ${chronos.days} WK.${chronos.weeks}`}
+                        </span>
+                    </div>
                 </div>
             </div>
 

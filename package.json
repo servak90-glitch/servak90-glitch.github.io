@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "vitest"
+    "test": "vitest",
+    "validate": "npx tsx scripts/validator/run.ts --auto-fix-report",
+    "visualize": "python scripts/visualize_metrics.py"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.1",
@@ -41,6 +43,7 @@
     "globals": "^17.0.0",
     "jsdom": "^27.4.0",
     "prettier": "^3.8.0",
+    "puppeteer": "^24.37.1",
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.53.0",
     "vite": "^6.2.0",

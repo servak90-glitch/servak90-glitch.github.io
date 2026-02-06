@@ -10,7 +10,7 @@ import { t } from '../services/localization';
 const DevTools: React.FC = () => {
   const store = useGameStore();
   const lang = store.settings.language;
-  const [activeTab, setActiveTab] = useState<'RES' | 'STATE' | 'NAV' | 'EVENT' | 'GLOBAL'>('RES');
+  const [activeTab, setActiveTab] = useState<'RES' | 'STATE' | 'NAV' | 'EVENT' | 'TIME' | 'GLOBAL'>('RES');
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
@@ -107,7 +107,7 @@ const DevTools: React.FC = () => {
 
       {/* TABS */}
       <div className="flex border-b border-green-800">
-        {(['RES', 'STATE', 'NAV', 'EVENT', 'GLOBAL'] as const).map(tab => (
+        {(['RES', 'STATE', 'NAV', 'EVENT', 'TIME', 'GLOBAL'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -327,6 +327,69 @@ const DevTools: React.FC = () => {
                 >
                   OK
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'TIME' && (
+          <div className="space-y-4">
+            {/* SPEED CONTROLS */}
+            <div className="border border-green-800 p-2">
+              <div className="text-green-500 mb-2 text-[10px]">⚡ TIME SPEED</div>
+              <div className="grid grid-cols-4 gap-2">
+                {[1, 2, 5, 10].map(m => (
+                  <button
+                    key={m}
+                    onClick={() => store.adminSetTimeMultiplier(m)}
+                    className={`border border-green-700 py-1 text-[10px] hover:bg-green-900/50 ${store.timeMultiplier === m ? 'bg-green-600 text-white' : 'text-green-500'}`}
+                  >
+                    x{m}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* TIME SKIP */}
+            <div className="border border-green-800 p-2">
+              <div className="text-green-500 mb-2 text-[10px]">⏩ TIME JUMP (SKIP)</div>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => store.adminSkipTime(3600)}
+                  className="border border-amber-700 hover:bg-amber-900/30 p-2 text-[10px] text-amber-500"
+                >
+                  +1 HOUR
+                </button>
+                <button
+                  onClick={() => store.adminSkipTime(86400)}
+                  className="border border-amber-700 hover:bg-amber-900/30 p-2 text-[10px] text-amber-500"
+                >
+                  +1 DAY
+                </button>
+                <button
+                  onClick={() => store.adminSkipTime(864000)}
+                  className="border border-orange-700 hover:bg-orange-900/30 p-2 text-[10px] text-orange-500"
+                >
+                  +10 DAYS
+                </button>
+              </div>
+            </div>
+
+            {/* STATUS */}
+            <div className="p-2 bg-green-950/20 border border-green-900/50 rounded text-[9px]">
+              <div className="flex justify-between">
+                <span className="text-green-600">GAME TIME:</span>
+                <span className="text-green-300 font-bold">{Math.floor(store.gameTime || 0)}s</span>
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-green-600">CHRONOS:</span>
+                <span className="text-yellow-400">
+                  D{store.chronos?.days} {store.chronos?.hours}h {store.chronos?.minutes}m
+                </span>
+              </div>
+              <div className="flex justify-between mt-1 border-t border-green-900/30 pt-1">
+                <span className="text-green-600">MULTIPLIER:</span>
+                <span className="text-cyan-400">x{store.timeMultiplier}</span>
               </div>
             </div>
           </div>

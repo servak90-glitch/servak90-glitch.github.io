@@ -205,6 +205,8 @@ export class AudioEngine {
     this.compressor.release.value = 0.5;   // Плавное восстановление
     this.compressor.connect(this.ctx.destination);
 
+    this.compressor.connect(this.ctx.destination);
+
     // --- 1. Master Bus Structure ---
     this.masterBus = this.ctx.createGain();
     this.masterBus.gain.setValueAtTime(1.0, this.ctx.currentTime);
@@ -707,6 +709,12 @@ export class AudioEngine {
     if (!this.ctx) return;
 
     const now = this.ctx.currentTime;
+
+    // DEBUG: Log update occasionally
+    if (Math.random() < 0.01) {
+      console.log(`[AudioEngine] UPDATE TICK. Time: ${now.toFixed(2)}. Mode: ${this.currentMode}. Heat: ${heat.toFixed(1)}. State: ${this.ctx.state}`);
+    }
+
     const oldMode = this.currentMode;
     if (depth < 5000) this.currentMode = MusicMode.SURFACE;
     else if (depth < 20000) this.currentMode = MusicMode.CRYSTAL;
@@ -1158,6 +1166,32 @@ export class AudioEngine {
       osc.disconnect();
       g.disconnect();
     };
+  }
+
+  playPager() {
+    if (!this.ctx || !this.sfxBus || !this.sfxDelayBus) return;
+    const t = this.ctx.currentTime;
+
+    // Two short high-pitched beeps
+    [0, 0.2].forEach(delay => {
+      const osc = this.ctx!.createOscillator();
+      const g = this.ctx!.createGain();
+      const startTime = t + delay;
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2500, startTime);
+
+      g.gain.setValueAtTime(0, startTime);
+      g.gain.linearRampToValueAtTime(0.1, startTime + 0.02);
+      g.gain.linearRampToValueAtTime(0, startTime + 0.1);
+
+      osc.connect(g);
+      g.connect(this.sfxBus!);
+      g.connect(this.sfxDelayBus!);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.15);
+    });
   }
 
   playGlitch() {

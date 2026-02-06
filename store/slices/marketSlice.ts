@@ -15,10 +15,12 @@ export interface MarketActions {
 
     buyFromMarket: (resource: keyof Resources, amount: number) => void;
     sellToMarket: (resource: keyof Resources, amount: number) => void;
+    sellSmuggled: (resource: keyof Resources, amount: number) => void; // Механика Лисы
     buyBlackMarketItem: (itemId: string) => void;
 }
 
 import { getActivePerkIds } from '../../services/factionLogic';
+import { economySystem } from '../../services/systems/EconomySystem';
 
 export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
     marketTransactionHistory: [],
@@ -31,7 +33,7 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
         const activePerks = getActivePerkIds(state.reputation);
 
         // Расчёт цены
-        const stats = calculateStats(state.drill, state.skillLevels, state.equippedArtifacts, state.inventory, state.depth);
+        const stats = calculateStats(state.drill, state.skillLevels, state.equippedArtifacts, state.inventory, state.depth, [], state.operatorId, state.hiredCrewIds);
         const price = calculateMarketPrice(resource, state.currentRegion, [], activePerks);
 
         // Apply Artifact Discount
@@ -78,7 +80,12 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
     sellToMarket: (resource, amount) => {
         const state = get();
 
-        // Рынок доступен через Терминал Хаба (глобальный доступ)
+        // Проверка блокировки (Облава)
+        if (economySystem.isMarketBlocked(state)) {
+            audioEngine.playUIError();
+            set(s => ({ actionLogQueue: [...s.actionLogQueue, { type: 'LOG', msg: '🚨 РЫНОК ЗАБЛОКИРОВАН ПОСЛЕ ОБЛАВЫ!', color: 'text-red-500 font-bold' }] }));
+            return;
+        }
 
         // Проверка наличия ресурсов
         if ((state.resources[resource] || 0) < amount) {
@@ -88,9 +95,11 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
         }
 
         const activePerks = getActivePerkIds(state.reputation);
+        const category = economySystem.getCategory(resource as any);
+        const saturationMult = economySystem.calculateSaturationMult(state, state.currentRegion, category);
 
-        // Расчёт выручки (80% от рыночной цены)
-        const { sellPrice, totalRevenue } = calculateSellRevenue(resource, amount, state.currentRegion, [], activePerks);
+        // Расчёт выручки (с учетом насыщения)
+        const { sellPrice, totalRevenue } = calculateSellRevenue(resource, amount, state.currentRegion, [], activePerks, saturationMult);
 
         // Транзакция
         audioEngine.playMarketTrade();
@@ -101,9 +110,16 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
                 [resource]: (state.resources[resource] || 0) - amount,
             };
 
+            // Обновление насыщения
+            const newSaturation = { ...state.marketSaturation };
+            const regionSat = { ...(newSaturation[state.currentRegion] || {}) };
+            regionSat[category] = (regionSat[category] || 0) + amount;
+            newSaturation[state.currentRegion] = regionSat;
+
             return {
                 resources: newResources,
                 currentCargoWeight: recalculateCargoWeight(newResources),
+                marketSaturation: newSaturation,
                 marketTransactionHistory: [
                     ...state.marketTransactionHistory,
                     {
@@ -119,7 +135,64 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
             };
         });
 
-        console.log(`✅ Продано ${amount} ${resource} за ${totalRevenue} credits (цена продажи: ${sellPrice}/шт)`);
+        if (saturationMult < 1.0) {
+            console.log(`📉 Цена снижена из-за насыщения категории ${category}: x${saturationMult.toFixed(2)}`);
+        }
+    },
+
+    /**
+     * Контрабанда (Механика Лисы)
+     * Код готов, но будет активирован позже в UI.
+     */
+    sellSmuggled: (resource, amount) => {
+        const state = get();
+
+        // Проверка блокировки (Облава)
+        if (economySystem.isMarketBlocked(state)) {
+            audioEngine.playUIError();
+            return;
+        }
+
+        if ((state.resources[resource] || 0) < amount) {
+            audioEngine.playUIError();
+            return;
+        }
+
+        const activePerks = getActivePerkIds(state.reputation);
+        // Лиса покупает по 70% ВСЕГДА (без учета насыщения, но ниже номинала)
+        const { totalRevenue } = calculateSellRevenue(resource, amount, state.currentRegion, [], activePerks, 0.875); // 0.8 * 0.875 = 0.7
+
+        const riskGain = economySystem.calculateRaidProgress(totalRevenue);
+        const newRaidRisk = state.raidRisk + riskGain;
+        const isRaidTriggered = Math.random() < (newRaidRisk / 100);
+
+        audioEngine.playMarketTrade(); // TODO: добавить более "теневой" звук
+
+        set(s => {
+            const newRes = { ...s.resources, credits: s.resources.credits + totalRevenue, [resource]: s.resources[resource] - amount };
+            const logs = [];
+
+            if (isRaidTriggered) {
+                // Облава! Блокируем рынок (30 игровых часов)
+                const blockedUntil = s.gameTime + 30 * 3600;
+                logs.push({ type: 'LOG', msg: '🚨 ОБЛАВА! РЫНОК ЗАБЛОКИРОВАН НА 30 ЧАСОВ!', color: 'text-red-500 font-bold' });
+                logs.push({ type: 'VISUAL_EFFECT', option: 'GLITCH_RED' });
+                return {
+                    resources: newRes,
+                    currentCargoWeight: recalculateCargoWeight(newRes),
+                    raidRisk: 0, // Сброс после облавы
+                    marketBlockedUntil: blockedUntil,
+                    actionLogQueue: [...s.actionLogQueue, ...logs]
+                };
+            }
+
+            return {
+                resources: newRes,
+                currentCargoWeight: recalculateCargoWeight(newRes),
+                raidRisk: newRaidRisk,
+                actionLogQueue: [...s.actionLogQueue, { type: 'LOG', msg: `🦊 СДЕЛКА С ЛИСОЙ: +${totalRevenue} кр. (Риск: ${newRaidRisk.toFixed(1)}%)`, color: 'text-orange-400' }]
+            };
+        });
     },
 
     buyBlackMarketItem: (itemId: string) => {

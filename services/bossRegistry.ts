@@ -70,6 +70,8 @@ export const generateBoss = (depth: number, biomeName: string): Boss => {
 
   if (depth > 1000) resources.ancientTech = Math.floor(10 + depth / 500);
   if (depth > 5000) resources.diamonds = Math.floor(1 + depth / 10000);
+  if (depth > 100000) resources.voidMatter = Math.floor(5 + depth / 20000);
+  if (depth > 150000) resources.chronoShards = Math.floor(2 + depth / 50000);
   resources.gold = Math.floor(100 + depth / 10);
   resources.titanium = Math.floor(depth / 50);
 

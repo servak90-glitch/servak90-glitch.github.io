@@ -20,4 +20,7 @@ export { createMarketSlice, type MarketActions } from './marketSlice';
 export { createCaravanSlice, type CaravanActions } from './caravanSlice';
 export { createQuestSlice, type QuestActions } from './questSlice';
 export { createCraftSlice, type CraftActions } from './craftSlice';  // NEW: Phase 2.1
-
+export { createLogbookSlice, type LogbookSlice } from './logbookSlice';
+export { createOperatorSlice, type OperatorActions } from './operatorSlice';
+export { createContractSlice, type ContractActions } from './contractSlice';  // NEW: Phase 6
+export { createBlackMarketSlice, type BlackMarketActions } from './blackMarketSlice';  // NEW: Phase 6.2

@@ -60,7 +60,7 @@ const NavigationManager: React.FC<NavigationManagerProps> = ({
             )}
             {activeView === View.FORGE && <ForgeView />}
             {activeView === View.SKILLS && <SkillsView />}
-            {activeView === View.CODEX && <CodexView discoveredArtifacts={discoveredArtifacts} />}
+            {activeView === View.CODEX && <CodexView />}
             {activeView === View.GLOBAL_MAP && <GlobalMapView />}
         </div>
     );

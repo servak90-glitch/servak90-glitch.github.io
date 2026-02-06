@@ -5,15 +5,21 @@
  */
 
 import { StoreApi } from 'zustand';
-import { GameState, View, VisualEvent } from '../../types';
+import { OperatorActions } from './operatorSlice';
+import { GameState, View, VisualEvent, DialogueState } from '../../types';
 
 /**
  * Расширение GameState для store
  */
-export interface GameStore extends GameState {
+export interface GameStore extends GameState,
+    OperatorActions {
     isGameActive: boolean;
     activeView: View;
     actionLogQueue: VisualEvent[];
+
+    startDialogue: (state: DialogueState) => void;
+    chooseDialogueOption: (choiceIndex: number) => void;
+    closeDialogue: () => void;
 }
 
 /**

@@ -80,7 +80,7 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
 
     repairHull: () => {
         const s = get();
-        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, s.activeEffects);
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, s.activeEffects, s.operatorId, s.hiredCrewIds);
         const { resource, cost } = calculateRepairCost(s.depth, s.integrity, stats.integrity);
 
         if (cost <= 0) return;

@@ -21,8 +21,15 @@ import {
     Crown,
     Sparkles,
     Skull,
-    ArrowRight
+    ArrowRight,
+    Users,
+    UserPlus,
+    UserMinus,
+    Check,
+    Zap
 } from 'lucide-react';
+import { CREW_MEMBERS } from '../../constants/rpg';
+import { getActivePerkIds } from '../../services/factionLogic';
 
 const DrinkIcon = ({ icon }: { icon: string }) => {
     switch (icon) {
@@ -35,7 +42,7 @@ const DrinkIcon = ({ icon }: { icon: string }) => {
 };
 
 const BarTab: React.FC<BarTabProps> = ({ resources }) => {
-    const [barTab, setBarTab] = useState<'DRINKS' | 'DICE' | 'VIP'>('DRINKS');
+    const [barTab, setBarTab] = useState<'DRINKS' | 'DICE' | 'RECRUITMENT' | 'VIP'>('DRINKS');
     const [diceBetRes, setDiceBetRes] = useState<ResourceType>(ResourceType.STONE);
     const [diceBetAmount, setDiceBetAmount] = useState<number>(GAMBLING.MIN_BET);
     const [isRolling, setIsRolling] = useState(false);
@@ -108,7 +115,7 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
         <div className="max-w-4xl mx-auto flex flex-col h-full space-y-8 pb-12">
             {/* SUB-TABS: GLASSMOPHISM NAVIGATION */}
             <div className="flex bg-black/60 backdrop-blur-xl p-1 border border-white/5 rounded-sm shrink-0">
-                {(['DRINKS', 'DICE', 'VIP'] as const).map(tab => (
+                {(['DRINKS', 'DICE', 'RECRUITMENT', 'VIP'] as const).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setBarTab(tab)}
@@ -116,7 +123,9 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
                             ${barTab === tab ? 'text-black bg-white' : 'text-zinc-500 hover:text-white hover:bg-white/5'}
                         `}
                     >
-                        {tab === 'DRINKS' ? t(TL.ui.menu_label, lang) : tab === 'DICE' ? t(TL.ui.gamble_label, lang) : 'EXECUTIVE LOUNGE'}
+                        {tab === 'DRINKS' ? t(TL.ui.menu_label, lang) :
+                            tab === 'DICE' ? t(TL.ui.gamble_label, lang) :
+                                tab === 'RECRUITMENT' ? 'PARTNERS' : 'EXECUTIVE LOUNGE'}
                         {barTab === tab && <div className="absolute inset-x-0 bottom-0 h-1 bg-amber-500 shadow-[0_0_10px_#f59e0b]" />}
                     </button>
                 ))}
@@ -303,151 +312,265 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
                 </div>
             )}
 
-            {/* VIP SECTION */}
-            {barTab === 'VIP' && (
-                <div className="animate-in fade-in duration-1000 space-y-8 pb-12">
-                    <div className="relative group p-10 bg-black/60 backdrop-blur-3xl border border-amber-500/30 overflow-hidden text-center">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.05)_0%,transparent_70%)] pointer-events-none" />
-                        <div className="relative z-10 flex flex-col items-center">
-                            <Crown className="w-12 h-12 text-amber-500 mb-4" />
-                            <h3 className="text-2xl font-[1000] text-amber-500 tracking-[0.3em] uppercase italic mb-2">EXECUTIVE VIP LOUNGE</h3>
-                            <p className="text-[10px] text-zinc-500 font-mono tracking-[0.2em] uppercase italic leading-loose">
-                                Unauthorized biological entities will be terminated.<br />Welcome to the high-stakes sector, Administrator.
-                            </p>
-                            <div className="mt-8 bg-amber-500/10 border border-amber-500/20 px-8 py-4 flex flex-col items-center shadow-[0_0_30px_rgba(245,158,11,0.1)]">
-                                <span className="text-[8px] text-amber-600 font-black uppercase tracking-widest mb-1">Corporate Credit Balance</span>
-                                <div className="text-3xl font-black text-white font-mono tracking-tighter">{resources.credits} pts</div>
-                            </div>
+            {/* RECRUITMENT SECTION */}
+            {barTab === 'RECRUITMENT' && (
+                <div className="animate-in fade-in duration-700 space-y-8">
+                    <div className="relative group">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 via-transparent to-cyan-500/20 blur opacity-30"></div>
+                        <div className="relative bg-black/40 backdrop-blur-md border border-white/5 p-8 text-center">
+                            <h3 className="text-xl font-black text-white tracking-[0.5em] uppercase italic mb-2">CREW RECRUITMENT</h3>
+                            <div className="h-px w-24 bg-cyan-500 mx-auto mb-4" />
+                            <p className="text-[10px] text-zinc-500 font-mono italic tracking-widest uppercase">Select specialists to enhance your operational efficiency</p>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* BRIBE CARD */}
-                        <div className="relative group bg-white/5 border border-white/5 p-8 hover:border-amber-500/40 transition-all flex flex-col">
-                            <div className="flex justify-between items-start mb-10">
-                                <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-500">
-                                    <ScrollText className="w-8 h-8" />
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Operation Cost</div>
-                                    <div className="text-xl font-black text-white font-mono">750 pts</div>
-                                </div>
-                            </div>
-                            <h4 className="text-base font-black text-white uppercase tracking-[0.2em] mb-4 italic">{t(TL.ui.bribeManagement, lang)}</h4>
-                            <p className="text-[10px] text-zinc-500 font-mono leading-relaxed mb-10 h-12 overflow-hidden italic">
-                                "{t(TL.ui.bribeDesc, lang)}"
-                            </p>
-                            <div className="grid grid-cols-2 gap-4 mb-10">
-                                <div className="bg-black/40 border border-white/5 p-3">
-                                    <span className="text-[7px] text-zinc-600 uppercase block font-black">Success Rate</span>
-                                    <span className="text-xs font-black text-green-500 font-mono">35%</span>
-                                </div>
-                                <div className="bg-black/40 border border-white/5 p-3">
-                                    <span className="text-[7px] text-zinc-600 uppercase block font-black">Yield</span>
-                                    <span className="text-xs font-black text-amber-500 font-mono">3000 XP</span>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => handleGambleVIP('XP')}
-                                disabled={resources.credits < 750 || isRolling}
-                                className={`w-full py-5 text-[10px] font-black uppercase tracking-[0.4em] transition-all
-                                    ${resources.credits >= 750 && !isRolling ? 'bg-amber-600 text-black hover:bg-white' : 'bg-white/5 text-zinc-800 border border-zinc-900 cursor-not-allowed'}`}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {CREW_MEMBERS.map(crew => (
+                            <CrewCard key={crew.id} crew={crew} lang={lang} />
+                        ))}
+
+                        {/* SHADOW CONTACT: THE FOX (Appears if Black Market perk is active) */}
+                        {getActivePerkIds(useGameStore.getState().reputation).includes('BLACK_MARKET') && (
+                            <div
+                                onClick={() => useGameStore.getState().startDialogue({
+                                    currentNodeId: 'start',
+                                    nodes: {
+                                        'start': {
+                                            id: 'start',
+                                            characterName: { RU: 'Лиса', EN: 'The Fox' },
+                                            portraitPath: '/assets/portraits/fox_contact.webp',
+                                            text: TL.ui.fox_dialogue_intro,
+                                            choices: [
+                                                {
+                                                    text: { RU: 'Как это работает?', EN: 'How does this work?' },
+                                                    nextId: 'how_it_works'
+                                                },
+                                                {
+                                                    text: { RU: 'До встречи.', EN: 'See you.' },
+                                                    onSelect: () => { }
+                                                }
+                                            ]
+                                        },
+                                        'how_it_works': {
+                                            id: 'how_it_works',
+                                            characterName: { RU: 'Лиса', EN: 'The Fox' },
+                                            portraitPath: '/assets/portraits/fox_contact.webp',
+                                            text: TL.ui.fox_dialogue_market,
+                                            choices: [
+                                                {
+                                                    text: { RU: 'Понял.', EN: 'Understood.' },
+                                                    onSelect: () => { }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                })}
+                                className="group relative bg-white/5 border border-orange-500/30 p-6 transition-all hover:bg-white/10 hover:border-orange-500/60 cursor-pointer overflow-hidden"
                             >
-                                {isRolling ? 'PROCESSING...' : 'INITIATE BRIBE'}
-                            </button>
-                        </div>
+                                <div className="relative aspect-[4/5] mb-6 overflow-hidden border border-orange-500/20">
+                                    <img
+                                        src="/assets/portraits/fox_contact.webp"
+                                        alt={t({ RU: 'Лиса', EN: 'The Fox' }, lang)}
+                                        className="w-full h-full object-cover transition-all duration-700 grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+                                </div>
 
-                        {/* TENDER CARD */}
-                        <div className="relative group bg-white/5 border border-white/5 p-8 hover:border-yellow-500/40 transition-all flex flex-col shadow-2xl">
-                            <div className="flex justify-between items-start mb-10">
-                                <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500">
-                                    <Trophy className="w-8 h-8" />
+                                <div className="mb-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="text-lg font-black text-white uppercase italic tracking-tighter">
+                                            {t({ RU: 'Лиса', EN: 'The Fox' }, lang)}
+                                        </h4>
+                                        <Zap className="w-4 h-4 text-orange-400" />
+                                    </div>
+                                    <div className="text-[10px] text-zinc-500 font-mono italic mb-4 h-8 overflow-hidden line-clamp-2">
+                                        {t({
+                                            RU: 'Хозяйка теневого рынка. Знает всех и каждого в этом секторе.',
+                                            EN: 'Mistress of the shadow market. Knows everyone in this sector.'
+                                        }, lang)}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="text-[9px] font-black text-orange-500 uppercase tracking-widest flex items-center gap-2">
+                                            <Sparkles className="w-3 h-3" />
+                                            Bonus Effect
+                                        </div>
+                                        <p className="text-[10px] text-zinc-300 font-medium leading-tight p-2 bg-white/5 border-l-2 border-orange-500">
+                                            {t({
+                                                RU: 'Доступ к теневому терминалу и контрабандным заказам.',
+                                                EN: 'Access to the shadow terminal and smuggling orders.'
+                                            }, lang)}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <div className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Entry Fee</div>
-                                    <div className="text-xl font-black text-white font-mono">2500 pts</div>
-                                </div>
-                            </div>
-                            <h4 className="text-base font-black text-white uppercase tracking-[0.2em] mb-4 italic">{t(TL.ui.blackTender, lang)}</h4>
-                            <p className="text-[10px] text-zinc-500 font-mono leading-relaxed mb-10 h-12 overflow-hidden italic">
-                                "{t(TL.ui.tenderDesc, lang)}"
-                            </p>
-                            <div className="bg-black/40 border border-white/5 p-4 mb-10">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-[8px] text-zinc-600 uppercase font-black">Loot Acquisition</span>
-                                    <span className="text-[8px] text-yellow-500 font-black uppercase">Guaranteed</span>
-                                </div>
-                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                                    <div className="h-full w-full bg-gradient-to-r from-yellow-600 to-amber-400" />
-                                </div>
-                                <div className="text-right text-[7px] font-mono text-zinc-500 mt-1 italic">Rarity Deviation: ±12%</div>
-                            </div>
-                            <button
-                                onClick={() => handleGambleVIP('ARTIFACT')}
-                                disabled={resources.credits < 2500 || isRolling}
-                                className={`w-full py-5 text-[10px] font-black uppercase tracking-[0.4em] transition-all
-                                    ${resources.credits >= 2500 && !isRolling ? 'bg-yellow-500 text-black hover:bg-white' : 'bg-white/5 text-zinc-800 border border-zinc-900 cursor-not-allowed'}`}
-                            >
-                                {isRolling ? 'CRYPTOGRAPHY...' : 'ACQUIRE ARTIFACT'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
-            {/* OVERLAY MODAL: TRANSACTION LOG */}
-            {showResult && resultData && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-500">
-                    <div className={`max-w-md w-full bg-black border-2 p-10 text-center relative overflow-hidden transition-all duration-500
-                        ${resultData.won ? 'border-green-500/50 shadow-[0_0_100px_rgba(34,197,94,0.1)]' : 'border-red-500/50 shadow-[0_0_100px_rgba(239,68,68,0.1)]'}
-                    `}>
-                        {/* Background Static Line Animation Effect */}
-                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-
-                        <div className="flex justify-center mb-6">
-                            {resultData.won ? <Sparkles className="w-16 h-16 text-green-500" /> : <Skull className="w-16 h-16 text-red-500" />}
-                        </div>
-
-                        {resultData.artifactId && (
-                            <div className="mb-8">
-                                <div className="text-5xl mb-4 p-4 bg-white/5 border border-white/5 inline-block">{ARTIFACTS.find(a => a.id === resultData.artifactId)?.icon || '❓'}</div>
-                                <div className="text-xs font-black uppercase tracking-[0.4em] text-amber-500 italic">
-                                    {(() => {
-                                        const a = ARTIFACTS.find(art => art.id === resultData.artifactId);
-                                        if (!a) return 'UNKNOWN_OBJECT';
-                                        return typeof a.name === 'string' ? a.name : a.name[lang];
-                                    })()}
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex flex-col">
+                                        <span className="text-[8px] text-zinc-600 uppercase font-black">Shadow Access</span>
+                                        <span className="text-sm font-black font-mono text-white">
+                                            ACTIVE
+                                        </span>
+                                    </div>
+                                    <button
+                                        className="flex-1 py-3 px-4 bg-orange-600 text-black text-[9px] font-black uppercase tracking-[0.2em] hover:bg-white transition-all"
+                                    >
+                                        NEGOTIATE
+                                    </button>
                                 </div>
+
+                                <div className="absolute inset-x-0 bottom-0 h-0.5 bg-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 shadow-[0_0_10px_#f97316]" />
                             </div>
                         )}
-
-                        <h4 className={`text-4xl font-[1000] uppercase italic tracking-tighter mb-4 ${resultData.won ? 'text-green-500' : 'text-red-500'}`}>
-                            {resultData.won ? 'Contract Fulfilled' : 'Asset Liquidated'}
-                        </h4>
-
-                        <p className="text-[10px] text-zinc-500 font-mono mb-10 uppercase tracking-widest leading-relaxed px-8">
-                            {resultData.msg}
-                        </p>
-
-                        <div className="bg-white/5 border border-white/5 p-6 mb-10 flex flex-col items-center">
-                            <span className="text-[8px] text-zinc-600 uppercase font-black tracking-widest mb-1">Transaction Balance</span>
-                            <div className={`text-3xl font-black font-mono ${resultData.won ? 'text-green-400' : 'text-red-500'}`}>
-                                {resultData.won ? '+' : '-'}{resultData.amount} <span className="text-xs">{resultData.res === ('XP' as any) ? 'XP' : t(getResourceLabel(resultData.res || ResourceType.STONE), lang)}</span>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => setShowResult(false)}
-                            className={`w-full py-5 text-[10px] font-black uppercase tracking-[0.5em] transition-all
-                                ${resultData.won ? 'bg-green-600 text-white hover:bg-white hover:text-black' : 'bg-red-950 text-red-500 hover:bg-red-600 hover:text-white'}
-                            `}
-                        >
-                            Accept Transaction Result
-                        </button>
                     </div>
                 </div>
             )}
-        </div>
+            {
+                barTab === 'VIP' && (
+                    <div className="animate-in fade-in duration-1000 space-y-8 pb-12">
+                        <div className="relative group p-10 bg-black/60 backdrop-blur-3xl border border-amber-500/30 overflow-hidden text-center">
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.05)_0%,transparent_70%)] pointer-events-none" />
+                            <div className="relative z-10 flex flex-col items-center">
+                                <Crown className="w-12 h-12 text-amber-500 mb-4" />
+                                <h3 className="text-2xl font-[1000] text-amber-500 tracking-[0.3em] uppercase italic mb-2">EXECUTIVE VIP LOUNGE</h3>
+                                <p className="text-[10px] text-zinc-500 font-mono tracking-[0.2em] uppercase italic leading-loose">
+                                    Unauthorized biological entities will be terminated.<br />Welcome to the high-stakes sector, Administrator.
+                                </p>
+                                <div className="mt-8 bg-amber-500/10 border border-amber-500/20 px-8 py-4 flex flex-col items-center shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+                                    <span className="text-[8px] text-amber-600 font-black uppercase tracking-widest mb-1">Corporate Credit Balance</span>
+                                    <div className="text-3xl font-black text-white font-mono tracking-tighter">{resources.credits} pts</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* BRIBE CARD */}
+                            <div className="relative group bg-white/5 border border-white/5 p-8 hover:border-amber-500/40 transition-all flex flex-col">
+                                <div className="flex justify-between items-start mb-10">
+                                    <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-500">
+                                        <ScrollText className="w-8 h-8" />
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Operation Cost</div>
+                                        <div className="text-xl font-black text-white font-mono">750 pts</div>
+                                    </div>
+                                </div>
+                                <h4 className="text-base font-black text-white uppercase tracking-[0.2em] mb-4 italic">{t(TL.ui.bribeManagement, lang)}</h4>
+                                <p className="text-[10px] text-zinc-500 font-mono leading-relaxed mb-10 h-12 overflow-hidden italic">
+                                    "{t(TL.ui.bribeDesc, lang)}"
+                                </p>
+                                <div className="grid grid-cols-2 gap-4 mb-10">
+                                    <div className="bg-black/40 border border-white/5 p-3">
+                                        <span className="text-[7px] text-zinc-600 uppercase block font-black">Success Rate</span>
+                                        <span className="text-xs font-black text-green-500 font-mono">35%</span>
+                                    </div>
+                                    <div className="bg-black/40 border border-white/5 p-3">
+                                        <span className="text-[7px] text-zinc-600 uppercase block font-black">Yield</span>
+                                        <span className="text-xs font-black text-amber-500 font-mono">3000 XP</span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleGambleVIP('XP')}
+                                    disabled={resources.credits < 750 || isRolling}
+                                    className={`w-full py-5 text-[10px] font-black uppercase tracking-[0.4em] transition-all
+                                    ${resources.credits >= 750 && !isRolling ? 'bg-amber-600 text-black hover:bg-white' : 'bg-white/5 text-zinc-800 border border-zinc-900 cursor-not-allowed'}`}
+                                >
+                                    {isRolling ? 'PROCESSING...' : 'INITIATE BRIBE'}
+                                </button>
+                            </div>
+
+                            {/* TENDER CARD */}
+                            <div className="relative group bg-white/5 border border-white/5 p-8 hover:border-yellow-500/40 transition-all flex flex-col shadow-2xl">
+                                <div className="flex justify-between items-start mb-10">
+                                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500">
+                                        <Trophy className="w-8 h-8" />
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Entry Fee</div>
+                                        <div className="text-xl font-black text-white font-mono">2500 pts</div>
+                                    </div>
+                                </div>
+                                <h4 className="text-base font-black text-white uppercase tracking-[0.2em] mb-4 italic">{t(TL.ui.blackTender, lang)}</h4>
+                                <p className="text-[10px] text-zinc-500 font-mono leading-relaxed mb-10 h-12 overflow-hidden italic">
+                                    "{t(TL.ui.tenderDesc, lang)}"
+                                </p>
+                                <div className="bg-black/40 border border-white/5 p-4 mb-10">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-[8px] text-zinc-600 uppercase font-black">Loot Acquisition</span>
+                                        <span className="text-[8px] text-yellow-500 font-black uppercase">Guaranteed</span>
+                                    </div>
+                                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-full w-full bg-gradient-to-r from-yellow-600 to-amber-400" />
+                                    </div>
+                                    <div className="text-right text-[7px] font-mono text-zinc-500 mt-1 italic">Rarity Deviation: ±12%</div>
+                                </div>
+                                <button
+                                    onClick={() => handleGambleVIP('ARTIFACT')}
+                                    disabled={resources.credits < 2500 || isRolling}
+                                    className={`w-full py-5 text-[10px] font-black uppercase tracking-[0.4em] transition-all
+                                    ${resources.credits >= 2500 && !isRolling ? 'bg-yellow-500 text-black hover:bg-white' : 'bg-white/5 text-zinc-800 border border-zinc-900 cursor-not-allowed'}`}
+                                >
+                                    {isRolling ? 'CRYPTOGRAPHY...' : 'ACQUIRE ARTIFACT'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* OVERLAY MODAL: TRANSACTION LOG */}
+            {
+                showResult && resultData && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-500">
+                        <div className={`max-w-md w-full bg-black border-2 p-10 text-center relative overflow-hidden transition-all duration-500
+                        ${resultData.won ? 'border-green-500/50 shadow-[0_0_100px_rgba(34,197,94,0.1)]' : 'border-red-500/50 shadow-[0_0_100px_rgba(239,68,68,0.1)]'}
+                    `}>
+                            {/* Background Static Line Animation Effect */}
+                            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+
+                            <div className="flex justify-center mb-6">
+                                {resultData.won ? <Sparkles className="w-16 h-16 text-green-500" /> : <Skull className="w-16 h-16 text-red-500" />}
+                            </div>
+
+                            {resultData.artifactId && (
+                                <div className="mb-8">
+                                    <div className="text-5xl mb-4 p-4 bg-white/5 border border-white/5 inline-block">{ARTIFACTS.find(a => a.id === resultData.artifactId)?.icon || '❓'}</div>
+                                    <div className="text-xs font-black uppercase tracking-[0.4em] text-amber-500 italic">
+                                        {(() => {
+                                            const a = ARTIFACTS.find(art => art.id === resultData.artifactId);
+                                            if (!a) return 'UNKNOWN_OBJECT';
+                                            return typeof a.name === 'string' ? a.name : a.name[lang];
+                                        })()}
+                                    </div>
+                                </div>
+                            )}
+
+                            <h4 className={`text-4xl font-[1000] uppercase italic tracking-tighter mb-4 ${resultData.won ? 'text-green-500' : 'text-red-500'}`}>
+                                {resultData.won ? 'Contract Fulfilled' : 'Asset Liquidated'}
+                            </h4>
+
+                            <p className="text-[10px] text-zinc-500 font-mono mb-10 uppercase tracking-widest leading-relaxed px-8">
+                                {resultData.msg}
+                            </p>
+
+                            <div className="bg-white/5 border border-white/5 p-6 mb-10 flex flex-col items-center">
+                                <span className="text-[8px] text-zinc-600 uppercase font-black tracking-widest mb-1">Transaction Balance</span>
+                                <div className={`text-3xl font-black font-mono ${resultData.won ? 'text-green-400' : 'text-red-500'}`}>
+                                    {resultData.won ? '+' : '-'}{resultData.amount} <span className="text-xs">{resultData.res === ('XP' as any) ? 'XP' : t(getResourceLabel(resultData.res || ResourceType.STONE), lang)}</span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setShowResult(false)}
+                                className={`w-full py-5 text-[10px] font-black uppercase tracking-[0.5em] transition-all
+                                ${resultData.won ? 'bg-green-600 text-white hover:bg-white hover:text-black' : 'bg-red-950 text-red-500 hover:bg-red-600 hover:text-white'}
+                            `}
+                            >
+                                Accept Transaction Result
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 
@@ -534,6 +657,117 @@ const GambleCard: React.FC<GambleCardProps> = ({ title, icon, desc, chances, pri
             >
                 {isRolling ? t(TL.ui.waiting, lang) : t(TL.ui.deal_btn, lang)}
             </button>
+        </div>
+    );
+};
+
+const CrewCard: React.FC<{ crew: any, lang: any }> = ({ crew, lang }) => {
+    const { hiredCrewIds, resources, hireCrew, dismissCrew, startDialogue } = useGameStore();
+    const isHired = hiredCrewIds.includes(crew.id);
+    const canAfford = resources.credits >= crew.cost.credits;
+
+    const handleRecruit = () => {
+        if (isHired) return;
+
+        // Trigger recruitment dialogue
+        startDialogue({
+            currentNodeId: 'start',
+            nodes: {
+                'start': {
+                    id: 'start',
+                    characterName: crew.name,
+                    portraitPath: crew.portraitPath,
+                    text: {
+                        RU: `Приветствую. Я — ${crew.name.RU}. ${crew.lore.RU} Согласны ли вы нанять меня за ${crew.cost.credits} кредитов?`,
+                        EN: `Greetings. I am ${crew.name.EN}. ${crew.lore.EN} Do you agree to hire me for ${crew.cost.credits} credits?`
+                    },
+                    choices: [
+                        {
+                            text: { RU: 'Да, ты нам нужен.', EN: 'Yes, we need you.' },
+                            onSelect: () => {
+                                if (canAfford) {
+                                    hireCrew(crew.id);
+                                }
+                            }
+                        },
+                        {
+                            text: { RU: 'Не сейчас.', EN: 'Not right now.' },
+                            onSelect: () => { }
+                        }
+                    ]
+                }
+            }
+        });
+    };
+
+    return (
+        <div className={`group relative bg-white/5 border border-white/5 p-6 transition-all hover:bg-white/10 ${isHired ? 'border-cyan-500/50' : 'hover:border-white/20'}`}>
+            <div className="relative aspect-[4/5] mb-6 overflow-hidden border border-white/10">
+                <img
+                    src={crew.portraitPath}
+                    alt={t(crew.name, lang)}
+                    className={`w-full h-full object-cover transition-all duration-700 ${isHired ? 'grayscale-0 scale-105' : 'grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100'}`}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+
+                {isHired && (
+                    <div className="absolute top-2 right-2 bg-cyan-500/20 backdrop-blur-md border border-cyan-500/30 p-2 text-cyan-400">
+                        <Check className="w-5 h-5" />
+                    </div>
+                )}
+            </div>
+
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-lg font-black text-white uppercase italic tracking-tighter">{t(crew.name, lang)}</h4>
+                    <Users className="w-4 h-4 text-zinc-600" />
+                </div>
+                <div className="text-[10px] text-zinc-500 font-mono italic mb-4 h-8 overflow-hidden line-clamp-2">
+                    {t(crew.lore, lang)}
+                </div>
+                <div className="space-y-2">
+                    <div className="text-[9px] font-black text-cyan-500 uppercase tracking-widest flex items-center gap-2">
+                        <Sparkles className="w-3 h-3" />
+                        Bonus Effect
+                    </div>
+                    <p className="text-[10px] text-zinc-300 font-medium leading-tight p-2 bg-white/5 border-l-2 border-cyan-500">
+                        {t(crew.effectDesc, lang)}
+                    </p>
+                </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col">
+                    <span className="text-[8px] text-zinc-600 uppercase font-black">Contract Fee</span>
+                    <span className={`text-sm font-black font-mono ${canAfford || isHired ? 'text-white' : 'text-red-500'}`}>
+                        {crew.cost.credits} pts
+                    </span>
+                </div>
+
+                {isHired ? (
+                    <button
+                        onClick={() => dismissCrew(crew.id)}
+                        className="p-3 bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white border border-red-500/30 transition-all group/btn"
+                        title="Terminate Contract"
+                    >
+                        <UserMinus className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
+                    </button>
+                ) : (
+                    <button
+                        onClick={handleRecruit}
+                        disabled={!canAfford}
+                        className={`flex-1 py-3 px-4 text-[9px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2
+                            ${canAfford ? 'bg-cyan-600 text-black hover:bg-white' : 'bg-transparent text-zinc-800 border border-zinc-900 cursor-not-allowed'}
+                        `}
+                    >
+                        <UserPlus className="w-4 h-4" />
+                        Negotiate
+                    </button>
+                )}
+            </div>
+
+            {/* Background Data Stream Effect on Hover */}
+            <div className="absolute inset-x-0 bottom-0 h-0.5 bg-cyan-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 shadow-[0_0_10px_#22d3ee]" />
         </div>
     );
 };

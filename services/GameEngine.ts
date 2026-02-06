@@ -6,13 +6,12 @@
  * - tick() теперь оркестрирует подсистемы
  */
 
-import { GameState, VisualEvent, Resources, ResourceType } from '../types';
+import { GameState, VisualEvent, Resources, ResourceType, GameCommand } from '../types';
 import { calculateStats, recalculateCargoWeight } from './gameMath';
 import { calculateTotalMass } from './mathEngine';
 import { narrativeManager } from './narrativeManager';
 import { BIOMES } from '../constants';
 
-import { audioEngine } from './audioEngine';
 import { getActivePerkIds } from './factionLogic';
 import {
     processEffects,
@@ -28,22 +27,28 @@ import {
     applyResourceChanges,
     ResourceChanges
 } from './systems';
+import { calculateChronosTime } from './systems/TimeSystem';
 import { processDrones, processRegeneration } from './systems/DroneSystem';
 import { tunnelAtmosphere } from './systems/TunnelAtmosphere';
 import { abilitySystem } from './systems/AbilitySystem';
 import { expeditionSystem } from './systems/ExpeditionSystem';
 import { raidSystem } from './systems/RaidSystem';
+import { economySystem } from './systems/EconomySystem';
 import { EventTrigger, PlayerBase, DefenseUnitType } from '../types';
 import { DEFENSE_UNITS } from '../constants/defenseUnits';
 
 export class GameEngine {
-    tick(state: GameState, dt: number): { partialState: Partial<GameState>, events: VisualEvent[], questUpdates: { target: string, type: 'DEFEAT_BOSS' }[] } {
+    tick(state: GameState, dt: number, timestamp: number): {
+        partialState: Partial<GameState>,
+        events: VisualEvent[],
+        commands: GameCommand[]
+    } {
         const visualEvents: VisualEvent[] = [];
-        const questUpdates: { target: string, type: 'DEFEAT_BOSS' }[] = [];
+        const commands: GameCommand[] = [];
 
         // === КРИТИЧЕСКОЕ ПОВРЕЖДЕНИЕ: СМЕРТЬ ===
         if (state.integrity <= 0 && !state.isGodMode) {
-            const stats = calculateStats(state.drill, state.skillLevels, state.equippedArtifacts, state.inventory, state.depth);
+            const stats = calculateStats(state.drill, state.skillLevels, state.equippedArtifacts, state.inventory, state.depth, state.activeEffects, state.operatorId, state.hiredCrewIds);
             const reducedResources = Object.keys(state.resources).reduce((acc, key) => {
                 acc[key as keyof Resources] = Math.floor(state.resources[key as keyof Resources] * 0.7);
                 return acc;
@@ -64,16 +69,23 @@ export class GameEngine {
                     shieldCharge: 0,
                 },
                 events: visualEvents,
-                questUpdates: []
+                commands: []
             };
         }
 
         // === ВЫЧИСЛЕНИЕ СТАТОВ ===
-        const stats = calculateStats(state.drill, state.skillLevels, state.equippedArtifacts, state.inventory, state.depth, state.activeEffects);
+        const stats = calculateStats(state.drill, state.skillLevels, state.equippedArtifacts, state.inventory, state.depth, state.activeEffects, state.operatorId, state.hiredCrewIds);
         if (state.isGodMode) {
             // В режиме бога — полное HP
             state = { ...state, integrity: stats.integrity };
         }
+
+        // === CHRONOS PROTOCOL: TIME TICK ===
+        // dt is in seconds. 1 real second = 1 game minute = 60 game seconds.
+        // So we multiply dt by 60 to get game seconds.
+        const gameSecondsPassed = dt * 60;
+        const newGameTime = (state.gameTime || 0) + gameSecondsPassed;
+        const chronos = calculateChronosTime(newGameTime);
 
         // === СБОР ИЗМЕНЕНИЙ ОТ ПОДСИСТЕМ ===
         const resourceChanges: ResourceChanges = {};
@@ -129,9 +141,14 @@ export class GameEngine {
             dt
         );
         visualEvents.push(...combatResult.events);
-        Object.assign(resourceChanges, combatResult.resourceChanges);
         Object.assign(inventoryUpdates, combatResult.newInventoryItems);
-        if (combatResult.questUpdates) questUpdates.push(...combatResult.questUpdates);
+        if (combatResult.questUpdates) {
+            combatResult.questUpdates.forEach(upd => {
+                // В будущем переведем на команды, пока передаем через стейт если нужно
+                // Но лучше через команды:
+                commands.push({ type: 'QUEST_OBJECTIVE_UPDATE', questId: 'AUTO', objectiveId: upd.target, value: 1 });
+            });
+        }
 
         // 8. Летающие объекты
         const entityResult = processEntities({
@@ -147,6 +164,10 @@ export class GameEngine {
         const isSlowTick = state.eventCheckTick % 30 === 0;
         let activeExpeditions = state.activeExpeditions;
 
+        // 10. [PHASE 3] Economy Recovery (Saturation & Raid Risk)
+        const deltaHours = gameSecondsPassed / 3600;
+        const economyUpdates = economySystem.processEconomyRecovery(state, deltaHours);
+
         if (isSlowTick) {
             // [MODULAR] Expedition Update
             let hasChanges = false;
@@ -157,19 +178,23 @@ export class GameEngine {
             });
             if (hasChanges) activeExpeditions = updated;
 
-            // [PHASE 2] Check caravan completions
-            try {
-                (state as any).checkAllCaravans?.();
-                (state as any).checkAllQuestsProgress?.(); // [PHASE 3.1] Quest System check
-            } catch (e) {
-                console.error("Side system tick failure:", e);
+            // [MODULAR] Commands for side systems
+            commands.push({ type: 'CHECK_CARAVANS' });
+            commands.push({ type: 'CHECK_QUESTS' });
+            commands.push({ type: 'CHECK_CONTRACT_EXPIRATION' });
+            commands.push({ type: 'GENERATE_CONTRACTS' });
+
+            // [PHASE 6.2] Black Market
+            if (!state.blackMarkets || Object.keys(state.blackMarkets).length === 0) {
+                commands.push({ type: 'INITIALIZE_BLACK_MARKET' });
             }
+            commands.push({ type: 'UPDATE_BLACK_MARKET_RISK', deltaHours: deltaHours * 30 });
         }
 
         // [RAID SYSTEM] Check every 3600 ticks (~6 min) - v4.1.3 balance
         // Only if player has bases
         let playerBases = state.playerBases || [];
-        const nowMs = Date.now();
+        const nowMs = timestamp;
 
         // 11. [PHASE 4] Base Construction & Defense Production
         let basesChanged = false;
@@ -183,7 +208,7 @@ export class GameEngine {
                 baseUpdated = true;
                 basesChanged = true;
                 visualEvents.push({ type: 'LOG', msg: `🏢 БАЗА В ${updatedBase.regionId.toUpperCase()} ПОСТРОЕНА!`, color: 'text-green-400 font-bold' });
-                audioEngine.playLog();
+                commands.push({ type: 'PLAY_SOUND', sfx: 'LOG' });
             }
 
             // Production Queue
@@ -202,7 +227,7 @@ export class GameEngine {
                 baseUpdated = true;
                 basesChanged = true;
                 visualEvents.push({ type: 'LOG', msg: '🛡️ ПРОИЗВОДСТВО ОБОРОНЫ ЗАВЕРШЕНО!', color: 'text-green-400 font-bold' });
-                audioEngine.playLog();
+                commands.push({ type: 'PLAY_SOUND', sfx: 'LOG' });
             }
 
             return baseUpdated ? updatedBase : base;
@@ -214,19 +239,19 @@ export class GameEngine {
         /*
         const RAID_INTERVAL_MS = 6 * 60 * 1000; // 6 минут в миллисекундах
         const timeSinceLastRaid = nowMs - (state.lastRaidCheck || 0);
-
+    
         if (timeSinceLastRaid >= RAID_INTERVAL_MS && playerBases.length > 0) {
             const raidResult = raidSystem.processBaseRaids(
                 playerBases,
                 state.reputation['REBELS'] || 0,
                 state.isDrilling ? EventTrigger.DRILLING : EventTrigger.GLOBAL_MAP_ACTIVE
             );
-
+    
             if (raidResult.updatedBases !== playerBases) {
                 playerBases = raidResult.updatedBases;
                 visualEvents.push(...raidResult.events);
             }
-
+    
             inventoryUpdates['lastRaidCheck'] = nowMs;
         }
         */
@@ -328,15 +353,7 @@ export class GameEngine {
             ? BIOMES.find(b => (typeof b.name === 'string' ? b.name : b.name.EN) === state.selectedBiome) || BIOMES[0]
             : BIOMES.slice().reverse().find(b => depth >= b.depth) || BIOMES[0];
 
-        audioEngine.update(
-            heat,
-            depth,
-            heatResult.update.isOverheated,
-            !!combatResult.update.currentBoss,
-            state.isBroken,
-            currentBiome.resource as ResourceType,
-            state.isDrilling
-        );
+        // audioEngine.update moved to GameStore
 
         // NARRATIVE TICK (Time based)
         const NARRATIVE_INTERVAL = 10.0; // Seconds
@@ -379,6 +396,10 @@ export class GameEngine {
                 activeAbilities, // Add this
                 playerBases, // Updated bases from Raids
 
+                // Chronos
+                gameTime: newGameTime,
+                chronos,
+
                 // Тепло
                 heat,
                 isOverheated: heatResult.update.isOverheated,
@@ -418,6 +439,8 @@ export class GameEngine {
                 eventQueue: eventsResult.update.eventQueue,
                 eventCheckTick: eventsResult.update.eventCheckTick,
                 recentEventIds: eventsResult.update.recentEventIds,
+                eventCooldowns: eventsResult.update.eventCooldowns,
+                eventLastTriggerDay: eventsResult.update.eventLastTriggerDay,
 
                 // Эффекты и анализатор
                 activeEffects,
@@ -440,10 +463,13 @@ export class GameEngine {
                 ...travelResult.update,
 
                 // PERFORMANCE: Pre-calculated stats
-                stats: stats
+                stats: stats,
+
+                // Экономика
+                ...economyUpdates
             },
             events: visualEvents,
-            questUpdates
+            commands
         };
     }
 }

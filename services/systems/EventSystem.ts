@@ -9,7 +9,7 @@
  */
 
 import { GameState, VisualEvent, GameEvent, EventTrigger, Resources } from '../../types';
-import { rollRandomEvent } from '../eventRegistry';
+import { rollRandomEvent, EVENTS } from '../eventRegistry';
 import { calculateStats } from '../gameMath';
 import { poissonProbability, normalDistribution } from '../mathUtils';
 import { getActivePerkIds } from '../factionLogic';
@@ -26,6 +26,7 @@ export interface EventUpdate {
     xp?: number;
     heat?: number;
     resourceChanges?: Partial<Resources>;
+    eventLastTriggerDay?: Record<string, number>;
 }
 
 /**
@@ -115,6 +116,53 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
 
     const updates: Partial<EventUpdate> = {};
     const currentTime = Date.now();
+    const eventLastTriggerDay = { ...(state.eventLastTriggerDay || {}) };
+
+    // === CHRONOS PROTOCOL EVENTS ===
+    // Проверяем события, привязанные к игровому времени (день/час)
+
+    const chronosEvents = EVENTS.filter((e: GameEvent) => e.chronosChance);
+
+    chronosEvents.forEach((event: GameEvent) => {
+        if (!event.chronosChance) return;
+
+        const { chance, period, interval = 1 } = event.chronosChance;
+        const trackingKey = `${period}_${event.id}`;
+        const lastTriggeredPeriod = eventLastTriggerDay[trackingKey] || 0;
+
+        let shouldRoll = false;
+        let currentPeriodIndex = 0;
+
+        if (period === 'day') {
+            // Рассчитываем индекс периода: текущий день / интервал
+            currentPeriodIndex = Math.floor(state.chronos.days / interval);
+        } else if (period === 'hour') {
+            // Рассчитываем индекс периода: общее кол-во игровых часов / интервал
+            const totalHours = state.gameTime / 3600;
+            currentPeriodIndex = Math.floor(totalHours / interval);
+        }
+
+        if (currentPeriodIndex > lastTriggeredPeriod) {
+            shouldRoll = true;
+            // Обновляем индекс последнего проверенного периода
+            eventLastTriggerDay[trackingKey] = currentPeriodIndex;
+        }
+
+        if (shouldRoll && Math.random() < chance) {
+            // Событие выпало!
+            eventQueue = [...eventQueue, event];
+            recentEventIds = [...recentEventIds, event.id];
+
+            visualEvents.push({ type: 'SOUND', sfx: 'LOG' });
+            visualEvents.push({
+                type: 'LOG',
+                msg: `>> СОБЫТИЕ (${period === 'day' ? 'ЕЖЕДНЕВНОЕ' : 'ЕЖЕЧАСНОЕ'}): ${typeof event.title === 'string' ? event.title : event.title.RU}`,
+                color: "text-amber-400"
+            });
+        }
+    });
+
+    updates.eventLastTriggerDay = eventLastTriggerDay;
 
     // === ОБРАБОТКА ОТЛОЖЕННЫХ ПРЕДСКАЗАНИЙ ===
     const triggeredPredictions = pendingPredictions.filter(p => currentTime >= p.triggerTime);
@@ -163,7 +211,12 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
 
         // Вычисляем вероятность события за 1 секунду
         const lambda = BASE_LAMBDA * lambdaModifier;
-        const poissonProbability = 1 - Math.exp(-lambda);  // P(k≥1) = 1 - e^(-λ)
+        let poissonProbability = 1 - Math.exp(-lambda);  // P(k≥1) = 1 - e^(-λ)
+
+        // [PHASE 5] Geologist bonus: Hazard Risk Reduction (20%)
+        if ((state as any).operatorId === 'geologist') {
+            poissonProbability *= 0.8;
+        }
 
         // Бросок на событие
         if (Math.random() < poissonProbability) {
@@ -297,6 +350,13 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
                     // Начисление ресурса в state.resources через resourceChanges
                     const resType = resource.type.toLowerCase() as keyof Resources;
                     if (!updates.resourceChanges) updates.resourceChanges = {};
+
+                    // Perk: Executive (CORPORATE Level 10) - Passive generation/events x2
+                    const activePerks = getActivePerkIds(state.reputation);
+                    if (activePerks.includes('EXECUTIVE')) {
+                        amount *= 2;
+                    }
+
                     updates.resourceChanges[resType] = (updates.resourceChanges[resType] || 0) + Math.floor(amount);
 
                     visualEvents.push({
@@ -310,7 +370,7 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
     }
 
     return {
-        update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns, pendingPredictions, ...updates },
+        update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns, pendingPredictions, eventLastTriggerDay, ...updates },
         events: visualEvents
     };
 }

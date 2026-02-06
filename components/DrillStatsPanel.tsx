@@ -108,6 +108,15 @@ export const DrillStatsPanel: React.FC = () => {
                             {stats.skillMods.autoSpeedPct > 0 && <BonusRow label="Привод" value={`+${stats.skillMods.autoSpeedPct}%`} color="text-cyan-500" />}
                             {stats.skillMods.coolingPowerPct > 0 && <BonusRow label="Термостат" value={`+${stats.skillMods.coolingPowerPct}%`} color="text-blue-400" />}
                             {stats.artifactMods.resourceMultPct > 0 && <BonusRow label="Артефакты" value={`+${stats.artifactMods.resourceMultPct}% лут`} color="text-purple-400" />}
+
+                            {/* RPG System Modifiers (Crew & Operator) */}
+                            {stats.rpgMods.drillSpeedBasePct > 0 && <BonusRow label="Экипаж (Скорость)" value={`+${stats.rpgMods.drillSpeedBasePct}%`} color="text-emerald-400" />}
+                            {stats.rpgMods.coolingEfficiencyPct > 0 && <BonusRow label="Экипаж (Охлаждение)" value={`+${stats.rpgMods.coolingEfficiencyPct}%`} color="text-emerald-400" />}
+                            {stats.rpgMods.cargoCapacityPct > 0 && <BonusRow label="Экипаж (Трюм)" value={`+${stats.rpgMods.cargoCapacityPct}%`} color="text-emerald-400" />}
+                            {stats.rpgMods.luckPct > 0 && <BonusRow label="Экипаж (Удача)" value={`+${stats.rpgMods.luckPct}%`} color="text-pink-400" />}
+                            {stats.rpgMods.drillTorquePct > 0 && <BonusRow label="Экипаж (Мощность)" value={`+${stats.rpgMods.drillTorquePct}%`} color="text-red-400" />}
+                            {stats.rpgMods.critChancePct > 0 && <BonusRow label="Экипаж (Крит)" value={`+${stats.rpgMods.critChancePct}%`} color="text-yellow-400" />}
+                            {stats.rpgMods.bossDamagePct > 0 && <BonusRow label="Экипаж (Урон боссам)" value={`+${stats.rpgMods.bossDamagePct}%`} color="text-red-500" />}
                         </div>
                     </section>
 

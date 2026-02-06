@@ -202,7 +202,12 @@ const FactionPanel: React.FC = () => {
                                                     <Zap className="w-4 h-4" />
                                                 </div>
                                                 <div className={`text-[9px] font-black px-3 py-1 glass-panel uppercase tracking-widest ${isUnlocked ? 'text-emerald-400 border-emerald-500/30' : 'text-white/20 border-white/5'}`}>
-                                                    {isUnlocked ? t(TL.ui.status, lang) : `${t(TL.ui.level, lang)} ${perk.levelRequired}`}
+                                                    {isUnlocked ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                                            <span>{t(TL.ui.status, lang)}</span>
+                                                        </div>
+                                                    ) : `${t(TL.ui.level, lang)} ${perk.levelRequired}`}
                                                 </div>
                                             </div>
 

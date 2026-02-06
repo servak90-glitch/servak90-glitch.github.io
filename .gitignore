@@ -28,3 +28,21 @@ dist-ssr
 # Deployment instructions (local only)
 TELEGRAM_DEPLOYMENT.md
 IDEAS_OF_CREATOR.md
+SECRET_OPERATORS_PLAN.md
+
+# Game Validator (internal only)
+scripts/validator/
+validator-report.json
+# Validator outputs
+validation-report.json
+progression_metrics.csv
+progression_charts.png
+validation-screenshots/
+scripts/fix_market_scroll.py
+
+# Validator outputs
+validation-report.json
+progression_metrics.csv
+progression_charts.png
+validation-screenshots/
+scripts/fix_market_scroll.py

@@ -44,7 +44,9 @@ const RESOURCE_COLORS: Record<string, string> = {
     scrap: '#5c2e14',
     repairKit: '#4cc9f0',
     coolantPaste: '#4361ee',
-    advancedCoolant: '#3a0ca3'
+    advancedCoolant: '#3a0ca3',
+    voidMatter: '#480ca8',
+    chronoShards: '#f72585'
 };
 
 const getPropAtDepth = (depthIndex: number) => {
@@ -126,7 +128,9 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             cachedState.equippedArtifacts,
             cachedState.inventory,
             cachedState.depth,
-            cachedState.activeEffects
+            cachedState.activeEffects,
+            cachedState.operatorId,
+            cachedState.hiredCrewIds
         );
         let lastStatsUpdate = 0;
 
@@ -146,7 +150,9 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                     cachedState.equippedArtifacts,
                     cachedState.inventory,
                     cachedState.depth,
-                    cachedState.activeEffects
+                    cachedState.activeEffects,
+                    cachedState.operatorId,
+                    cachedState.hiredCrewIds
                 );
                 lastStatsUpdate = tick;
             }

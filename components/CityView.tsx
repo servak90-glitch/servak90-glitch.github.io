@@ -10,6 +10,7 @@ import ServiceTab from './city/ServiceTab';
 import BarTab from './city/BarTab';
 import ExpeditionTab from './city/ExpeditionTab';
 import LicenseTab from './city/LicenseTab';
+import { ClinicTab } from './city/ClinicTab';
 
 import {
   ShoppingCart,
@@ -18,7 +19,8 @@ import {
   Wrench,
   Rocket,
   Ticket,
-  GlassWater
+  GlassWater,
+  Activity
 } from 'lucide-react';
 
 interface CityViewProps {
@@ -34,13 +36,14 @@ interface CityViewProps {
   onRepair: () => void;
 }
 
-type CityTab = 'TRADE' | 'CONTRACTS' | 'SERVICE' | 'BAR' | 'JEWELER' | 'EXPEDITIONS' | 'LICENSES';
+type CityTab = 'TRADE' | 'CONTRACTS' | 'SERVICE' | 'BAR' | 'JEWELER' | 'EXPEDITIONS' | 'LICENSES' | 'CLINIC';
 
 const TABS: { id: CityTab; label: string; icon: React.ReactNode }[] = [
   { id: 'TRADE', label: 'РЫНОК', icon: <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" /> },
   { id: 'CONTRACTS', label: 'КОНТРАКТЫ', icon: <ScrollText className="w-5 h-5 md:w-6 md:h-6" /> },
   { id: 'JEWELER', label: 'ЮВЕЛИР', icon: <Gem className="w-5 h-5 md:w-6 md:h-6" /> },
   { id: 'SERVICE', label: 'СЕРВИС', icon: <Wrench className="w-5 h-5 md:w-6 md:h-6" /> },
+  { id: 'CLINIC', label: 'КЛИНИКА', icon: <Activity className="w-5 h-5 md:w-6 md:h-6" /> },
   { id: 'EXPEDITIONS', label: 'ЭКСПЕДИЦИИ', icon: <Rocket className="w-5 h-5 md:w-6 md:h-6" /> },
   { id: 'LICENSES', label: 'ЛИЦЕНЗИИ', icon: <Ticket className="w-5 h-5 md:w-6 md:h-6" /> },
   { id: 'BAR', label: 'БАР', icon: <GlassWater className="w-5 h-5 md:w-6 md:h-6" /> },
@@ -89,7 +92,8 @@ const CityView: React.FC<CityViewProps> = ({
         );
       case 'BAR':
         return <BarTab resources={resources} depth={depth} />;
-
+      case 'CLINIC':
+        return <ClinicTab />;
       case 'EXPEDITIONS':
         return <ExpeditionTab base={currentBase} />;
       case 'LICENSES':

@@ -33,14 +33,14 @@ export const BIOMES: Biome[] = [
     hazard: 'MAGNETIC', hazardLevel: 30, gemResource: ResourceType.DIAMONDS
   },
   {
-    depth: 50000, name: { RU: "ПЛАСТЫ ПУСТОТЫ", EN: "VOID LAYERS" }, resource: ResourceType.TITANIUM, color: "#1A1A1A",
+    depth: 50000, name: { RU: "ПЛАСТЫ ПУСТОТЫ", EN: "VOID LAYERS" }, resource: ResourceType.VOID_MATTER, color: "#1A1A1A",
     description: { RU: "Здесь свет гаснет. Давление критическое.", EN: "Where the light fades. Critical pressure." }, hub: "КУЗНИЦА МАГМЫ",
     hazard: 'VOID_PRESSURE', hazardLevel: 50, gemResource: ResourceType.DIAMONDS
   },
   {
     depth: 100000, name: { RU: "РАДИОАКТИВНОЕ ЯДРО", EN: "RADIOACTIVE CORE" }, resource: ResourceType.URANIUM, color: "#32CD32",
     description: { RU: "Последний барьер. Сердце бытия.", EN: "The final barrier. Heart of existence." }, hub: "СВЯТИЛИЩЕ ЯДРА",
-    hazard: 'RADIATION', hazardLevel: 100, gemResource: ResourceType.EMERALDS
+    hazard: 'RADIATION', hazardLevel: 100, gemResource: ResourceType.CHRONO_SHARDS
   }
 ];
 
@@ -67,12 +67,12 @@ export const BITS: DrillPart[] = [
   { id: 'bit_8', iconPath: '/equipment/bits/bit_8.png', tier: 8, mass: 48, rarity: 'Epic', name: { RU: 'Лазерный долот', EN: 'Laser Chisel' }, description: { RU: 'Бесконтактный рез. Урон: 200. Энергия: 35.', EN: 'Contactless cut. Damage: 200. Energy: 35.' }, cost: { titanium: 3000, uranium: 200, rubies: 30 }, blueprintId: 'blueprint_advanced_drilling', baseStats: { damage: 200, energyCost: 35 }, fxId: 'golden_aura_vfx' },
   { id: 'bit_9', iconPath: '/equipment/bits/bit_9.png', tier: 9, mass: 52, rarity: 'Epic', name: { RU: 'Плазменный Резак', EN: 'Plasma Cutter' }, description: { RU: 'Солнечный жар. Урон: 350. Энергия: 50.', EN: 'Solar heat. Damage: 350. Energy: 50.' }, cost: { uranium: 1000, rubies: 50, nanoSwarm: 100 }, blueprintId: 'blueprint_advanced_drilling', baseStats: { damage: 350, energyCost: 50 }, fxId: 'golden_aura_vfx' },
   { id: 'bit_10', iconPath: '/equipment/bits/bit_10.png', tier: 10, mass: 56, rarity: 'Legendary', name: { RU: 'Молекулярный Дезинтегратор', EN: 'Molecular Disintegrator' }, description: { RU: 'Расщепление связей. Урон: 600. Энергия: 70.', EN: 'Bond splitting. Damage: 600. Energy: 70.' }, cost: { ancientTech: 10, emeralds: 30, nanoSwarm: 300 }, blueprintId: 'blueprint_quantum_drilling', baseStats: { damage: 600, energyCost: 70 }, fxId: 'fractal_rainbow_trail' },
-  { id: 'bit_11', iconPath: '/equipment/bits/bit_11.png', tier: 11, mass: 60, rarity: 'Legendary', name: { RU: 'Гравитационное Шило', EN: 'Gravitational Awl' }, description: { RU: 'Разрыв пространства. Урон: 1200. Энергия: 100.', EN: 'Space rupture. Damage: 1200. Energy: 100.' }, cost: { ancientTech: 50, diamonds: 50, nanoSwarm: 500 }, blueprintId: 'blueprint_quantum_drilling', baseStats: { damage: 1200, energyCost: 100 }, fxId: 'fractal_rainbow_trail' },
-  { id: 'bit_12', iconPath: '/equipment/bits/bit_12.png', tier: 12, mass: 64, rarity: 'Legendary', name: { RU: 'Антиматериевое перо', EN: 'Antimatter Nib' }, description: { RU: 'Аннигиляция. Урон: 2500. Энергия: 150.', EN: 'Annihilation. Damage: 2500. Energy: 150.' }, cost: { ancientTech: 150, nanoSwarm: 1000, diamonds: 100 }, blueprintId: 'blueprint_quantum_drilling', baseStats: { damage: 2500, energyCost: 150 }, fxId: 'fractal_rainbow_trail' },
+  { id: 'bit_11', iconPath: '/equipment/bits/bit_11.png', tier: 11, mass: 60, rarity: 'Legendary', name: { RU: 'Гравитационное Шило', EN: 'Gravitational Awl' }, description: { RU: 'Разрыв пространства. Урон: 1200. Энергия: 100.', EN: 'Space rupture. Damage: 1200. Energy: 100.' }, cost: { ancientTech: 50, diamonds: 50, nanoSwarm: 500, voidMatter: 100 }, blueprintId: 'blueprint_quantum_drilling', baseStats: { damage: 1200, energyCost: 100 }, fxId: 'fractal_rainbow_trail' },
+  { id: 'bit_12', iconPath: '/equipment/bits/bit_12.png', tier: 12, mass: 64, rarity: 'Legendary', name: { RU: 'Антиматериевое перо', EN: 'Antimatter Nib' }, description: { RU: 'Аннигиляция. Урон: 2500. Энергия: 150.', EN: 'Annihilation. Damage: 2500. Energy: 150.' }, cost: { ancientTech: 150, nanoSwarm: 1000, voidMatter: 300, diamonds: 100 }, blueprintId: 'blueprint_quantum_drilling', baseStats: { damage: 2500, energyCost: 150 }, fxId: 'fractal_rainbow_trail' },
   // FUSION ONLY
-  { id: 'bit_13', iconPath: '/equipment/bits/bit_13.png', tier: 13, mass: 68, rarity: 'Godly', name: { RU: 'Разлом Реальности', EN: 'Reality Breach' }, description: { RU: 'Стирание материи. Урон: 6000. Энергия: 300.', EN: 'Matter erasure. Damage: 6000. Energy: 300.' }, cost: { ancientTech: 500, rubies: 500, diamonds: 200 }, blueprintId: 'blueprint_fusion_core', baseStats: { damage: 6000, energyCost: 300 }, fxId: 'white_hole_distortion' },
-  { id: 'bit_14', iconPath: '/equipment/bits/bit_14.png', tier: 14, mass: 72, rarity: 'Godly', name: { RU: 'Спираль Судьбы', EN: 'Spiral of Fate' }, description: { RU: 'Бур, пронзающий небеса. Урон: 15000. Энергия: 500.', EN: 'The drill that pierces heavens. Damage: 15000. Energy: 500.' }, cost: { ancientTech: 1000, emeralds: 500, nanoSwarm: 2000 }, blueprintId: 'blueprint_fusion_core', baseStats: { damage: 15000, energyCost: 500 }, fxId: 'white_hole_distortion' },
-  { id: 'bit_15', iconPath: '/equipment/bits/bit_15.png', tier: 15, mass: 76, rarity: 'Godly', name: { RU: 'Пронзающий Пустоту', EN: 'Void Piercer' }, description: { RU: 'Абсолютное оружие. Урон: 50000. Энергия: 1000.', EN: 'Absolute weapon. Damage: 50000. Energy: 1000.' }, cost: { ancientTech: 5000, diamonds: 1000, nanoSwarm: 5000 }, blueprintId: 'blueprint_fusion_core', baseStats: { damage: 50000, energyCost: 1000 }, fxId: 'white_hole_distortion' }
+  { id: 'bit_13', iconPath: '/equipment/bits/bit_13.png', tier: 13, mass: 68, rarity: 'Godly', name: { RU: 'Разлом Реальности', EN: 'Reality Breach' }, description: { RU: 'Стирание материи. Урон: 6000. Энергия: 300.', EN: 'Matter erasure. Damage: 6000. Energy: 300.' }, cost: { ancientTech: 500, chronoShards: 50, rubies: 500, diamonds: 200 }, blueprintId: 'blueprint_fusion_core', baseStats: { damage: 6000, energyCost: 300 }, fxId: 'white_hole_distortion' },
+  { id: 'bit_14', iconPath: '/equipment/bits/bit_14.png', tier: 14, mass: 72, rarity: 'Godly', name: { RU: 'Спираль Судьбы', EN: 'Spiral of Fate' }, description: { RU: 'Бур, пронзающий небеса. Урон: 15000. Энергия: 500.', EN: 'The drill that pierces heavens. Damage: 15000. Energy: 500.' }, cost: { ancientTech: 1000, chronoShards: 200, emeralds: 500, nanoSwarm: 2000 }, blueprintId: 'blueprint_fusion_core', baseStats: { damage: 15000, energyCost: 500 }, fxId: 'white_hole_distortion' },
+  { id: 'bit_15', iconPath: '/equipment/bits/bit_15.png', tier: 15, mass: 76, rarity: 'Godly', name: { RU: 'Пронзающий Пустоту', EN: 'Void Piercer' }, description: { RU: 'Абсолютное оружие. Урон: 50000. Энергия: 1000.', EN: 'Absolute weapon. Damage: 50000. Energy: 1000.' }, cost: { ancientTech: 5000, chronoShards: 1000, diamonds: 1000, nanoSwarm: 5000 }, blueprintId: 'blueprint_fusion_core', baseStats: { damage: 50000, energyCost: 1000 }, fxId: 'white_hole_distortion' }
 ];
 
 
@@ -87,11 +87,11 @@ export const ENGINES: EnginePart[] = [
   { id: 'eng_8', iconPath: '/equipment/engines/eng_8.png', tier: 8, mass: 422, rarity: 'Epic', name: { RU: 'Ионный ускоритель', EN: 'Ionic Accelerator' }, description: { RU: 'Скорость 9.0. Энергия: 80.', EN: 'Speed 9.0. Energy: 80.' }, cost: { uranium: 1000, emeralds: 20 }, blueprintId: 'blueprint_high_power_engines', baseStats: { speed: 9.0, energyCost: 80 } },
   { id: 'eng_9', iconPath: '/equipment/engines/eng_9.png', tier: 9, mass: 464, rarity: 'Epic', name: { RU: 'Фотонный двигатель', EN: 'Photonic Engine' }, description: { RU: 'Скорость 12.0. Энергия: 100.', EN: 'Speed 12.0. Energy: 100.' }, cost: { ancientTech: 20, rubies: 30 }, blueprintId: 'blueprint_high_power_engines', baseStats: { speed: 12.0, energyCost: 100 } },
   { id: 'eng_10', iconPath: '/equipment/engines/eng_10.png', tier: 10, mass: 505, rarity: 'Legendary', name: { RU: 'Варп-привод', EN: 'Warp Drive' }, description: { RU: 'Скорость 18.0. Энергия: 150.', EN: 'Speed 18.0. Energy: 150.' }, cost: { ancientTech: 50, rubies: 50, nanoSwarm: 200 }, blueprintId: 'blueprint_quantum_engines', baseStats: { speed: 18.0, energyCost: 150 } },
-  { id: 'eng_11', iconPath: '/equipment/engines/eng_11.png', tier: 11, mass: 545, rarity: 'Legendary', name: { RU: 'Тахионный ротор', EN: 'Tachyon Rotor' }, description: { RU: 'Скорость 25.0. Энергия: 200.', EN: 'Speed 25.0. Energy: 200.' }, cost: { ancientTech: 150, emeralds: 50, nanoSwarm: 400 }, blueprintId: 'blueprint_quantum_engines', baseStats: { speed: 25.0, energyCost: 200 } },
-  { id: 'eng_12', iconPath: '/equipment/engines/eng_12.png', tier: 12, mass: 584, rarity: 'Legendary', name: { RU: 'Темная материя', EN: 'Dark Matter' }, description: { RU: 'Скорость 40.0. Энергия: 300.', EN: 'Speed 40.0. Energy: 300.' }, cost: { ancientTech: 400, diamonds: 50, nanoSwarm: 800 }, blueprintId: 'blueprint_quantum_engines', baseStats: { speed: 40.0, energyCost: 300 } },
-  { id: 'fus_eng_13', iconPath: '/equipment/engines/fus_eng_13.png', tier: 13, mass: 623, rarity: 'Godly', name: { RU: 'Нулевая точка', EN: 'Zero Point' }, description: { RU: 'Скорость 60.0. Энергия: 500.', EN: 'Speed 60.0. Energy: 500.' }, cost: { ancientTech: 1000, nanoSwarm: 2000, rubies: 200 }, blueprintId: 'blueprint_fusion_core', baseStats: { speed: 60.0, energyCost: 500 } },
-  { id: 'fus_eng_14', iconPath: '/equipment/engines/fus_eng_14.png', tier: 14, mass: 661, rarity: 'Godly', name: { RU: 'Квантовый суперпозитор', EN: 'Quantum Superpositor' }, description: { RU: 'Скорость 100.0. Энергия: 800.', EN: 'Speed 100.0. Energy: 800.' }, cost: { ancientTech: 2500, rubies: 1000, diamonds: 500 }, blueprintId: 'blueprint_fusion_core', baseStats: { speed: 100.0, energyCost: 800 } },
-  { id: 'fus_eng_15', iconPath: '/equipment/engines/fus_eng_15.png', tier: 15, mass: 698, rarity: 'Godly', name: { RU: 'Двигатель Воли', EN: 'Engine of Will' }, description: { RU: 'Скорость 200.0. Энергия: 1500.', EN: 'Speed 200.0. Energy: 1500.' }, cost: { ancientTech: 9999, nanoSwarm: 5000 }, blueprintId: 'blueprint_fusion_core', baseStats: { speed: 200.0, energyCost: 1500 } }
+  { id: 'eng_11', iconPath: '/equipment/engines/eng_11.png', tier: 11, mass: 545, rarity: 'Legendary', name: { RU: 'Тахионный ротор', EN: 'Tachyon Rotor' }, description: { RU: 'Скорость 25.0. Энергия: 200.', EN: 'Speed 25.0. Energy: 200.' }, cost: { ancientTech: 150, voidMatter: 100, emeralds: 50, nanoSwarm: 400 }, blueprintId: 'blueprint_quantum_engines', baseStats: { speed: 25.0, energyCost: 200 } },
+  { id: 'eng_12', iconPath: '/equipment/engines/eng_12.png', tier: 12, mass: 584, rarity: 'Legendary', name: { RU: 'Темная материя', EN: 'Dark Matter' }, description: { RU: 'Скорость 40.0. Энергия: 300.', EN: 'Speed 40.0. Energy: 300.' }, cost: { ancientTech: 400, voidMatter: 300, diamonds: 50, nanoSwarm: 800 }, blueprintId: 'blueprint_quantum_engines', baseStats: { speed: 40.0, energyCost: 300 } },
+  { id: 'fus_eng_13', iconPath: '/equipment/engines/fus_eng_13.png', tier: 13, mass: 623, rarity: 'Godly', name: { RU: 'Нулевая точка', EN: 'Zero Point' }, description: { RU: 'Скорость 60.0. Энергия: 500.', EN: 'Speed 60.0. Energy: 500.' }, cost: { ancientTech: 1000, chronoShards: 50, nanoSwarm: 2000, rubies: 200 }, blueprintId: 'blueprint_fusion_core', baseStats: { speed: 60.0, energyCost: 500 } },
+  { id: 'fus_eng_14', iconPath: '/equipment/engines/fus_eng_14.png', tier: 14, mass: 661, rarity: 'Godly', name: { RU: 'Квантовый суперпозитор', EN: 'Quantum Superpositor' }, description: { RU: 'Скорость 100.0. Энергия: 800.', EN: 'Speed 100.0. Energy: 800.' }, cost: { ancientTech: 2500, chronoShards: 200, rubies: 1000, diamonds: 500 }, blueprintId: 'blueprint_fusion_core', baseStats: { speed: 100.0, energyCost: 800 } },
+  { id: 'fus_eng_15', iconPath: '/equipment/engines/fus_eng_15.png', tier: 15, mass: 698, rarity: 'Godly', name: { RU: 'Двигатель Воли', EN: 'Engine of Will' }, description: { RU: 'Скорость 200.0. Энергия: 1500.', EN: 'Speed 200.0. Energy: 1500.' }, cost: { ancientTech: 9999, chronoShards: 1000, nanoSwarm: 5000 }, blueprintId: 'blueprint_fusion_core', baseStats: { speed: 200.0, energyCost: 1500 } }
 ];
 
 
@@ -106,11 +106,11 @@ export const COOLERS: CoolerPart[] = [
   { id: 'cool_8', iconPath: '/equipment/coolers/cool_8.png', tier: 8, mass: 129, rarity: 'Epic', name: { RU: 'Крио-капсула', EN: 'Cryo-Capsule' }, description: { RU: 'Заморозка звука. Охл: 35. Энергия: 30.', EN: 'Sound freezing. Cool: 35. Energy: 30.' }, cost: { ancientTech: 15, diamonds: 10 }, blueprintId: 'blueprint_quantum_cooling', baseStats: { cooling: 35, energyCost: 30 } },
   { id: 'cool_9', iconPath: '/equipment/coolers/cool_9.png', tier: 9, mass: 140, rarity: 'Epic', name: { RU: 'Тепловой насос "Бездна"', EN: 'Heat Pump "Abyss"' }, description: { RU: 'Сброс в вакуум. Охл: 50. Энергия: 45.', EN: 'Vacuum dump. Cool: 50. Energy: 45.' }, cost: { ancientTech: 40, rubies: 20, nanoSwarm: 50 }, blueprintId: 'blueprint_quantum_cooling', baseStats: { cooling: 50, energyCost: 45 } },
   { id: 'cool_10', iconPath: '/equipment/coolers/cool_10.png', tier: 10, mass: 150, rarity: 'Legendary', name: { RU: 'Эндотермический реактор', EN: 'Endothermic Reactor' }, description: { RU: 'Жар = Энергия. Охл: 70. Выход: +5.', EN: 'Heat = Energy. Cool: 70. Gen: +5.' }, cost: { ancientTech: 100, emeralds: 50, nanoSwarm: 100 }, blueprintId: 'blueprint_cryogenic_tech', baseStats: { cooling: 70, energyCost: -5 } },
-  { id: 'cool_11', iconPath: '/equipment/coolers/cool_11.png', tier: 11, mass: 161, rarity: 'Legendary', name: { RU: 'Абсолютный ноль', EN: 'Absolute Zero' }, description: { RU: 'Остановка атомов. Охл: 100. Энергия: 80.', EN: 'Atomic stop. Cool: 100. Energy: 80.' }, cost: { ancientTech: 300, diamonds: 50, nanoSwarm: 200, ice: 500 }, blueprintId: 'blueprint_cryogenic_tech', baseStats: { cooling: 100, energyCost: 80 } },
-  { id: 'cool_12', iconPath: '/equipment/coolers/cool_12.png', tier: 12, mass: 171, rarity: 'Legendary', name: { RU: 'Стрингер Пустоты', EN: 'Void Stringer' }, description: { RU: 'Сброс за грань. Охл: 150. Энергия: 120.', EN: 'Void dump. Cool: 150. Energy: 120.' }, cost: { ancientTech: 800, nanoSwarm: 1000, rubies: 50, ice: 2000 }, blueprintId: 'blueprint_cryogenic_tech', baseStats: { cooling: 150, energyCost: 120 } },
-  { id: 'cool_13', iconPath: '/equipment/coolers/cool_13.png', tier: 13, mass: 181, rarity: 'Godly', name: { RU: 'Энтропийный якорь', EN: 'Entropy Anchor' }, description: { RU: 'Запрет нагрева. Охл: 250. Энергия: 200.', EN: 'Heating forbidden. Cool: 250. Energy: 200.' }, cost: { ancientTech: 2000, rubies: 500, nanoSwarm: 1500 }, blueprintId: 'blueprint_fusion_core', baseStats: { cooling: 250, energyCost: 200 } },
-  { id: 'cool_14', iconPath: '/equipment/coolers/cool_14.png', tier: 14, mass: 190, rarity: 'Godly', name: { RU: 'Ледяное сердце звезды', EN: 'Ice Heart of a Star' }, description: { RU: 'Холод космоса. Охл: 400. Энергия: 300.', EN: 'Space cold. Cool: 400. Energy: 300.' }, cost: { ancientTech: 5000, emeralds: 500, diamonds: 200 }, blueprintId: 'blueprint_fusion_core', baseStats: { cooling: 400, energyCost: 300 } },
-  { id: 'cool_15', iconPath: '/equipment/coolers/cool_15.png', tier: 15, mass: 200, rarity: 'Godly', name: { RU: 'Смерть Вселенной', EN: 'Death of the Universe' }, description: { RU: 'Энтропия замерла. Охл: 999. Энергия: 500.', EN: 'Entropy frozen. Cool: 999. Energy: 500.' }, cost: { ancientTech: 10000, nanoSwarm: 5000 }, blueprintId: 'blueprint_fusion_core', baseStats: { cooling: 999, energyCost: 500 } }
+  { id: 'cool_11', iconPath: '/equipment/coolers/cool_11.png', tier: 11, mass: 161, rarity: 'Legendary', name: { RU: 'Абсолютный ноль', EN: 'Absolute Zero' }, description: { RU: 'Остановка атомов. Охл: 100. Энергия: 80.', EN: 'Atomic stop. Cool: 100. Energy: 80.' }, cost: { ancientTech: 300, voidMatter: 80, diamonds: 50, nanoSwarm: 200, ice: 500 }, blueprintId: 'blueprint_cryogenic_tech', baseStats: { cooling: 100, energyCost: 80 } },
+  { id: 'cool_12', iconPath: '/equipment/coolers/cool_12.png', tier: 12, mass: 171, rarity: 'Legendary', name: { RU: 'Стрингер Пустоты', EN: 'Void Stringer' }, description: { RU: 'Сброс за грань. Охл: 150. Энергия: 120.', EN: 'Void dump. Cool: 150. Energy: 120.' }, cost: { ancientTech: 800, voidMatter: 250, nanoSwarm: 1000, rubies: 50, ice: 2000 }, blueprintId: 'blueprint_cryogenic_tech', baseStats: { cooling: 150, energyCost: 120 } },
+  { id: 'cool_13', iconPath: '/equipment/coolers/cool_13.png', tier: 13, mass: 181, rarity: 'Godly', name: { RU: 'Энтропийный якорь', EN: 'Entropy Anchor' }, description: { RU: 'Запрет нагрева. Охл: 250. Энергия: 200.', EN: 'Heating forbidden. Cool: 250. Energy: 200.' }, cost: { ancientTech: 2000, chronoShards: 40, rubies: 500, nanoSwarm: 1500 }, blueprintId: 'blueprint_fusion_core', baseStats: { cooling: 250, energyCost: 200 } },
+  { id: 'cool_14', iconPath: '/equipment/coolers/cool_14.png', tier: 14, mass: 190, rarity: 'Godly', name: { RU: 'Ледяное сердце звезды', EN: 'Ice Heart of a Star' }, description: { RU: 'Холод космоса. Охл: 400. Энергия: 300.', EN: 'Space cold. Cool: 400. Energy: 300.' }, cost: { ancientTech: 5000, chronoShards: 150, emeralds: 500, diamonds: 200 }, blueprintId: 'blueprint_fusion_core', baseStats: { cooling: 400, energyCost: 300 } },
+  { id: 'cool_15', iconPath: '/equipment/coolers/cool_15.png', tier: 15, mass: 200, rarity: 'Godly', name: { RU: 'Смерть Вселенной', EN: 'Death of the Universe' }, description: { RU: 'Энтропия замерла. Охл: 999. Энергия: 500.', EN: 'Entropy frozen. Cool: 999. Energy: 500.' }, cost: { ancientTech: 10000, chronoShards: 800, nanoSwarm: 5000 }, blueprintId: 'blueprint_fusion_core', baseStats: { cooling: 999, energyCost: 500 } }
 ];
 
 
@@ -125,11 +125,11 @@ export const HULLS: HullPart[] = [
   { id: 'hull_8', iconPath: '/equipment/hulls/hull_8.png', tier: 8, mass: 3084, rarity: 'Epic', name: { RU: 'Оболочка "Стелс"', EN: 'Hull "Stealth"' }, description: { RU: '4 слота. HP: 600. Теплоемкость!', EN: '4 slots. HP: 600. Heat Cap!' }, cost: { uranium: 1500, nanoSwarm: 50 }, blueprintId: 'blueprint_titanium_hull', baseStats: { maxIntegrity: 600, slots: 4, heatCap: 500, regen: 3, cargoCapacity: 70000 } },
   { id: 'hull_9', iconPath: '/equipment/hulls/hull_9.png', tier: 9, mass: 3419, rarity: 'Epic', name: { RU: 'Титановый Монолит', EN: 'Titanium Monolith' }, description: { RU: '5 слотов. HP: 1500. Монолит.', EN: '5 slots. HP: 1500. Monolith.' }, cost: { ancientTech: 50, rubies: 10, diamonds: 20 }, blueprintId: 'blueprint_titanium_hull', baseStats: { maxIntegrity: 1500, slots: 5, heatCap: 600, regen: 5, cargoCapacity: 120000 } },
   { id: 'hull_10', iconPath: '/equipment/hulls/hull_10.png', tier: 10, mass: 3749, rarity: 'Legendary', name: { RU: 'Экзо-скелет "Атлант"', EN: 'Exo-skeleton "Atlas"' }, description: { RU: '5 слотов. HP: 2500. Атлант.', EN: '5 slots. HP: 2500. Atlas.' }, cost: { ancientTech: 150, emeralds: 50, nanoSwarm: 200 }, blueprintId: 'blueprint_adaptive_armor', baseStats: { maxIntegrity: 2500, slots: 5, heatCap: 700, regen: 10, cargoCapacity: 250000 } },
-  { id: 'hull_11', iconPath: '/equipment/hulls/hull_11.png', tier: 11, mass: 4076, rarity: 'Legendary', name: { RU: 'Живая броня', EN: 'Living Armor' }, description: { RU: '6 слотов. HP: 3000. Реген: 25.', EN: '6 slots. HP: 3000. Regen: 25.' }, cost: { ancientTech: 400, diamonds: 30, nanoSwarm: 500, scrap: 1000 }, blueprintId: 'blueprint_adaptive_armor', baseStats: { maxIntegrity: 3000, slots: 6, heatCap: 800, regen: 25, cargoCapacity: 500000 } },
-  { id: 'hull_12', iconPath: '/equipment/hulls/hull_12.png', tier: 12, mass: 4398, rarity: 'Legendary', name: { RU: 'Композит "Зеркало"', EN: 'Composite "Mirror"' }, description: { RU: '6 слотов. HP: 3500. Отражение.', EN: '6 slots. HP: 3500. Mirror.' }, cost: { ancientTech: 1000, nanoSwarm: 1500, rubies: 100, scrap: 4000 }, blueprintId: 'blueprint_adaptive_armor', baseStats: { maxIntegrity: 3500, slots: 6, heatCap: 900, regen: 50, cargoCapacity: 1000000 } },
-  { id: 'hull_13', iconPath: '/equipment/hulls/hull_13.png', tier: 13, mass: 4717, rarity: 'Godly', name: { RU: 'Ковчег Предтеч', EN: 'Ark of the Precursors' }, description: { RU: '7 слотов. HP: 5000. Обитель.', EN: '7 slots. HP: 5000. Abode.' }, cost: { ancientTech: 3000, rubies: 1000, diamonds: 500 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxIntegrity: 5000, slots: 7, heatCap: 1200, regen: 100, cargoCapacity: 2500000 } },
-  { id: 'hull_14', iconPath: '/equipment/hulls/hull_14.png', tier: 14, mass: 5033, rarity: 'Godly', name: { RU: 'Сингулярная оболочка', EN: 'Singular Shell' }, description: { RU: '8 слотов. HP: 8000. Поглощение.', EN: '8 slots. HP: 8000. Absorption.' }, cost: { ancientTech: 8000, emeralds: 1000, nanoSwarm: 3000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxIntegrity: 8000, slots: 8, heatCap: 2000, regen: 250, cargoCapacity: 6000000 } },
-  { id: 'hull_15', iconPath: '/equipment/hulls/hull_15.png', tier: 15, mass: 5346, rarity: 'Godly', name: { RU: 'Несокрушимый', EN: 'Indestructible' }, description: { RU: '10 слотов. HP: 20000. Эпоха.', EN: '10 slots. HP: 20000. Age.' }, cost: { ancientTech: 20000, diamonds: 1000, nanoSwarm: 8000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxIntegrity: 20000, slots: 10, heatCap: 5000, regen: 1000, cargoCapacity: 15000000 } }
+  { id: 'hull_11', iconPath: '/equipment/hulls/hull_11.png', tier: 11, mass: 4076, rarity: 'Legendary', name: { RU: 'Живая броня', EN: 'Living Armor' }, description: { RU: '6 слотов. HP: 3000. Реген: 25.', EN: '6 slots. HP: 3000. Regen: 25.' }, cost: { ancientTech: 400, voidMatter: 200, diamonds: 30, nanoSwarm: 500, scrap: 1000 }, blueprintId: 'blueprint_adaptive_armor', baseStats: { maxIntegrity: 3000, slots: 6, heatCap: 800, regen: 25, cargoCapacity: 500000 } },
+  { id: 'hull_12', iconPath: '/equipment/hulls/hull_12.png', tier: 12, mass: 4398, rarity: 'Legendary', name: { RU: 'Композит "Зеркало"', EN: 'Composite "Mirror"' }, description: { RU: '6 слотов. HP: 3500. Отражение.', EN: '6 slots. HP: 3500. Mirror.' }, cost: { ancientTech: 1000, voidMatter: 600, nanoSwarm: 1500, rubies: 100, scrap: 4000 }, blueprintId: 'blueprint_adaptive_armor', baseStats: { maxIntegrity: 3500, slots: 6, heatCap: 900, regen: 50, cargoCapacity: 1000000 } },
+  { id: 'hull_13', iconPath: '/equipment/hulls/hull_13.png', tier: 13, mass: 4717, rarity: 'Godly', name: { RU: 'Ковчег Предтеч', EN: 'Ark of the Precursors' }, description: { RU: '7 слотов. HP: 5000. Обитель.', EN: '7 slots. HP: 5000. Abode.' }, cost: { ancientTech: 3000, chronoShards: 100, rubies: 1000, diamonds: 500 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxIntegrity: 5000, slots: 7, heatCap: 1200, regen: 100, cargoCapacity: 2500000 } },
+  { id: 'hull_14', iconPath: '/equipment/hulls/hull_14.png', tier: 14, mass: 5033, rarity: 'Godly', name: { RU: 'Сингулярная оболочка', EN: 'Singular Shell' }, description: { RU: '8 слотов. HP: 8000. Поглощение.', EN: '8 slots. HP: 8000. Absorption.' }, cost: { ancientTech: 8000, chronoShards: 400, emeralds: 1000, nanoSwarm: 3000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxIntegrity: 8000, slots: 8, heatCap: 2000, regen: 250, cargoCapacity: 6000000 } },
+  { id: 'hull_15', iconPath: '/equipment/hulls/hull_15.png', tier: 15, mass: 5346, rarity: 'Godly', name: { RU: 'Несокрушимый', EN: 'Indestructible' }, description: { RU: '10 слотов. HP: 20000. Эпоха.', EN: '10 slots. HP: 20000. Age.' }, cost: { ancientTech: 20000, chronoShards: 2000, diamonds: 1000, nanoSwarm: 8000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxIntegrity: 20000, slots: 10, heatCap: 5000, regen: 1000, cargoCapacity: 15000000 } }
 ];
 
 
@@ -144,11 +144,11 @@ export const LOGIC_CORES: LogicPart[] = [
   { id: 'cpu_8', iconPath: '/equipment/cores/cpu_8.png', tier: 8, mass: 17, rarity: 'Epic', name: { RU: 'Квантовый чип', EN: 'Quantum Chip' }, description: { RU: 'Вероятностные поля. Крит: 15%. Предсказание: 3с. Энергия: 35.', EN: 'Probabilistic fields. Crit: 15%. Prediction: 3s. Energy: 35.' }, cost: { ancientTech: 20, nanoSwarm: 50 }, baseStats: { critChance: 15, energyCost: 35, luck: 15, predictionTime: 3 } },
   { id: 'cpu_9', iconPath: '/equipment/cores/cpu_9.png', tier: 9, mass: 19, rarity: 'Epic', name: { RU: 'Нейросеть "Видение"', EN: 'Neural Network "Vision"' }, description: { RU: 'Самообучение. Крит: 18%. Предсказание: 4с. Энергия: 50.', EN: 'Self-learning. Crit: 18%. Prediction: 4s. Energy: 50.' }, cost: { ancientTech: 50, nanoSwarm: 100 }, baseStats: { critChance: 18, energyCost: 50, luck: 20, predictionTime: 4 } },
   { id: 'cpu_10', iconPath: '/equipment/cores/cpu_10.png', tier: 10, mass: 20, rarity: 'Legendary', name: { RU: 'Анализатор "Слабость"', EN: 'Analyzer "Weakness"' }, description: { RU: 'Точки излома. Крит: 22%. Предсказание: 5с. Энергия: 80.', EN: 'Fracture points. Crit: 22%. Prediction: 5s. Energy: 80.' }, cost: { ancientTech: 100, rubies: 50, nanoSwarm: 200 }, baseStats: { critChance: 22, energyCost: 80, luck: 30, predictionTime: 5 } },
-  { id: 'cpu_11', iconPath: '/equipment/cores/cpu_11.png', tier: 11, mass: 21, rarity: 'Legendary', name: { RU: 'Кибер-мозг "Альфа"', EN: 'Cyberbrain "Alpha"' }, description: { RU: 'Сверхсознание. Крит: 25%. Предсказание: 7с. Энергия: 120.', EN: 'Overmind. Crit: 25%. Prediction: 7s. Energy: 120.' }, cost: { ancientTech: 250, emeralds: 50, nanoSwarm: 400 }, baseStats: { critChance: 25, energyCost: 120, luck: 40, predictionTime: 7 } },
-  { id: 'cpu_12', iconPath: '/equipment/cores/cpu_12.png', tier: 12, mass: 22, rarity: 'Legendary', name: { RU: 'Предсказатель', EN: 'Forecaster' }, description: { RU: 'Взгляд сквозь время. Крит: 30%. Предсказание: 10с. Энергия: 180.', EN: 'Gaze through time. Crit: 30%. Prediction: 10s. Energy: 180.' }, cost: { ancientTech: 600, diamonds: 50, nanoSwarm: 800 }, baseStats: { critChance: 30, energyCost: 180, luck: 50, predictionTime: 10 } },
-  { id: 'cpu_13', iconPath: '/equipment/cores/cpu_13.png', tier: 13, mass: 23, rarity: 'Godly', name: { RU: 'Система "Доминация"', EN: 'System "Domination"' }, description: { RU: 'Доминация разума. Крит: 35%. Предсказание: 15с. Энергия: 250.', EN: 'Mind domination. Crit: 35%. Prediction: 15s. Energy: 250.' }, cost: { ancientTech: 1500, nanoSwarm: 2000 }, baseStats: { critChance: 35, energyCost: 250, luck: 75, predictionTime: 15 } },
-  { id: 'cpu_14', iconPath: '/equipment/cores/cpu_14.png', tier: 14, mass: 24, rarity: 'Godly', name: { RU: 'Матрица Братана', EN: 'Brotan Matrix' }, description: { RU: 'Сила единства. Крит: 50%. Предсказание: 20с. Энергия: 400.', EN: 'Power of unity. Crit: 50%. Prediction: 20s. Energy: 400.' }, cost: { ancientTech: 4000, diamonds: 500, nanoSwarm: 3000 }, baseStats: { critChance: 50, energyCost: 400, luck: 100, predictionTime: 20 } },
-  { id: 'cpu_15', iconPath: '/equipment/cores/cpu_15.png', tier: 15, mass: 25, rarity: 'Godly', name: { RU: 'Божественный Архитектор', EN: 'Divine Architect' }, description: { RU: 'Всеведение. Крит: 100%. Предсказание: 30с. Энергия: 800.', EN: 'Omniscience. Crit: 100%. Prediction: 30s. Energy: 800.' }, cost: { ancientTech: 10000, nanoSwarm: 8000 }, baseStats: { critChance: 100, energyCost: 800, luck: 200, predictionTime: 30 } }
+  { id: 'cpu_11', iconPath: '/equipment/cores/cpu_11.png', tier: 11, mass: 21, rarity: 'Legendary', name: { RU: 'Кибер-мозг "Альфа"', EN: 'Cyberbrain "Alpha"' }, description: { RU: 'Сверхсознание. Крит: 25%. Предсказание: 7с. Энергия: 120.', EN: 'Overmind. Crit: 25%. Prediction: 7s. Energy: 120.' }, cost: { ancientTech: 250, voidMatter: 80, emeralds: 50, nanoSwarm: 400 }, baseStats: { critChance: 25, energyCost: 120, luck: 40, predictionTime: 7 } },
+  { id: 'cpu_12', iconPath: '/equipment/cores/cpu_12.png', tier: 12, mass: 22, rarity: 'Legendary', name: { RU: 'Предсказатель', EN: 'Forecaster' }, description: { RU: 'Взгляд сквозь время. Крит: 30%. Предсказание: 10с. Энергия: 180.', EN: 'Gaze through time. Crit: 30%. Prediction: 10s. Energy: 180.' }, cost: { ancientTech: 600, voidMatter: 200, diamonds: 50, nanoSwarm: 800 }, baseStats: { critChance: 30, energyCost: 180, luck: 50, predictionTime: 10 } },
+  { id: 'cpu_13', iconPath: '/equipment/cores/cpu_13.png', tier: 13, mass: 23, rarity: 'Godly', name: { RU: 'Система "Доминация"', EN: 'System "Domination"' }, description: { RU: 'Доминация разума. Крит: 35%. Предсказание: 15с. Энергия: 250.', EN: 'Mind domination. Crit: 35%. Prediction: 15s. Energy: 250.' }, cost: { ancientTech: 1500, chronoShards: 50, nanoSwarm: 2000 }, baseStats: { critChance: 35, energyCost: 250, luck: 75, predictionTime: 15 } },
+  { id: 'cpu_14', iconPath: '/equipment/cores/cpu_14.png', tier: 14, mass: 24, rarity: 'Godly', name: { RU: 'Матрица Братана', EN: 'Brotan Matrix' }, description: { RU: 'Сила единства. Крит: 50%. Предсказание: 20с. Энергия: 400.', EN: 'Power of unity. Crit: 50%. Prediction: 20s. Energy: 400.' }, cost: { ancientTech: 4000, chronoShards: 200, diamonds: 500, nanoSwarm: 3000 }, baseStats: { critChance: 50, energyCost: 400, luck: 100, predictionTime: 20 } },
+  { id: 'cpu_15', iconPath: '/equipment/cores/cpu_15.png', tier: 15, mass: 25, rarity: 'Godly', name: { RU: 'Божественный Архитектор', EN: 'Divine Architect' }, description: { RU: 'Всеведение. Крит: 100%. Предсказание: 30с. Энергия: 800.', EN: 'Omniscience. Crit: 100%. Prediction: 30s. Energy: 800.' }, cost: { ancientTech: 10000, chronoShards: 1000, nanoSwarm: 8000 }, baseStats: { critChance: 100, energyCost: 800, luck: 200, predictionTime: 30 } }
 ];
 
 
@@ -170,17 +170,11 @@ export const CONTROL_UNITS: ControlPart[] = [
   { id: 'ctrl_2', iconPath: '/equipment/units/ctrl_2.png', tier: 2, mass: 13, rarity: 'Common', name: { RU: 'Механический тумблер', EN: 'Mechanical Toggle' }, description: { RU: 'x1.2', EN: 'x1.2' }, cost: { stone: 50 }, baseStats: { clickMultiplier: 1.2, energyCost: 1, ventSpeed: 1.1 } },
   { id: 'ctrl_3', iconPath: '/equipment/units/ctrl_3.png', tier: 3, mass: 16, rarity: 'Common', name: { RU: 'Педаль газа', EN: 'Gas Pedal' }, description: { RU: 'Мульт: x1.5. Продув: 1.2. Энергия: 2.', EN: 'Mult: x1.5. Vent: 1.2. Energy: 2.' }, cost: { copper: 150 }, baseStats: { clickMultiplier: 1.5, energyCost: 2, ventSpeed: 1.2 } },
   { id: 'ctrl_4', iconPath: '/equipment/units/ctrl_4.png', tier: 4, mass: 20, rarity: 'Rare', name: { RU: 'Джойстик "Ретро"', EN: 'Retro Joystick' }, description: { RU: 'Мульт: x2.0. Продув: 1.5. Энергия: 3.', EN: 'Mult: x2.0. Vent: 1.5. Energy: 3.' }, cost: { iron: 300 }, baseStats: { clickMultiplier: 2.0, energyCost: 3, ventSpeed: 1.5 } },
-  { id: 'ctrl_5', iconPath: '/equipment/units/ctrl_5.png', tier: 5, mass: 23, rarity: 'Rare', name: { RU: 'Сенсорный ввод', EN: 'Touch Input' }, description: { RU: 'Мульт: x2.5. Продув: 1.8. Энергия: 5.', EN: 'Mult: x2.5. Vent: 1.8. Energy: 5.' }, cost: { silver: 600 }, baseStats: { clickMultiplier: 2.5, energyCost: 5, ventSpeed: 1.8 } },
-  { id: 'ctrl_6', iconPath: '/equipment/units/ctrl_6.png', tier: 6, mass: 26, rarity: 'Rare', name: { RU: 'Кинетик-сенсор', EN: 'Kinetic Sensor' }, description: { RU: 'Мульт: x3.0. Продув: 2.0. Энергия: 8.', EN: 'Mult: x3.0. Vent: 2.0. Energy: 8.' }, cost: { gold: 1000 }, baseStats: { clickMultiplier: 3.0, energyCost: 8, ventSpeed: 2.0 } },
-  { id: 'ctrl_7', iconPath: '/equipment/units/ctrl_7.png', tier: 7, mass: 28, rarity: 'Epic', name: { RU: 'Голо-панель', EN: 'Holo Panel' }, description: { RU: 'Мульт: x4.0. Продув: 3.0. Энергия: 12.', EN: 'Mult: x4.0. Vent: 3.0. Energy: 12.' }, cost: { titanium: 1500, nanoSwarm: 20 }, baseStats: { clickMultiplier: 4.0, energyCost: 12, ventSpeed: 3.0 } },
-  { id: 'ctrl_8', iconPath: '/equipment/units/ctrl_8.png', tier: 8, mass: 31, rarity: 'Epic', name: { RU: 'Перчатка силы', EN: 'Power Glove' }, description: { RU: 'Мульт: x6.0. Продув: 4.0. Энергия: 20.', EN: 'Mult: x6.0. Vent: 4.0. Energy: 20.' }, cost: { uranium: 800, rubies: 10 }, baseStats: { clickMultiplier: 6.0, energyCost: 20, ventSpeed: 4.0 } },
-  { id: 'ctrl_9', iconPath: '/equipment/units/ctrl_9.png', tier: 9, mass: 33, rarity: 'Epic', name: { RU: 'Мысленный шлем', EN: 'Thought Helmet' }, description: { RU: 'Мульт: x10. Продув: 6.0. Энергия: 35.', EN: 'Mult: x10. Vent: 6.0. Energy: 35.' }, cost: { ancientTech: 25, nanoSwarm: 50 }, baseStats: { clickMultiplier: 10.0, energyCost: 35, ventSpeed: 6.0 } },
-  { id: 'ctrl_10', iconPath: '/equipment/units/ctrl_10.png', tier: 10, mass: 36, rarity: 'Legendary', name: { RU: 'Нейро-имплант', EN: 'Neuro-implant' }, description: { RU: 'Мульт: x15. Продув: 8.0. Энергия: 50.', EN: 'Mult: x15. Vent: 8.0. Energy: 50.' }, cost: { ancientTech: 100, nanoSwarm: 200 }, baseStats: { clickMultiplier: 15.0, energyCost: 50, ventSpeed: 8.0 } },
-  { id: 'ctrl_11', iconPath: '/equipment/units/ctrl_11.png', tier: 11, mass: 38, rarity: 'Legendary', name: { RU: 'Прямое подключение', EN: 'Direct Connection' }, description: { RU: 'Мульт: x25. Продув: 12. Энергия: 80.', EN: 'Mult: x25. Vent: 12. Energy: 80.' }, cost: { ancientTech: 250, nanoSwarm: 400 }, baseStats: { clickMultiplier: 25.0, energyCost: 80, ventSpeed: 12.0 } },
-  { id: 'ctrl_12', iconPath: '/equipment/units/ctrl_12.png', tier: 12, mass: 40, rarity: 'Legendary', name: { RU: 'Волевой интерфейс', EN: 'Will Interface' }, description: { RU: 'Мульт: x50. Продув: 20. Энергия: 120.', EN: 'Mult: x50. Vent: 20. Energy: 120.' }, cost: { ancientTech: 600, nanoSwarm: 800, diamonds: 50 }, baseStats: { clickMultiplier: 50.0, energyCost: 120, ventSpeed: 20.0 } },
-  { id: 'ctrl_13', iconPath: '/equipment/units/ctrl_13.png', tier: 13, mass: 42, rarity: 'Godly', name: { RU: 'Симбиоз', EN: 'Symbiosis' }, description: { RU: 'Мульт: x100. Продув: 50. Энергия: 200.', EN: 'Mult: x100. Vent: 50. Energy: 200.' }, cost: { ancientTech: 1500, nanoSwarm: 2000, emeralds: 200 }, baseStats: { clickMultiplier: 100.0, energyCost: 200, ventSpeed: 50.0 } },
-  { id: 'ctrl_14', iconPath: '/equipment/units/ctrl_14.png', tier: 14, mass: 44, rarity: 'Godly', name: { RU: 'Единство души', EN: 'Unity of Soul' }, description: { RU: 'Мульт: x500. Продув: 100. Энергия: 400.', EN: 'Mult: x500. Vent: 100. Energy: 400.' }, cost: { ancientTech: 5000, nanoSwarm: 5000 }, baseStats: { clickMultiplier: 500.0, energyCost: 400, ventSpeed: 100.0 } },
-  { id: 'ctrl_15', iconPath: '/equipment/units/ctrl_15.png', tier: 15, mass: 47, rarity: 'Godly', name: { RU: 'Творец', EN: 'Creator' }, description: { RU: 'Мульт: x1000. Продув: 500. Энергия: 800.', EN: 'Mult: x1000. Vent: 500. Energy: 800.' }, cost: { ancientTech: 20000, nanoSwarm: 10000 }, baseStats: { clickMultiplier: 1000.0, energyCost: 800, ventSpeed: 500.0 } }
+  { id: 'ctrl_11', iconPath: '/equipment/units/ctrl_11.png', tier: 11, mass: 38, rarity: 'Legendary', name: { RU: 'Прямое подключение', EN: 'Direct Connection' }, description: { RU: 'Мульт: x25. Продув: 12. Энергия: 80.', EN: 'Mult: x25. Vent: 12. Energy: 80.' }, cost: { ancientTech: 250, voidMatter: 100, nanoSwarm: 400 }, baseStats: { clickMultiplier: 25.0, energyCost: 80, ventSpeed: 12.0 } },
+  { id: 'ctrl_12', iconPath: '/equipment/units/ctrl_12.png', tier: 12, mass: 40, rarity: 'Legendary', name: { RU: 'Волевой интерфейс', EN: 'Will Interface' }, description: { RU: 'Мульт: x50. Продув: 20. Энергия: 120.', EN: 'Mult: x50. Vent: 20. Energy: 120.' }, cost: { ancientTech: 600, voidMatter: 300, nanoSwarm: 800, diamonds: 50 }, baseStats: { clickMultiplier: 50.0, energyCost: 120, ventSpeed: 20.0 } },
+  { id: 'ctrl_13', iconPath: '/equipment/units/ctrl_13.png', tier: 13, mass: 42, rarity: 'Godly', name: { RU: 'Симбиоз', EN: 'Symbiosis' }, description: { RU: 'Мульт: x100. Продув: 50. Энергия: 200.', EN: 'Mult: x100. Vent: 50. Energy: 200.' }, cost: { ancientTech: 1500, chronoShards: 50, nanoSwarm: 2000, emeralds: 200 }, baseStats: { clickMultiplier: 100.0, energyCost: 200, ventSpeed: 50.0 } },
+  { id: 'ctrl_14', iconPath: '/equipment/units/ctrl_14.png', tier: 14, mass: 44, rarity: 'Godly', name: { RU: 'Единство души', EN: 'Unity of Soul' }, description: { RU: 'Мульт: x500. Продув: 100. Энергия: 400.', EN: 'Mult: x500. Vent: 100. Energy: 400.' }, cost: { ancientTech: 5000, chronoShards: 250, nanoSwarm: 5000 }, baseStats: { clickMultiplier: 500.0, energyCost: 400, ventSpeed: 100.0 } },
+  { id: 'ctrl_15', iconPath: '/equipment/units/ctrl_15.png', tier: 15, mass: 47, rarity: 'Godly', name: { RU: 'Творец', EN: 'Creator' }, description: { RU: 'Мульт: x1000. Продув: 500. Энергия: 800.', EN: 'Mult: x1000. Vent: 500. Energy: 800.' }, cost: { ancientTech: 20000, chronoShards: 1200, nanoSwarm: 10000 }, baseStats: { clickMultiplier: 1000.0, energyCost: 800, ventSpeed: 500.0 } }
 ];
 
 
@@ -195,11 +189,11 @@ export const GEARBOXES: GearboxPart[] = [
   { id: 'gear_8', iconPath: '/equipment/gears/gear_8.png', tier: 8, mass: 191, rarity: 'Epic', name: { RU: 'Вариатор "Поток"', EN: 'Variator "Flux"' }, description: { RU: 'Крутящий момент 22. Энергия: 40.', EN: 'Torque 22. Energy: 40.' }, cost: { ancientTech: 25, rubies: 25 }, blueprintId: 'blueprint_high_performance_transmission', baseStats: { torque: 22.0, energyCost: 40 } },
   { id: 'gear_9', iconPath: '/equipment/gears/gear_9.png', tier: 9, mass: 211, rarity: 'Epic', name: { RU: 'Стрингер момента', EN: 'Torque Stringer' }, description: { RU: 'Крутящий момент 30. Энергия: 60.', EN: 'Torque 30. Energy: 60.' }, cost: { ancientTech: 60, nanoSwarm: 50 }, blueprintId: 'blueprint_high_performance_transmission', baseStats: { torque: 30.0, energyCost: 60 } },
   { id: 'gear_10', iconPath: '/equipment/gears/gear_10.png', tier: 10, mass: 231, rarity: 'Legendary', name: { RU: 'Квантовый привод', EN: 'Quantum Drive' }, description: { RU: 'Крутящий момент 45. Энергия: 100.', EN: 'Torque 45. Energy: 100.' }, cost: { ancientTech: 150, nanoSwarm: 200 }, blueprintId: 'blueprint_heavy_duty_gears', baseStats: { torque: 45.0, energyCost: 100 } },
-  { id: 'gear_11', iconPath: '/equipment/gears/gear_11.png', tier: 11, mass: 251, rarity: 'Legendary', name: { RU: 'Грави-связка', EN: 'Grav-link' }, description: { RU: 'Крутящий момент 70. Энергия: 150.', EN: 'Torque 70. Energy: 150.' }, cost: { ancientTech: 400, diamonds: 50, nanoSwarm: 400 }, blueprintId: 'blueprint_heavy_duty_gears', baseStats: { torque: 70.0, energyCost: 150 } },
-  { id: 'gear_12', iconPath: '/equipment/gears/gear_12.png', tier: 12, mass: 271, rarity: 'Legendary', name: { RU: 'Сингулярный вал', EN: 'Singular Shaft' }, description: { RU: 'Крутящий момент 100. Энергия: 250.', EN: 'Torque 100. Energy: 250.' }, cost: { ancientTech: 1000, nanoSwarm: 800 }, blueprintId: 'blueprint_heavy_duty_gears', baseStats: { torque: 100.0, energyCost: 250 } },
-  { id: 'gear_13', iconPath: '/equipment/gears/gear_13.png', tier: 13, mass: 291, rarity: 'Godly', name: { RU: 'Передача Нуля', EN: 'Zero Gear' }, description: { RU: 'Крутящий момент 200. Энергия: 400.', EN: 'Torque 200. Energy: 400.' }, cost: { ancientTech: 2500, nanoSwarm: 2000 }, blueprintId: 'blueprint_fusion_core', baseStats: { torque: 200.0, energyCost: 400 } },
-  { id: 'gear_14', iconPath: '/equipment/gears/gear_14.png', tier: 14, mass: 311, rarity: 'Godly', name: { RU: 'Ротор Предков', EN: 'Ancestor Rotor' }, description: { RU: 'Крутящий момент 400. Энергия: 600.', EN: 'Torque 400. Energy: 600.' }, cost: { ancientTech: 6000, rubies: 1000, diamonds: 500 }, blueprintId: 'blueprint_fusion_core', baseStats: { torque: 400.0, energyCost: 600 } },
-  { id: 'gear_15', iconPath: '/equipment/gears/gear_15.png', tier: 15, mass: 331, rarity: 'Godly', name: { RU: 'Вечный Двигатель', EN: 'Perpetual Gear' }, description: { RU: 'Крутящий момент 999. Энергия: 1000.', EN: 'Torque 999. Energy: 1000.' }, cost: { ancientTech: 20000, nanoSwarm: 10000 }, blueprintId: 'blueprint_fusion_core', baseStats: { torque: 999.0, energyCost: 1000 } }
+  { id: 'gear_11', iconPath: '/equipment/gears/gear_11.png', tier: 11, mass: 251, rarity: 'Legendary', name: { RU: 'Грави-связка', EN: 'Grav-link' }, description: { RU: 'Крутящий момент 70. Энергия: 150.', EN: 'Torque 70. Energy: 150.' }, cost: { ancientTech: 400, voidMatter: 150, diamonds: 50, nanoSwarm: 400 }, blueprintId: 'blueprint_heavy_duty_gears', baseStats: { torque: 70.0, energyCost: 150 } },
+  { id: 'gear_12', iconPath: '/equipment/gears/gear_12.png', tier: 12, mass: 271, rarity: 'Legendary', name: { RU: 'Сингулярный вал', EN: 'Singular Shaft' }, description: { RU: 'Крутящий момент 100. Энергия: 250.', EN: 'Torque 100. Energy: 250.' }, cost: { ancientTech: 1000, voidMatter: 400, nanoSwarm: 800 }, blueprintId: 'blueprint_heavy_duty_gears', baseStats: { torque: 100.0, energyCost: 250 } },
+  { id: 'gear_13', iconPath: '/equipment/gears/gear_13.png', tier: 13, mass: 291, rarity: 'Godly', name: { RU: 'Передача Нуля', EN: 'Zero Gear' }, description: { RU: 'Крутящий момент 200. Энергия: 400.', EN: 'Torque 200. Energy: 400.' }, cost: { ancientTech: 2500, chronoShards: 100, nanoSwarm: 2000 }, blueprintId: 'blueprint_fusion_core', baseStats: { torque: 200.0, energyCost: 400 } },
+  { id: 'gear_14', iconPath: '/equipment/gears/gear_14.png', tier: 14, mass: 311, rarity: 'Godly', name: { RU: 'Ротор Предков', EN: 'Ancestor Rotor' }, description: { RU: 'Крутящий момент 400. Энергия: 600.', EN: 'Torque 400. Energy: 600.' }, cost: { ancientTech: 6000, chronoShards: 400, rubies: 1000, diamonds: 500 }, blueprintId: 'blueprint_fusion_core', baseStats: { torque: 400.0, energyCost: 600 } },
+  { id: 'gear_15', iconPath: '/equipment/gears/gear_15.png', tier: 15, mass: 331, rarity: 'Godly', name: { RU: 'Вечный Двигатель', EN: 'Perpetual Gear' }, description: { RU: 'Крутящий момент 999. Энергия: 1000.', EN: 'Torque 999. Energy: 1000.' }, cost: { ancientTech: 20000, chronoShards: 2000, nanoSwarm: 10000 }, blueprintId: 'blueprint_fusion_core', baseStats: { torque: 999.0, energyCost: 1000 } }
 ];
 
 
@@ -214,11 +208,11 @@ export const POWER_CORES: PowerCorePart[] = [
   { id: 'pwr_8', iconPath: '/equipment/power/pwr_8.png', tier: 8, mass: 586, rarity: 'Epic', name: { RU: 'Плазменный шар', EN: 'Plasma Sphere' }, description: { RU: 'Ядро плазмы. Выход: 500. Дроны: 2.2x', EN: 'Plasma core. Output: 500. Drones: 2.2x' }, cost: { ancientTech: 20, rubies: 30 }, baseStats: { energyOutput: 500, droneEfficiency: 2.2 } },
   { id: 'pwr_9', iconPath: '/equipment/power/pwr_9.png', tier: 9, mass: 647, rarity: 'Epic', name: { RU: 'Антиматериевый бак', EN: 'Antimatter Tank' }, description: { RU: 'Чистая энергия. Выход: 800. Дроны: 2.6x', EN: 'Pure energy. Output: 800. Drones: 2.6x' }, cost: { ancientTech: 50, nanoSwarm: 50 }, baseStats: { energyOutput: 800, droneEfficiency: 2.6 } },
   { id: 'pwr_10', iconPath: '/equipment/power/pwr_10.png', tier: 10, mass: 708, rarity: 'Legendary', name: { RU: 'Кварковая ячейка', EN: 'Quark Cell' }, description: { RU: 'Кварковый синтез. Выход: 1200. Дроны: 3.5x', EN: 'Quark synthesis. Output: 1200. Drones: 3.5x' }, cost: { ancientTech: 120, rubies: 50, nanoSwarm: 100 }, baseStats: { energyOutput: 1200, droneEfficiency: 3.5 } },
-  { id: 'pwr_11', iconPath: '/equipment/power/pwr_11.png', tier: 11, mass: 768, rarity: 'Legendary', name: { RU: 'Звездное ядро', EN: 'Star Core' }, description: { RU: 'Микро-звезда. Выход: 1800. Дроны: 4.5x', EN: 'Micro-star. Output: 1800. Drones: 4.5x' }, cost: { ancientTech: 300, rubies: 100, diamonds: 50 }, baseStats: { energyOutput: 1800, droneEfficiency: 4.5 } },
-  { id: 'pwr_12', iconPath: '/equipment/power/pwr_12.png', tier: 12, mass: 827, rarity: 'Legendary', name: { RU: 'Сингулярность', EN: 'Singularity' }, description: { RU: 'Горизонт событий. Выход: 3000. Дроны: 6x', EN: 'Event horizon. Output: 3000. Drones: 6x' }, cost: { ancientTech: 800, nanoSwarm: 500, emeralds: 50 }, baseStats: { energyOutput: 3000, droneEfficiency: 6.0 } },
-  { id: 'pwr_13', iconPath: '/equipment/power/pwr_13.png', tier: 13, mass: 885, rarity: 'Godly', name: { RU: 'Энергия Пустоты', EN: 'Void Energy' }, description: { RU: 'Извлечение из пустоты. Выход: 6000. Дроны: 10x', EN: 'Extraction from void. Output: 6000. Drones: 10x' }, cost: { ancientTech: 2000, rubies: 500, nanoSwarm: 1000 }, baseStats: { energyOutput: 6000, droneEfficiency: 10.0 } },
-  { id: 'pwr_14', iconPath: '/equipment/power/pwr_14.png', tier: 14, mass: 942, rarity: 'Godly', name: { RU: 'Дыхание Вселенной', EN: 'Breath of the Universe' }, description: { RU: 'Космический такт. Выход: 15000. Дроны: 20x', EN: 'Cosmic tact. Output: 15000. Drones: 20x' }, cost: { ancientTech: 5000, rubies: 1000, diamonds: 500 }, baseStats: { energyOutput: 15000, droneEfficiency: 20.0 } },
-  { id: 'pwr_15', iconPath: '/equipment/power/pwr_15.png', tier: 15, mass: 999, rarity: 'Godly', name: { RU: 'Вечный Двигатель', EN: 'Perpetual Motion' }, description: { RU: 'Энергия без границ. Выход: ∞. Дроны: 50x', EN: 'Limitless energy. Output: ∞. Drones: 50x' }, cost: { ancientTech: 15000, nanoSwarm: 5000 }, baseStats: { energyOutput: 99999, droneEfficiency: 50.0 } }
+  { id: 'pwr_11', iconPath: '/equipment/power/pwr_11.png', tier: 11, mass: 768, rarity: 'Legendary', name: { RU: 'Звездное ядро', EN: 'Star Core' }, description: { RU: 'Микро-звезда. Выход: 1800. Дроны: 4.5x', EN: 'Micro-star. Output: 1800. Drones: 4.5x' }, cost: { ancientTech: 300, voidMatter: 150, rubies: 100, diamonds: 50 }, baseStats: { energyOutput: 1800, droneEfficiency: 4.5 } },
+  { id: 'pwr_12', iconPath: '/equipment/power/pwr_12.png', tier: 12, mass: 827, rarity: 'Legendary', name: { RU: 'Сингулярность', EN: 'Singularity' }, description: { RU: 'Горизонт событий. Выход: 3000. Дроны: 6x', EN: 'Event horizon. Output: 3000. Drones: 6x' }, cost: { ancientTech: 800, voidMatter: 500, nanoSwarm: 500, emeralds: 50 }, baseStats: { energyOutput: 3000, droneEfficiency: 6.0 } },
+  { id: 'pwr_13', iconPath: '/equipment/power/pwr_13.png', tier: 13, mass: 885, rarity: 'Godly', name: { RU: 'Энергия Пустоты', EN: 'Void Energy' }, description: { RU: 'Извлечение из пустоты. Выход: 6000. Дроны: 10x', EN: 'Extraction from void. Output: 6000. Drones: 10x' }, cost: { ancientTech: 2000, chronoShards: 100, rubies: 500, nanoSwarm: 1000 }, baseStats: { energyOutput: 6000, droneEfficiency: 10.0 } },
+  { id: 'pwr_14', iconPath: '/equipment/power/pwr_14.png', tier: 14, mass: 942, rarity: 'Godly', name: { RU: 'Дыхание Вселенной', EN: 'Breath of the Universe' }, description: { RU: 'Космический такт. Выход: 15000. Дроны: 20x', EN: 'Cosmic tact. Output: 15000. Drones: 20x' }, cost: { ancientTech: 5000, chronoShards: 500, rubies: 1000, diamonds: 500 }, baseStats: { energyOutput: 15000, droneEfficiency: 20.0 } },
+  { id: 'pwr_15', iconPath: '/equipment/power/pwr_15.png', tier: 15, mass: 999, rarity: 'Godly', name: { RU: 'Вечный Двигатель', EN: 'Perpetual Motion' }, description: { RU: 'Энергия без границ. Выход: ∞. Дроны: 50x', EN: 'Limitless energy. Output: ∞. Drones: 50x' }, cost: { ancientTech: 15000, chronoShards: 3000, nanoSwarm: 5000 }, baseStats: { energyOutput: 99999, droneEfficiency: 50.0 } }
 ];
 
 
@@ -233,12 +227,12 @@ export const SHIELD_GENERATORS: ShieldPart[] = [
   { id: 'shd_8', iconPath: '/equipment/shields/shd_8.png', tier: 8, mass: 230, rarity: 'Epic', name: { RU: 'Поле Фарадея-Икс', EN: 'Faraday Field-X' }, description: { RU: 'Щит: 750. Эфф: 40%. Энергия: 45.', EN: 'Shield: 750. Eff: 40%. Energy: 45.' }, cost: { uranium: 1200, emeralds: 25 }, blueprintId: 'blueprint_shield_tech', baseStats: { maxShield: 750, efficiency: 0.40, rechargeMult: 5.5, energyCost: 45 } },
   { id: 'shd_9', iconPath: '/equipment/shields/shd_9.png', tier: 9, mass: 280, rarity: 'Epic', name: { RU: 'Фотонная кожа', EN: 'Photonic Skin' }, description: { RU: 'Щит: 1000. Эфф: 50%. Энергия: 65.', EN: 'Shield: 1000. Eff: 50%. Energy: 65.' }, cost: { ancientTech: 20, nanoSwarm: 50 }, blueprintId: 'blueprint_shield_tech', baseStats: { maxShield: 1000, efficiency: 0.50, rechargeMult: 7.0, energyCost: 65 } },
   { id: 'shd_10', iconPath: '/equipment/shields/shd_10.png', tier: 10, mass: 335, rarity: 'Legendary', name: { RU: 'Зеркальный щит', EN: 'Mirror Shield' }, description: { RU: 'Щит: 1500. Эфф: 60%. Энергия: 90.', EN: 'Shield: 1500. Eff: 60%. Energy: 90.' }, cost: { ancientTech: 150, emeralds: 50, nanoSwarm: 200 }, blueprintId: 'blueprint_quantum_shield', baseStats: { maxShield: 1500, efficiency: 0.60, rechargeMult: 9.0, energyCost: 90 } },
-  { id: 'shd_11', iconPath: '/equipment/shields/shd_11.png', tier: 11, mass: 395, rarity: 'Legendary', name: { RU: 'Квантовый страж', EN: 'Quantum Sentry' }, description: { RU: 'Щит: 2000. Эфф: 70%. Энергия: 130.', EN: 'Shield: 2000. Eff: 70%. Energy: 130.' }, cost: { ancientTech: 400, diamonds: 50, nanoSwarm: 500 }, blueprintId: 'blueprint_quantum_shield', baseStats: { maxShield: 2000, efficiency: 0.70, rechargeMult: 12.0, energyCost: 130 } },
-  { id: 'shd_12', iconPath: '/equipment/shields/shd_12.png', tier: 12, mass: 460, rarity: 'Legendary', name: { RU: 'Сдвиг Реальности', EN: 'Reality Shift' }, description: { RU: 'Щит: 3000. Эфф: 80%. Энергия: 200.', EN: 'Shield: 3000. Eff: 80%. Energy: 200.' }, cost: { ancientTech: 1000, nanoSwarm: 1500 }, blueprintId: 'blueprint_quantum_shield', baseStats: { maxShield: 3000, efficiency: 0.80, rechargeMult: 15.0, energyCost: 200 } },
+  { id: 'shd_11', iconPath: '/equipment/shields/shd_11.png', tier: 11, mass: 395, rarity: 'Legendary', name: { RU: 'Квантовый страж', EN: 'Quantum Sentry' }, description: { RU: 'Щит: 2000. Эфф: 70%. Энергия: 130.', EN: 'Shield: 2000. Eff: 70%. Energy: 130.' }, cost: { ancientTech: 400, voidMatter: 150, diamonds: 50, nanoSwarm: 500 }, blueprintId: 'blueprint_quantum_shield', baseStats: { maxShield: 2000, efficiency: 0.70, rechargeMult: 12.0, energyCost: 130 } },
+  { id: 'shd_12', iconPath: '/equipment/shields/shd_12.png', tier: 12, mass: 460, rarity: 'Legendary', name: { RU: 'Сдвиг Реальности', EN: 'Reality Shift' }, description: { RU: 'Щит: 3000. Эфф: 80%. Энергия: 200.', EN: 'Shield: 3000. Eff: 80%. Energy: 200.' }, cost: { ancientTech: 1000, voidMatter: 500, nanoSwarm: 1500, rubies: 100 }, blueprintId: 'blueprint_quantum_shield', baseStats: { maxShield: 3000, efficiency: 0.80, rechargeMult: 15.0, energyCost: 200 } },
   // FUSION ONLY
-  { id: 'shd_13', iconPath: '/equipment/shields/shd_13.png', tier: 13, mass: 530, rarity: 'Godly', name: { RU: 'Сингулярный барьер', EN: 'Singular Barrier' }, description: { RU: 'Щит: 5000. Эфф: 85%. Энергия: 350.', EN: 'Shield: 5000. Eff: 85%. Energy: 350.' }, cost: { ancientTech: 3000, diamonds: 500, nanoSwarm: 3000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxShield: 5000, efficiency: 0.85, rechargeMult: 20.0, energyCost: 350 } },
-  { id: 'shd_14', iconPath: '/equipment/shields/shd_14.png', tier: 14, mass: 605, rarity: 'Godly', name: { RU: 'Горизонт событий', EN: 'Event Horizon' }, description: { RU: 'Щит: 10000. Эфф: 90%. Энергия: 600.', EN: 'Shield: 10000. Eff: 90%. Energy: 600.' }, cost: { ancientTech: 8000, nanoSwarm: 5000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxShield: 10000, efficiency: 0.90, rechargeMult: 30.0, energyCost: 600 } },
-  { id: 'shd_15', iconPath: '/equipment/shields/shd_15.png', tier: 15, mass: 685, rarity: 'Godly', name: { RU: 'Небытие', EN: 'Non-existence' }, description: { RU: 'Щит: 50000. Эфф: 99%. Энергия: 1000.', EN: 'Shield: 50000. Eff: 99%. Energy: 1000.' }, cost: { ancientTech: 20000, diamonds: 1000, nanoSwarm: 10000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxShield: 50000, efficiency: 0.99, rechargeMult: 60.0, energyCost: 1000 } }
+  { id: 'shd_13', iconPath: '/equipment/shields/shd_13.png', tier: 13, mass: 530, rarity: 'Godly', name: { RU: 'Сингулярный барьер', EN: 'Singular Barrier' }, description: { RU: 'Щит: 5000. Эфф: 85%. Энергия: 350.', EN: 'Shield: 5000. Eff: 85%. Energy: 350.' }, cost: { ancientTech: 3000, chronoShards: 100, diamonds: 500, nanoSwarm: 3000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxShield: 5000, efficiency: 0.85, rechargeMult: 20.0, energyCost: 350 } },
+  { id: 'shd_14', iconPath: '/equipment/shields/shd_14.png', tier: 14, mass: 605, rarity: 'Godly', name: { RU: 'Горизонт событий', EN: 'Event Horizon' }, description: { RU: 'Щит: 10000. Эфф: 90%. Энергия: 600.', EN: 'Shield: 10000. Eff: 90%. Energy: 600.' }, cost: { ancientTech: 8000, chronoShards: 500, nanoSwarm: 5000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxShield: 10000, efficiency: 0.90, rechargeMult: 30.0, energyCost: 600 } },
+  { id: 'shd_15', iconPath: '/equipment/shields/shd_15.png', tier: 15, mass: 685, rarity: 'Godly', name: { RU: 'Небытие', EN: 'Non-existence' }, description: { RU: 'Щит: 50000. Эфф: 99%. Энергия: 1000.', EN: 'Shield: 50000. Eff: 99%. Energy: 1000.' }, cost: { ancientTech: 20000, chronoShards: 2000, diamonds: 1000, nanoSwarm: 10000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxShield: 50000, efficiency: 0.99, rechargeMult: 60.0, energyCost: 1000 } }
 ];
 
 export const ARMORS: ArmorPart[] = [
@@ -252,11 +246,11 @@ export const ARMORS: ArmorPart[] = [
   { id: 'arm_8', tier: 8, mass: 975, rarity: 'Epic', name: { RU: 'Ионный щит', EN: 'Ionic Shield' }, description: { RU: 'Энерго-барьер. Защ: 35%. Все: +40%. Энергия: 40.', EN: 'Energy barrier. Def: 35%. All: +40%. Energy: 40.' }, cost: { uranium: 1000, rubies: 20 }, baseStats: { defense: 35, energyCost: 40, hazardResist: 40 } },
   { id: 'arm_9', tier: 9, mass: 1084, rarity: 'Epic', name: { RU: 'Вольфрамовая броня', EN: 'Tungsten Armor' }, description: { RU: 'Вольфрамовый блеск. Защ: 40%. Все: +50%. Энергия: 50.', EN: 'Tungsten shine. Def: 40%. All: +50%. Energy: 50.' }, cost: { ancientTech: 20, diamonds: 20 }, baseStats: { defense: 40, energyCost: 50, hazardResist: 50 } },
   { id: 'arm_10', tier: 10, mass: 1191, rarity: 'Legendary', name: { RU: 'Силовое поле "Зенит"', EN: 'Force Field "Zenith"' }, description: { RU: 'Полное поглощение. Защ: 50%. Все: +60%. Энергия: 70.', EN: 'Full absorption. Def: 50%. All: +60%. Energy: 70.' }, cost: { ancientTech: 60, rubies: 50, nanoSwarm: 50 }, baseStats: { defense: 50, energyCost: 70, hazardResist: 60 } },
-  { id: 'arm_11', tier: 11, mass: 1298, rarity: 'Legendary', name: { RU: 'Нейтронный слой', EN: 'Neutron Layer' }, description: { RU: 'Плотность звезды. Защ: 60%. Все: +70%. Энергия: 90.', EN: 'Star density. Def: 60%. All: +70%. Energy: 90.' }, cost: { ancientTech: 150, emeralds: 50, nanoSwarm: 100 }, baseStats: { defense: 60, energyCost: 90, hazardResist: 70 } },
-  { id: 'arm_12', tier: 12, mass: 1404, rarity: 'Legendary', name: { RU: 'Пространственный сдвиг', EN: 'Spatial Shift' }, description: { RU: 'Сдвиг фазы. Защ: 70%. Все: +80%. Энергия: 120.', EN: 'Phase shift. Def: 70%. All: +80%. Energy: 120.' }, cost: { ancientTech: 400, diamonds: 50, nanoSwarm: 300 }, baseStats: { defense: 70, energyCost: 120, hazardResist: 80 } },
-  { id: 'arm_13', tier: 13, mass: 1509, rarity: 'Godly', name: { RU: 'Щит "Абсолют"', EN: 'Shield "Absolute"' }, description: { RU: 'Абсолютная защита. Защ: 80%. Все: +90%. Энергия: 200.', EN: 'Absolute defense. Def: 80%. All: +90%. Energy: 200.' }, cost: { ancientTech: 1000, emeralds: 300, diamonds: 200 }, baseStats: { defense: 80, energyCost: 200, hazardResist: 90 } },
-  { id: 'arm_14', tier: 14, mass: 1613, rarity: 'Godly', name: { RU: 'Фрактальная броня', EN: 'Fractal Armor' }, description: { RU: 'Бесконечное дробление. Защ: 90%. Все: +95%. Энергия: 300.', EN: 'Infinite fragmentation. Def: 90%. All: +95%. Energy: 300.' }, cost: { ancientTech: 3000, nanoSwarm: 2000 }, baseStats: { defense: 90, energyCost: 300, hazardResist: 95 } },
-  { id: 'arm_15', tier: 15, mass: 1716, rarity: 'Godly', name: { RU: 'Божественная длань', EN: 'Divine Hand' }, description: { RU: 'Иммунитет Творца. Защ: 100%. Энергия: 600.', EN: 'Creator immunity. Def: 100%. Energy: 600.' }, cost: { ancientTech: 10000, rubies: 1000, emeralds: 1000, diamonds: 1000 }, baseStats: { defense: 100, energyCost: 600, hazardResist: 100 } }
+  { id: 'arm_11', tier: 11, mass: 1298, rarity: 'Legendary', name: { RU: 'Нейтронный слой', EN: 'Neutron Layer' }, description: { RU: 'Плотность звезды. Защ: 60%. Все: +70%. Энергия: 90.', EN: 'Star density. Def: 60%. All: +70%. Energy: 90.' }, cost: { ancientTech: 150, voidMatter: 100, emeralds: 50, nanoSwarm: 200 }, baseStats: { defense: 60, energyCost: 90, hazardResist: 70 } },
+  { id: 'arm_12', tier: 12, mass: 1404, rarity: 'Legendary', name: { RU: 'Пространственный сдвиг', EN: 'Spatial Shift' }, description: { RU: 'Сдвиг фазы. Защ: 70%. Все: +80%. Энергия: 120.', EN: 'Phase shift. Def: 70%. All: +80%. Energy: 120.' }, cost: { ancientTech: 400, voidMatter: 350, diamonds: 50, nanoSwarm: 500 }, baseStats: { defense: 70, energyCost: 120, hazardResist: 80 } },
+  { id: 'arm_13', tier: 13, mass: 1509, rarity: 'Godly', name: { RU: 'Щит "Абсолют"', EN: 'Shield "Absolute"' }, description: { RU: 'Абсолютная защита. Защ: 80%. Все: +90%. Энергия: 200.', EN: 'Absolute defense. Def: 80%. All: +90%. Energy: 200.' }, cost: { ancientTech: 1000, chronoShards: 80, emeralds: 300, diamonds: 200 }, baseStats: { defense: 80, energyCost: 200, hazardResist: 90 } },
+  { id: 'arm_14', tier: 14, mass: 1613, rarity: 'Godly', name: { RU: 'Фрактальная броня', EN: 'Fractal Armor' }, description: { RU: 'Бесконечное дробление. Защ: 90%. Все: +95%. Энергия: 300.', EN: 'Infinite fragmentation. Def: 90%. All: +95%. Energy: 300.' }, cost: { ancientTech: 3000, chronoShards: 400, nanoSwarm: 2000 }, baseStats: { defense: 90, energyCost: 300, hazardResist: 95 } },
+  { id: 'arm_15', tier: 15, mass: 1716, rarity: 'Godly', name: { RU: 'Божественная длань', EN: 'Divine Hand' }, description: { RU: 'Иммунитет Творца. Защ: 100%. Энергия: 600.', EN: 'Creator immunity. Def: 100%. Energy: 600.' }, cost: { ancientTech: 10000, chronoShards: 2000, rubies: 1000, emeralds: 1000, diamonds: 1000 }, baseStats: { defense: 100, energyCost: 600, hazardResist: 100 } }
 ];
 
 
@@ -271,12 +265,12 @@ export const CARGO_BAYS: CargoBayPart[] = [
   { id: 'cargo_8', tier: 8, mass: 1171, rarity: 'Epic', name: { RU: 'Магнитный расширитель', EN: 'Magnetic Expander' }, description: { RU: 'Поле. HP: 600. Груз: 80к. Энергия: 120.', EN: 'Field. HP: 600. Cargo: 80k. Energy: 120.' }, cost: { uranium: 1200, diamonds: 10 }, baseStats: { cargoCapacity: 80000, energyCost: 120 } },
   { id: 'cargo_9', tier: 9, mass: 1295, rarity: 'Epic', name: { RU: 'Нано-структурный блок', EN: 'Nano-structural Block' }, description: { RU: 'Нано-сборка. HP: 1500. Груз: 150к. Энергия: 200.', EN: 'Nano-assembly. HP: 1500. Cargo: 150k. Energy: 200.' }, cost: { ancientTech: 40, rubies: 20, nanoSwarm: 50 }, baseStats: { cargoCapacity: 150000, energyCost: 200 } },
   { id: 'cargo_10', tier: 10, mass: 1416, rarity: 'Legendary', name: { RU: 'Гравитационный стабилизатор', EN: 'Gravitational Stabilizer' }, description: { RU: 'Невесомость. HP: 2500. Груз: 300к. Энергия: 350.', EN: 'Weightlessness. HP: 2500. Cargo: 300k. Energy: 350.' }, cost: { ancientTech: 150, emeralds: 50, nanoSwarm: 200 }, baseStats: { cargoCapacity: 300000, energyCost: 350 } },
-  { id: 'cargo_11', tier: 11, mass: 1535, rarity: 'Legendary', name: { RU: 'Пространственный карман', EN: 'Spatial Pocket' }, description: { RU: 'Больше внутри. HP: 3000. Груз: 600к. Энергия: 500.', EN: 'Bigger inside. HP: 3000. Cargo: 600k. Energy: 500.' }, cost: { ancientTech: 400, diamonds: 50, nanoSwarm: 500 }, baseStats: { cargoCapacity: 600000, energyCost: 500 } },
-  { id: 'cargo_12', tier: 12, mass: 1653, rarity: 'Legendary', name: { RU: 'Подпространственный склад', EN: 'Subspace Warehouse' }, description: { RU: 'Склад в пустоте. HP: 3500. Груз: 1.2М. Энергия: 800.', EN: 'Void warehouse. HP: 3500. Cargo: 1.2M. Energy: 800.' }, cost: { ancientTech: 1200, nanoSwarm: 1500, rubies: 100 }, baseStats: { cargoCapacity: 1200000, energyCost: 800 } },
+  { id: 'cargo_11', tier: 11, mass: 1535, rarity: 'Legendary', name: { RU: 'Пространственный карман', EN: 'Spatial Pocket' }, description: { RU: 'Больше внутри. HP: 3000. Груз: 600к. Энергия: 500.', EN: 'Bigger inside. HP: 3000. Cargo: 600k. Energy: 500.' }, cost: { ancientTech: 400, voidMatter: 100, diamonds: 50, nanoSwarm: 500 }, baseStats: { cargoCapacity: 600000, energyCost: 500 } },
+  { id: 'cargo_12', tier: 12, mass: 1653, rarity: 'Legendary', name: { RU: 'Подпространственный склад', EN: 'Subspace Warehouse' }, description: { RU: 'Склад в пустоте. HP: 3500. Груз: 1.2М. Энергия: 800.', EN: 'Void warehouse. HP: 3500. Cargo: 1.2M. Energy: 800.' }, cost: { ancientTech: 1200, voidMatter: 400, nanoSwarm: 1500, rubies: 100 }, baseStats: { cargoCapacity: 1200000, energyCost: 800 } },
   // FUSION ONLY
-  { id: 'cargo_13', tier: 13, mass: 1770, rarity: 'Godly', name: { RU: 'Квантовый накопитель', EN: 'Quantum Accumulator' }, description: { RU: 'Квантовый сдвиг. HP: 5000. Груз: 3М. Энергия: 1200.', EN: 'Quantum shift. HP: 5000. Cargo: 3M. Energy: 1200.' }, cost: { ancientTech: 3000, rubies: 1000, diamonds: 500 }, baseStats: { cargoCapacity: 3000000, energyCost: 1200 } },
-  { id: 'cargo_14', tier: 14, mass: 1885, rarity: 'Godly', name: { RU: 'Сингулярное хранилище', EN: 'Singular Storage' }, description: { RU: 'Сингулярность. HP: 8000. Груз: 8М. Энергия: 2000.', EN: 'Singularity. HP: 8000. Cargo: 8M. Energy: 2000.' }, cost: { ancientTech: 8000, emeralds: 1000, nanoSwarm: 3000 }, baseStats: { cargoCapacity: 8000000, energyCost: 2000 } },
-  { id: 'cargo_15', tier: 15, mass: 1999, rarity: 'Godly', name: { RU: 'Бесконечный Горизонт', EN: 'Infinite Horizon' }, description: { RU: 'Объем планеты. HP: 20000. Груз: 20М. Энергия: 4000.', EN: 'Planet volume. HP: 20000. Cargo: 20M. Energy: 4000.' }, cost: { ancientTech: 20000, diamonds: 1000, nanoSwarm: 8000 }, baseStats: { cargoCapacity: 20000000, energyCost: 4000 } }
+  { id: 'cargo_13', tier: 13, mass: 1770, rarity: 'Godly', name: { RU: 'Квантовый накопитель', EN: 'Quantum Accumulator' }, description: { RU: 'Квантовый сдвиг. HP: 5000. Груз: 3М. Энергия: 1200.', EN: 'Quantum shift. HP: 5000. Cargo: 3M. Energy: 1200.' }, cost: { ancientTech: 3000, chronoShards: 100, rubies: 1000, diamonds: 500 }, baseStats: { cargoCapacity: 3000000, energyCost: 1200 } },
+  { id: 'cargo_14', tier: 14, mass: 1885, rarity: 'Godly', name: { RU: 'Сингулярное хранилище', EN: 'Singular Storage' }, description: { RU: 'Сингулярность. HP: 8000. Груз: 8М. Энергия: 2000.', EN: 'Singularity. HP: 8000. Cargo: 8M. Energy: 2000.' }, cost: { ancientTech: 8000, chronoShards: 500, emeralds: 1000, nanoSwarm: 3000 }, baseStats: { cargoCapacity: 8000000, energyCost: 2000 } },
+  { id: 'cargo_15', tier: 15, mass: 1999, rarity: 'Godly', name: { RU: 'Бесконечный Горизонт', EN: 'Infinite Horizon' }, description: { RU: 'Объем планеты. HP: 20000. Груз: 20М. Энергия: 4000.', EN: 'Planet volume. HP: 20000. Cargo: 20M. Energy: 4000.' }, cost: { ancientTech: 20000, chronoShards: 2000, diamonds: 1000, nanoSwarm: 8000 }, baseStats: { cargoCapacity: 20000000, energyCost: 4000 } }
 ];
 
 
@@ -287,7 +281,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'bit_13',
     componentAId: 'bit_12',
     componentBId: 'bit_12',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 500 },
     condition: { type: 'DEPTH_REACHED', target: 100000, description: { RU: 'Достигните глубины 100,000м', EN: 'Reach depth 100,000m' } },
     description: { RU: 'Два Антиматериевых пера создают Разлом Реальности', EN: 'Two Antimatter Nibs create Reality Breach' }
   },
@@ -305,7 +299,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'bit_15',
     componentAId: 'bit_14',
     componentBId: 'bit_14',
-    catalyst: { resource: ResourceType.DIAMONDS, amount: 500 },
+    catalyst: { resource: ResourceType.CHRONO_SHARDS, amount: 1000 },
     condition: { type: 'NO_DAMAGE', target: 100, description: { RU: 'Слияние при 100% HP', EN: 'Fusion at 100% HP' } },
     description: { RU: 'Две Спирали создают Пронзающий Пустоту', EN: 'Two Spirals create Void Piercer' }
   },
@@ -316,7 +310,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'fus_eng_13',
     componentAId: 'eng_12',
     componentBId: 'eng_12',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1500 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 800 },
     condition: { type: 'MAX_HEAT', target: 100, description: { RU: 'Слияние при максимальном нагреве', EN: 'Fusion at max heat' } },
     description: { RU: 'Две Темные материи создают Нулевую точку', EN: 'Two Dark Matters create Zero Point' }
   },
@@ -334,7 +328,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'fus_eng_15',
     componentAId: 'fus_eng_14',
     componentBId: 'fus_eng_14',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 },
+    catalyst: { resource: ResourceType.CHRONO_SHARDS, amount: 2000 },
     description: { RU: 'Два Суперпозитора создают Двигатель Воли', EN: 'Two Superpositors create Engine of Will' }
   },
 
@@ -344,7 +338,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'cool_13',
     componentAId: 'cool_12',
     componentBId: 'cool_12',
-    catalyst: { resource: ResourceType.ICE, amount: 5000 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 400 },
     condition: { type: 'ZERO_HEAT', target: 0, description: { RU: 'Слияние при нулевом нагреве', EN: 'Fusion at zero heat' } },
     description: { RU: 'Два Стрингера Пустоты создают Энтропийный якорь', EN: 'Two Void Stringers create Entropy Anchor' }
   },
@@ -361,7 +355,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'cool_15',
     componentAId: 'cool_14',
     componentBId: 'cool_14',
-    catalyst: { resource: ResourceType.DIAMONDS, amount: 1000 },
+    catalyst: { resource: ResourceType.CHRONO_SHARDS, amount: 1500 },
     description: { RU: 'Два Ледяных сердца создают Смерть Вселенной', EN: 'Two Ice Hearts create Death of the Universe' }
   },
 
@@ -371,7 +365,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'hull_13',
     componentAId: 'hull_12',
     componentBId: 'hull_12',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2000 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 1500 },
     condition: { type: 'NO_DAMAGE', target: 100, description: { RU: 'Слияние при 100% HP', EN: 'Fusion at 100% HP' } },
     description: { RU: 'Два Зеркала создают Ковчег Предтеч', EN: 'Two Mirrors create Ark of the Precursors' }
   },
@@ -389,7 +383,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'hull_15',
     componentAId: 'hull_14',
     componentBId: 'hull_14',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 10000 },
+    catalyst: { resource: ResourceType.CHRONO_SHARDS, amount: 5000 },
     description: { RU: 'Две Оболочки создают Несокрушимый', EN: 'Two Shells create Indestructible' }
   },
 
@@ -399,7 +393,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'shd_13',
     componentAId: 'shd_12',
     componentBId: 'shd_12',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2000 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 600 },
     condition: { type: 'NO_DAMAGE', target: 200, description: { RU: 'Слияние при 200% щита (Overcharge)', EN: 'Fusion at 200% Shield (Overcharge)' } },
     description: { RU: 'Два Сдвига Реальности создают Сингулярный барьер', EN: 'Two Reality Shifts create Singular Barrier' }
   },
@@ -416,7 +410,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'shd_15',
     componentAId: 'shd_14',
     componentBId: 'shd_14',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 12000 },
+    catalyst: { resource: ResourceType.CHRONO_SHARDS, amount: 3000 },
     description: { RU: 'Два Горизонта событий создают Небытие', EN: 'Two Event Horizons create Non-existence' }
   },
 
@@ -426,7 +420,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'cpu_13',
     componentAId: 'cpu_12',
     componentBId: 'cpu_12',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1200 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 500 },
     condition: { type: 'DEPTH_REACHED', target: 120000, description: { RU: 'Достигните глубины 120,000м', EN: 'Reach depth 120,000m' } },
     description: { RU: 'Два Предсказателя создают Систему "Доминация"', EN: 'Two Forecasters create System "Domination"' }
   },
@@ -444,7 +438,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'cpu_15',
     componentAId: 'cpu_14',
     componentBId: 'cpu_14',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 8000 },
+    catalyst: { resource: ResourceType.CHRONO_SHARDS, amount: 2000 },
     description: { RU: 'Две Матрицы создают Божественного Архитектора', EN: 'Two Matrices create Divine Architect' }
   },
 
@@ -454,7 +448,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'ctrl_13',
     componentAId: 'ctrl_12',
     componentBId: 'ctrl_12',
-    catalyst: { resource: ResourceType.NANO_SWARM, amount: 1500 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 400 },
     condition: { type: 'ZERO_HEAT', target: 0, description: { RU: 'Слияние при нулевом нагреве', EN: 'Fusion at zero heat' } },
     description: { RU: 'Два Волевых интерфейса создают Симбиоз', EN: 'Two Will Interfaces create Symbiosis' }
   },
@@ -471,7 +465,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'ctrl_15',
     componentAId: 'ctrl_14',
     componentBId: 'ctrl_14',
-    catalyst: { resource: ResourceType.NANO_SWARM, amount: 8000 },
+    catalyst: { resource: ResourceType.CHRONO_SHARDS, amount: 1500 },
     description: { RU: 'Два Единства создают Творца', EN: 'Two Unities create Creator' }
   },
 
@@ -481,7 +475,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'gear_13',
     componentAId: 'gear_12',
     componentBId: 'gear_12',
-    catalyst: { resource: ResourceType.DIAMONDS, amount: 300 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 600 },
     condition: { type: 'MAX_HEAT', target: 100, description: { RU: 'Слияние при максимальном нагреве', EN: 'Fusion at max heat' } },
     description: { RU: 'Два Вариатора "Тьма" создают Разрушитель связей', EN: 'Two Variators "Darkness" create Bond Breaker' }
   },
@@ -498,7 +492,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'gear_15',
     componentAId: 'gear_14',
     componentBId: 'gear_14',
-    catalyst: { resource: ResourceType.DIAMONDS, amount: 800 },
+    catalyst: { resource: ResourceType.CHRONO_SHARDS, amount: 2000 },
     description: { RU: 'Два Нулевых создают Абсолютную тягу', EN: 'Two Zeros create Absolute Traction' }
   },
 
@@ -508,7 +502,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'pwr_13',
     componentAId: 'pwr_12',
     componentBId: 'pwr_12',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1800 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 1000 },
     condition: { type: 'NO_DAMAGE', target: 100, description: { RU: 'Слияние при 100% HP', EN: 'Fusion at 100% HP' } },
     description: { RU: 'Две Сингулярности создают Энергию Пустоты', EN: 'Two Singularities create Void Energy' }
   },
@@ -535,7 +529,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'arm_13',
     componentAId: 'arm_12',
     componentBId: 'arm_12',
-    catalyst: { resource: ResourceType.EMERALDS, amount: 300 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 800 },
     condition: { type: 'DEPTH_REACHED', target: 180000, description: { RU: 'Достигните глубины 180,000м', EN: 'Reach depth 180,000m' } },
     description: { RU: 'Два Пространственных сдвига создают Щит "Абсолют"', EN: 'Two Spatial Shifts create Shield "Absolute"' }
   },
@@ -553,7 +547,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'arm_15',
     componentAId: 'arm_14',
     componentBId: 'arm_14',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 8000 },
+    catalyst: { resource: ResourceType.CHRONO_SHARDS, amount: 3000 },
     description: { RU: 'Две Брони создают Божественную длань', EN: 'Two Armors create Divine Hand' }
   },
 
@@ -563,7 +557,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'cargo_13',
     componentAId: 'cargo_12',
     componentBId: 'cargo_12',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2500 },
+    catalyst: { resource: ResourceType.VOID_MATTER, amount: 1200 },
     condition: { type: 'ZERO_HEAT', target: 0, description: { RU: 'Слияние при нулевом нагреве', EN: 'Fusion at zero heat' } },
     description: { RU: 'Два Подпространственных склада создают Квантовый накопитель', EN: 'Two Subspace Warehouses create Quantum Accumulator' }
   },
@@ -580,7 +574,7 @@ export const FUSION_RECIPES: MergeRecipe[] = [
     resultId: 'cargo_15',
     componentAId: 'cargo_14',
     componentBId: 'cargo_14',
-    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 15000 },
+    catalyst: { resource: ResourceType.CHRONO_SHARDS, amount: 6000 },
     description: { RU: 'Два Хранилища создают Бесконечный Горизонт', EN: 'Two Storages create Infinite Horizon' }
   }
 ];

@@ -35,6 +35,11 @@ export function calculateCaravanRisk(
         risk *= 0.5;
     }
 
+    // Perk: Sabotage (REBELS Level 10) - -10% risk
+    if (activePerks.includes('SABOTAGE')) {
+        risk *= 0.9;
+    }
+
     return risk;
 }
 

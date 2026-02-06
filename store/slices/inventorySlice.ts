@@ -381,7 +381,7 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
             return;
         }
 
-        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, [], s.operatorId, s.hiredCrewIds);
         let events: VisualEvent[] = [];
         let partialUpdate: Partial<import('../../types').GameState> = {};
 
@@ -422,11 +422,22 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
                 break;
         }
 
+        // [PHASE 5] Mechanic unique trait: consumableSaveChancePct
+        const skipConsume = stats.consumableSaveChancePct > 0 && Math.random() < (stats.consumableSaveChancePct / 100);
+        if (skipConsume) {
+            events.push({
+                type: 'LOG',
+                msg: `🛠️ ТЕХНИЧЕСКАЯ СМЕКАЛКА: Расходник не потрачен!`,
+                color: 'text-purple-400 font-bold'
+            });
+            events.push({ type: 'SOUND', sfx: 'ACHIEVEMENT' });
+        }
+
         set({
             ...partialUpdate,
             consumables: {
                 ...s.consumables,
-                [id]: count - 1
+                [id]: skipConsume ? count : count - 1
             },
             actionLogQueue: pushLogs(s, [...events])
         });
@@ -436,7 +447,7 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
 
     recycleResources: (type) => {
         const s = get();
-        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, [], s.operatorId, s.hiredCrewIds);
         const { resources, activeEffects } = s;
 
         let resUpdate: Partial<Resources> = {};

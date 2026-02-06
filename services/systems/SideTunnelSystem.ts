@@ -179,7 +179,6 @@ class SideTunnelSystem {
             title: title,
             description: desc,
             type: 'CHOICE',
-            weight: 100,
             options: [
                 {
                     label: `${lang === 'RU' ? 'Войти в' : 'Enter'} ${t(def.name, lang).toLowerCase()}`,
@@ -252,7 +251,12 @@ export function processSideTunnel(
     tunnel.progress += progressGain;
 
     // Шанс найти ресурс во время раскопок в туннеле
-    if (Math.random() < 0.05 * dt * 60) {
+    // [PHASE 5] Geologist bonus: stats.rareResourceChancePct
+    const baseResourceChance = 0.05;
+    const geologistBonus = (state as any).operatorId === 'geologist' ? 0.15 : 0; // Using operatorId directly as stats might not have rareResourceChancePct yet in all paths
+    const finalResourceChance = (baseResourceChance + geologistBonus) * dt * 60;
+
+    if (Math.random() < finalResourceChance) {
         const resourceTypes = Object.keys(tunnel.rewards).filter(k => k !== 'ancientTech');
         if (resourceTypes.length > 0) {
             const resType = resourceTypes[Math.floor(Math.random() * resourceTypes.length)];

@@ -91,6 +91,10 @@ export const TL = {
     refinery: { RU: "Переработка", EN: "Refinery" },
     workshop: { RU: "Мастерская", EN: "Workshop" },
     garrison: { RU: "Гарнизон", EN: "Garrison" },
+    baseModules: { RU: "Базовые Модули", EN: "Base Modules" },
+    activateModule: { RU: "АКТИВИРОВАТЬ МОДУЛЬ", EN: "ACTIVATE MODULE" },
+    upgradeModule_btn: { RU: "УЛУЧШИТЬ МОДУЛЬ", EN: "UPGRADE MODULE" },
+    maxLevel: { RU: "МАКС. УРОВЕНЬ", EN: "MAX LEVEL" },
 
     // Новые ключи для полной локализации
     creditReserve: { RU: "РЕЗЕРВ КРЕДИТОВ", EN: "CREDIT RESERVE" },
@@ -328,6 +332,9 @@ export const TL = {
     noDamage: { RU: "ПОВРЕЖДЕНИЙ НЕТ", EN: "NO DAMAGE" },
     restoreHull: { RU: "ВОССТАНОВИТЬ ОБШИВКУ", EN: "RESTORE HULL" },
     premiumService: { RU: "ПРЕМИУМ ОБСЛУЖИВАНИЕ", EN: "PREMIUM SERVICE" },
+    fox_name: { RU: "Лиса", EN: "The Fox" },
+    fox_dialogue_intro: { RU: "Ищешь Лису? Ты её нашёл. Надеюсь, ты здесь по делу, а не просто пришёл выпить.", EN: "Looking for Fox? You found her. Hope you're here for business, not just a drink." },
+    fox_dialogue_market: { RU: "Теневой терминал в разделе торговли — это моя работа. Там ты найдёшь контрабанду и спецзаказы. Не попадись законникам.", EN: "The shadow terminal in the trade section is my doing. You'll find smuggling and special orders there. Don't get caught by the law." },
 
     // Подсистемы
     drillBit: { RU: "БУРОВАЯ КОРОНКА", EN: "DRILL BIT" },
@@ -381,6 +388,8 @@ export const TL = {
     repairKit: { RU: "Ремкомплект", EN: "Repair Kit" },
     coolantPaste: { RU: "Охлаждающая паста", EN: "Coolant Paste" },
     advancedCoolant: { RU: "Активный хладагент", EN: "Active Coolant" },
+    voidMatter: { RU: "Материя Пустоты", EN: "Void Matter" },
+    chronoShards: { RU: "Хроно-осколки", EN: "Chrono-Shards" },
     credits: { RU: "Кредиты", EN: "Credits" }
   },
   caravan: {
@@ -431,7 +440,7 @@ export const TL = {
     rivalryWarning: { RU: "ПРОТИВОСТОЯНИЕ", EN: "CONFRONTATION" }
   },
   quests: {
-    title: { RU: "Центр Управления", EN: "Command Center" },
+    title: { RU: "Центр Контрактов", EN: "Contract Center" },
     tabs: {
       available: { RU: "Доступные", EN: "Available" },
       active: { RU: "Активные", EN: "Active" },
@@ -613,7 +622,18 @@ export const TEXT_IDS = {
   SETTINGS_AUDIO_MIXER: { RU: "ПОДСИСТЕМА АУДИО-МИКШЕРА", EN: "AUDIO MIXER SUBSYSTEM" },
   SETTINGS_STATUS_MUTED: { RU: "ОТКЛЮЧЕНО", EN: "MUTED" },
   SETTINGS_STATUS_ONLINE: { RU: "В СЕТИ", EN: "ONLINE" },
-  SETTINGS_BUILD_REVISION: { RU: "РЕВИЗИЯ СБОРКИ", EN: "BUILD REVISION" }
+  SETTINGS_BUILD_REVISION: { RU: "РЕВИЗИЯ СБОРКИ", EN: "BUILD REVISION" },
+
+  // Logbook
+  LOGBOOK_TITLE: { RU: 'БОРТОВОЙ ЖУРНАЛ', EN: 'SHIP LOG' },
+  LOGBOOK_TAB_LOGS: { RU: 'ЛОГИ', EN: 'LOGS' },
+  LOGBOOK_TAB_COMM: { RU: 'СВЯЗЬ', EN: 'COMM LINK' },
+  LOGBOOK_TAB_MISSIONS: { RU: 'МИССИИ', EN: 'MISSIONS' },
+  LOGBOOK_ACTIVE_MISSIONS: { RU: 'АКТИВНЫЕ КОНТРАКТЫ', EN: 'ACTIVE CONTRACTS' },
+  LOGBOOK_COMPLETED_MISSIONS: { RU: 'АРХИВ КОНТРАКТОВ', EN: 'CONTRACT ARCHIVE' },
+  LOGBOOK_ACTIVE_ASSEMBLIES: { RU: 'АКТИВНЫЕ СБОРКИ', EN: 'ACTIVE ASSEMBLIES' },
+  LOGBOOK_NO_ENTRIES: { RU: 'НЕТ ЗАПИСЕЙ', EN: 'NO ENTRIES FOUND' },
+  LOGBOOK_EMPTY_BUFFER: { RU: 'Буфер данных пуст', EN: 'Data buffer is empty' }
 } as const;
 
 

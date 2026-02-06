@@ -1,6 +1,6 @@
 
 import { SliceCreator } from './types';
-import { ResourceType, View, Resources, DroneType } from '../../types';
+import { ResourceType, View, Resources, DroneType, BaseType, BaseModuleType, RegionId } from '../../types';
 import { EVENTS } from '../../services/eventRegistry';
 import { generateBoss } from '../../services/bossRegistry';
 import { audioEngine } from '../../services/audioEngine';
@@ -8,6 +8,8 @@ import { REGION_IDS } from '../../constants/regions';
 import { sideTunnelSystem } from '../../services/systems/SideTunnelSystem';
 import { SKILLS } from '../../services/skillRegistry';
 import { raidSystem } from '../../services/systems/RaidSystem';
+import { economySystem } from '../../services/systems/EconomySystem';
+import { calculateChronosTime } from '../../services/systems/TimeSystem';
 
 export interface AdminActions {
     adminAddResources: (common: number, rare: number) => void;
@@ -40,15 +42,26 @@ export interface AdminActions {
     adminForceRaid: () => void;
     adminAddLevel: (amount: number) => void;
     adminClearEffects: () => void;
-    adminResetFreeCoolingCooldown: () => void;  // NEW: Reset free cooling cooldown
+    adminResetFreeCoolingCooldown: () => void;
+    adminSetTimeMultiplier: (multiplier: number) => void;
+    adminSkipTime: (seconds: number) => void;
+    adminTeleportRegion: (regionId: string) => void;
+    adminUnlockLicense: (type: string) => void;
+    adminCreateBase: (type: BaseType) => void;
+    adminUnlockCaravan: (tier: string) => void;
+    adminSetCargo: (amount: number) => void;
 }
 
 export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
     adminAddResources: (c, r) => set(s => {
         const nr = { ...s.resources };
         Object.keys(nr).forEach(k => {
-            if (['clay', 'stone', 'copper', 'iron', 'silver', 'gold', 'coal', 'oil', 'gas'].includes(k)) nr[k as ResourceType] += c;
-            else nr[k as ResourceType] += r;
+            const key = k as ResourceType;
+            if (['clay', 'stone', 'copper', 'iron', 'silver', 'gold', 'coal', 'oil', 'gas', 'ice', 'scrap'].includes(key)) {
+                nr[key] += c;
+            } else if (key !== 'credits') {
+                nr[key] += r;
+            }
         });
         return { resources: nr };
     }),
@@ -60,7 +73,8 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
             rubies: 0, emeralds: 0, diamonds: 0,
             coal: 0, oil: 0, gas: 0,
             ice: 0, scrap: 0, credits: 0,
-            repairKit: 0, coolantPaste: 0, advancedCoolant: 0
+            repairKit: 0, coolantPaste: 0, advancedCoolant: 0,
+            voidMatter: 0, chronoShards: 0
         }
     })),
 
@@ -109,7 +123,13 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
                         drones: 10,
                         turrets: 5
                     },
-                    productionQueue: []
+                    productionQueue: [],
+                    modules: [
+                        { type: BaseModuleType.SCIENCE, level: 0, unlocked: false, status: 'DISABLED' },
+                        { type: BaseModuleType.LOGISTICS, level: 0, unlocked: false, status: 'DISABLED' },
+                        { type: BaseModuleType.INDUSTRIAL, level: 0, unlocked: false, status: 'DISABLED' },
+                        { type: BaseModuleType.DRONE_COMMAND, level: 0, unlocked: false, status: 'DISABLED' }
+                    ]
                 });
             } else {
                 updatedBases = updatedBases.map(b =>
@@ -325,4 +345,73 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
         set({ freeCoolingLastUsed: 0 });
         audioEngine.playClick();
     },
+
+    adminSetTimeMultiplier: (multiplier) => set({ timeMultiplier: multiplier }),
+
+    adminSkipTime: (seconds) => {
+        set(s => {
+            const newTime = (s.gameTime || 0) + seconds;
+            const chronos = calculateChronosTime(newTime);
+
+            // Economy Recovery Simulation
+            // We use the imported 'economySystem' from the top of the file
+            const hoursSkipped = seconds / 3600;
+            const economyUpdates = economySystem.processEconomyRecovery(s, hoursSkipped);
+
+            const msg = `>> [TIME JUMP]: +${Math.round(seconds / 60)} game minutes (${hoursSkipped.toFixed(1)}h)`;
+
+            return {
+                gameTime: newTime,
+                chronos,
+                ...economyUpdates, // Apply market saturation and raid risk updates
+                actionLogQueue: [...s.actionLogQueue, { type: 'LOG', msg, color: 'text-amber-400 font-bold' }]
+            };
+        });
+    },
+
+    adminTeleportRegion: (regionId) => set({ currentRegion: regionId as any }),
+
+    adminUnlockLicense: (type) => set(s => ({
+        unlockedLicenses: Array.from(new Set([...s.unlockedLicenses, type as any]))
+    })),
+
+    adminCreateBase: (type) => {
+        const s = get();
+        const regionId = s.currentRegion;
+        set(state => ({
+            playerBases: [...state.playerBases, {
+                id: `dev_base_${regionId}_${Date.now()}`,
+                regionId,
+                type,
+                status: 'active',
+                storageCapacity: 5000,
+                storedResources: {},
+                lastVisitedAt: Date.now(),
+                upgradeLevel: 1,
+                facilities: [],
+                defense: { integrity: 100, shields: 0, infantry: 5, drones: 5, turrets: 2 },
+                productionQueue: [],
+                modules: [
+                    { type: BaseModuleType.SCIENCE, level: 0, unlocked: false, status: 'DISABLED' },
+                    { type: BaseModuleType.LOGISTICS, level: 0, unlocked: false, status: 'DISABLED' },
+                    { type: BaseModuleType.INDUSTRIAL, level: 0, unlocked: false, status: 'DISABLED' },
+                    { type: BaseModuleType.DRONE_COMMAND, level: 0, unlocked: false, status: 'DISABLED' }
+                ],
+                constructionStartTime: Date.now(),
+                constructionCompletionTime: Date.now(),
+                hasWorkshop: true,
+                workshopTierRange: [1, 5],
+                hasFuelFacilities: false,
+                hasMarket: type === 'station',
+                hasFortification: false,
+                hasGuards: false
+            }]
+        }));
+    },
+
+    adminUnlockCaravan: (tier) => set(s => ({
+        caravanUnlocks: s.caravanUnlocks.map(u => u.tier === tier ? { ...u, unlocked: true } : u)
+    })),
+
+    adminSetCargo: (amount) => set({ currentCargoWeight: amount }),
 });

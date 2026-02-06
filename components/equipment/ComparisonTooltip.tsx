@@ -95,9 +95,9 @@ export const ComparisonTooltip: React.FC<ComparisonTooltipProps> = ({ item, targ
     if (!isVisible) return null;
 
     // Расчет статов
-    const currentStats = calculateStats(drill, skillLevels, equippedArtifacts.filter(Boolean) as string[], inventory, depth);
+    const currentStats = calculateStats(drill, skillLevels, equippedArtifacts.filter(Boolean) as string[], inventory, depth, [], useGameStore.getState().operatorId, useGameStore.getState().hiredCrewIds);
     const ghostDrill = { ...drill, [item.slotType]: itemDef };
-    const nextStats = calculateStats(ghostDrill, skillLevels, equippedArtifacts.filter(Boolean) as string[], inventory, depth);
+    const nextStats = calculateStats(ghostDrill, skillLevels, equippedArtifacts.filter(Boolean) as string[], inventory, depth, [], useGameStore.getState().operatorId, useGameStore.getState().hiredCrewIds);
 
     const getStatsToCompare = () => {
         const base = [

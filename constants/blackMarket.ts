@@ -185,3 +185,116 @@ export const BLACK_MARKET_ITEMS: BlackMarketItem[] = [
         requiredReputation: 1000
     }
 ];
+
+// === PHASE 6.2: SMUGGLING SYSTEM (Контрабанда) ===
+
+import { BlackMarketResource, BlackMarketState, RegionId, SmugglingCategory } from '../types';
+
+/**
+ * Категории контрабанды
+ */
+export const SMUGGLING_CATEGORIES: Record<SmugglingCategory, {
+    riskMultiplier: number;
+    priceMultiplier: number;
+    description: { RU: string; EN: string };
+}> = {
+    LOW_RISK: {
+        riskMultiplier: 1.5, // Было 0.5
+        priceMultiplier: 1.3,
+        description: { RU: 'Низкий риск', EN: 'Low Risk' }
+    },
+    MEDIUM_RISK: {
+        riskMultiplier: 3.0, // Было 1.0
+        priceMultiplier: 1.6,
+        description: { RU: 'Средний риск', EN: 'Medium Risk' }
+    },
+    HIGH_RISK: {
+        riskMultiplier: 8.0, // Было 2.0
+        priceMultiplier: 2.2, // Увеличено с 2.0
+        description: { RU: 'Высокий риск', EN: 'High Risk' }
+    }
+};
+
+/**
+ * Базовые ресурсы черного рынка для контрабанды
+ */
+export const SMUGGLING_RESOURCES: Record<SmugglingCategory, ResourceType[]> = {
+    LOW_RISK: [ResourceType.STONE, ResourceType.COPPER, ResourceType.IRON, ResourceType.COAL],
+    MEDIUM_RISK: [ResourceType.SILVER, ResourceType.GOLD, ResourceType.TITANIUM, ResourceType.OIL, ResourceType.GAS],
+    HIGH_RISK: [ResourceType.URANIUM, ResourceType.ANCIENT_TECH, ResourceType.NANO_SWARM, ResourceType.RUBIES, ResourceType.EMERALDS, ResourceType.DIAMONDS]
+};
+
+/**
+ * Базовый риск за единицу ресурса
+ */
+export const BASE_RISK_PER_UNIT = 0.05; // Увеличено с 0.01
+
+/**
+ * Пороги риска облавы
+ */
+export const RAID_THRESHOLDS = {
+    WARNING: 30,
+    HIGH_RISK: 60,
+    RAID: 80
+};
+
+/**
+ * Штрафы за облаву
+ */
+export const RAID_PENALTIES = {
+    credits: 25000, // Увеличено с 5000
+    reputation: 25, // Увеличено с 20
+    foxReputation: -40, // Увеличено с -30
+    blockDuration: 24 * 60 * 60
+};
+
+/**
+ * Скорость снижения риска (% в игровой час)
+ */
+export const RISK_DECAY_RATE = 1.5; // Снижено с 2 для большей опасности
+
+/**
+ * Региональные модификаторы спроса
+ */
+export const REGIONAL_DEMAND: Record<RegionId, Partial<Record<ResourceType, number>>> = {
+    [RegionId.RUST_VALLEY]: { [ResourceType.IRON]: 1.5, [ResourceType.COPPER]: 1.3, [ResourceType.SCRAP]: 1.8 },
+    [RegionId.CRYSTAL_WASTES]: { [ResourceType.RUBIES]: 2.0, [ResourceType.EMERALDS]: 2.0, [ResourceType.DIAMONDS]: 2.0 },
+    [RegionId.IRON_GATES]: { [ResourceType.IRON]: 1.8, [ResourceType.SILVER]: 1.6 },
+    [RegionId.MAGMA_CORE]: { [ResourceType.URANIUM]: 1.8, [ResourceType.TITANIUM]: 1.5 },
+    [RegionId.VOID_CHASM]: { [ResourceType.ANCIENT_TECH]: 2.0, [ResourceType.NANO_SWARM]: 1.8 }
+};
+
+/**
+ * Генерация состояния черного рынка для региона
+ */
+export function initializeBlackMarket(regionId: RegionId): BlackMarketState {
+    const resources: BlackMarketResource[] = [];
+
+    Object.entries(SMUGGLING_RESOURCES).forEach(([category, resourceList]) => {
+        const cat = category as SmugglingCategory;
+        const config = SMUGGLING_CATEGORIES[cat];
+
+        resourceList.forEach(resource => {
+            const regionalDemand = REGIONAL_DEMAND[regionId]?.[resource] || 1.0;
+
+            resources.push({
+                resource,
+                category: cat,
+                priceMultiplier: config.priceMultiplier * regionalDemand,
+                riskPerUnit: BASE_RISK_PER_UNIT * config.riskMultiplier,
+                demandLevel: 50 + Math.random() * 30
+            });
+        });
+    });
+
+    return {
+        regionId,
+        status: 'AVAILABLE',
+        availableResources: resources,
+        currentRisk: 0,
+        lastRaidTime: 0,
+        foxReputation: 0,
+        activeQuest: null,
+        lastQuestGenTime: 0
+    };
+}

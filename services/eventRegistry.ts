@@ -13,11 +13,11 @@ export const EVENTS: GameEvent[] = [
     {
         id: 'GAS_POCKET',
         type: 'ANOMALY',
-        weight: 25,
         title: 'Газовый карман',
         description: 'Вы наткнулись на карман с токсичным газом!',
         triggers: [EventTrigger.DRILLING],
         cooldown: 60,
+        chronosChance: { chance: 0.1, period: 'day', interval: 1 },
         instantDamage: 0.1,
         options: [
             {
@@ -35,11 +35,12 @@ export const EVENTS: GameEvent[] = [
     {
         id: 'TECTONIC_SHIFT',
         type: 'WARNING',
-        weight: 25,
         title: 'Тектонический сдвиг',
         description: 'Земля содрогается под вами!',
         triggers: [EventTrigger.DRILLING],
         cooldown: 120,
+        chronosChance: { chance: 0.05, period: 'day', interval: 3 },
+        instantDamage: 0.05, // Добавим немного урона для заметности
         instantDepth: 20,
         options: [
             {
@@ -56,6 +57,7 @@ export const EVENTS: GameEvent[] = [
         description: 'Вы обнаружили залежи ресурсов!',
         triggers: [EventTrigger.DRILLING],
         cooldown: 90,
+        chronosChance: { chance: 0.2, period: 'day', interval: 4 },
         instantResource: {
             type: 'stone',
             amountMean: 40,
@@ -79,6 +81,7 @@ export const EVENTS: GameEvent[] = [
         description: 'Температура резко возрастает!',
         triggers: [EventTrigger.DRILLING],
         cooldown: 45,
+        chronosChance: { chance: 0.15, period: 'day', interval: 5 },
         instantHeat: 15,
         options: [
             {
@@ -100,6 +103,7 @@ export const EVENTS: GameEvent[] = [
         description: 'Блеск золота в породе!',
         triggers: [EventTrigger.DRILLING],
         cooldown: 180,
+        chronosChance: { chance: 0.2, period: 'day', interval: 10 },
         options: [
             {
                 actionId: 'mine_gold',
@@ -111,12 +115,12 @@ export const EVENTS: GameEvent[] = [
     {
         id: 'FOSSIL_FIND',
         type: 'NOTIFICATION',
-        weight: 20,
         minDepth: 500,
         title: 'Находка окаменелости',
         description: 'Древний артефакт обнаружен в породе.',
         triggers: [EventTrigger.DRILLING],
         cooldown: 300,
+        chronosChance: { chance: 0.1, period: 'day', interval: 5 },
         options: [
             {
                 actionId: 'collect',
@@ -128,13 +132,13 @@ export const EVENTS: GameEvent[] = [
     {
         id: 'QUANTUM_FLUCTUATION',
         type: 'ANOMALY',
-        weight: 15,
         minDepth: 5000,
         title: 'Квантовая флуктуация',
         description: 'Пространство вокруг вас искажается...',
         triggers: [EventTrigger.DRILLING],
         cooldown: 240,
         instantDepth: 100,
+        chronosChance: { chance: 0.05, period: 'day', interval: 30 },
         options: [
             {
                 actionId: 'embrace',
@@ -145,11 +149,11 @@ export const EVENTS: GameEvent[] = [
     {
         id: 'MAGNETIC_STORM',
         type: 'WARNING',
-        weight: 20,
         title: 'Магнитная буря',
         description: 'Электромагнитные помехи мешают системам!',
         triggers: [EventTrigger.DRILLING],
         cooldown: 120,
+        chronosChance: { chance: 0.1, period: 'day', interval: 10 },
         instantHeat: 10,
         options: [
             {
@@ -166,6 +170,7 @@ export const EVENTS: GameEvent[] = [
         description: 'Вы обнаружили богатые залежи угля в породе!',
         triggers: [EventTrigger.DRILLING],
         cooldown: 60,
+        chronosChance: { chance: 0.15, period: 'day', interval: 2 },
         instantResource: {
             type: 'coal',
             amountMean: 30,
@@ -187,7 +192,6 @@ export const EVENTS: GameEvent[] = [
         title: { RU: '🏴‍☠️ Налет Пиратов', EN: '🏴‍☠️ Pirate Raid' },
         description: { RU: 'Сканеры зафиксировали приближение пиратского отряда. Они нацелились на ваши склады!', EN: 'Scanners detected an approaching pirate squad. They are targeting your storage!' },
         triggers: [EventTrigger.BASE_RAID],
-        weight: 10,
         options: [
             {
                 actionId: EventActionId.BASE_DEFEND,
@@ -205,7 +209,6 @@ export const EVENTS: GameEvent[] = [
         title: { RU: '🌀 Саботаж Пустоты', EN: '🌀 Void Sabotage' },
         description: { RU: 'Странное влияние Пустоты дестабилизирует механизмы базы. Нужна срочная защита!', EN: 'Strange Void influence destabilizes base machinery. Urgent protection needed!' },
         triggers: [EventTrigger.BASE_RAID],
-        weight: 5,
         options: [
             {
                 actionId: EventActionId.BASE_DEFEND,
@@ -219,7 +222,6 @@ export const EVENTS: GameEvent[] = [
         title: 'Резонанс Кристаллов',
         description: 'Сканеры фиксируют необычную частоту в боковом ответвлении.',
         triggers: [EventTrigger.DRILLING],
-        weight: 15,
         minDepth: 2000,
         cooldown: 300,
         options: [
@@ -240,7 +242,6 @@ export const EVENTS: GameEvent[] = [
         title: 'Древний Шахтный Ствол',
         description: 'Вы наткнулись на заброшенную систему вентиляции.',
         triggers: [EventTrigger.DRILLING],
-        weight: 15,
         minDepth: 1000,
         cooldown: 300,
         options: [
@@ -261,7 +262,6 @@ export const EVENTS: GameEvent[] = [
         title: 'Гнездо Чужих',
         description: 'Биосканеры зашкаливают! Впереди органическое образование.',
         triggers: [EventTrigger.DRILLING],
-        weight: 10,
         minDepth: 3000,
         cooldown: 600,
         options: [
@@ -300,34 +300,16 @@ export function rollRandomEvent(
     // 2. Обычные события
     const availableEvents = EVENTS.filter(e =>
         !recentEventIds.includes(e.id) &&
-        (e.minDepth === undefined || depth >= e.minDepth)
+        (e.minDepth === undefined || depth >= e.minDepth) &&
+        !e.chronosChance // Исключаем события, управляемые Chronos Protocol
     );
 
     if (availableEvents.length === 0) {
         return null;
     }
 
-    // Используем weight из самих событий
-    const weights = availableEvents.map(event => {
-        let w = event.weight;
-        // Модификаторы на основе условий
-        if (event.id === 'GAS_POCKET' && depth > 10000) w *= 1.5;
-        if (event.id === 'HEAT_WAVE' && heat > 50) w *= 2.0;
-        if (event.id === 'QUANTUM_FLUCTUATION' && depth > 5000) w *= 1.5;
-        return w;
-    });
-
-    const totalWeight = weights.reduce((a, b) => a + b, 0);
-    let roll = Math.random() * totalWeight;
-
-    for (let i = 0; i < availableEvents.length; i++) {
-        roll -= weights[i];
-        if (roll <= 0) {
-            return availableEvents[i];
-        }
-    }
-
-    return availableEvents[0];
+    // Равномерный выбор из доступных событий (система весов удалена по просьбе Создателя)
+    return availableEvents[Math.floor(Math.random() * availableEvents.length)];
 }
 
 /**

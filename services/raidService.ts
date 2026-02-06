@@ -17,7 +17,7 @@ export interface RaidResult {
 /**
  * Рассчитывает результат налета на базу
  */
-export const calculateRaidOutcome = (base: PlayerBase, attackPower: number): RaidResult => {
+export const calculateRaidOutcome = (base: PlayerBase, attackPower: number, activePerks: string[] = []): RaidResult => {
     // Fallback для старых баз без defense
     const defense = base.defense ?? {
         integrity: 100,
@@ -27,10 +27,15 @@ export const calculateRaidOutcome = (base: PlayerBase, attackPower: number): Rai
         turrets: 0
     };
 
-    const defensePower =
+    let defensePower =
         defense.infantry * DEFENSE_UNITS.infantry.defensePower +
         defense.drones * DEFENSE_UNITS.drone.defensePower +
         defense.turrets * DEFENSE_UNITS.turret.defensePower;
+
+    // Perk: Liberation (REBELS Level 15) - +50% base defense effectiveness
+    if (activePerks && activePerks.includes('LIBERATION')) {
+        defensePower *= 1.5;
+    }
 
     // Щиты поглощают часть урона (до 50%)
     const shieldAbsorb = (defense.shields / 100) * 0.5;

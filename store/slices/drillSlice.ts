@@ -20,7 +20,7 @@ export const createDrillSlice: SliceCreator<DrillActions> = (set, get) => ({
 
     manualClick: () => {
         const s = get();
-        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, [], s.operatorId, s.hiredCrewIds);
         const energyLoad = stats.energyProd > 0 ? (stats.energyCons / stats.energyProd) * 100 : 100;
         const isOverloaded = (s.currentCargoWeight > stats.totalCargoCapacity && !s.isZeroWeight) || (energyLoad > 100 && !s.isInfiniteEnergy);
 
@@ -107,7 +107,7 @@ export const createDrillSlice: SliceCreator<DrillActions> = (set, get) => ({
         const wp = boss.weakPoints.find(p => p.id === wpId);
         if (!wp || !wp.isActive) return;
 
-        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, [], s.operatorId, s.hiredCrewIds);
         const damage = 10 * stats.clickMult * 3; // x3 damage for weak point
 
         const newWp = { ...wp, currentHp: Math.max(0, wp.currentHp - damage) };

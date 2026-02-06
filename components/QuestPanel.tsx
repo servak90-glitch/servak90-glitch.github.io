@@ -47,7 +47,6 @@ const QuestPanel: React.FC = () => {
     } = useGameStore();
 
     const lang = settings.language as 'RU' | 'EN';
-    const [activeTab, setActiveTab] = useState<'available' | 'active' | 'completed'>('active');
     const [dynamicQuests, setDynamicQuests] = useState<Quest[]>([]);
 
     const availableStoryQuests = getAvailableQuests(completedQuestIds)
@@ -83,136 +82,51 @@ const QuestPanel: React.FC = () => {
                 </div>
 
                 <div className="flex w-full lg:w-auto bg-black/60 backdrop-blur-xl p-1 border border-white/5 rounded-sm shrink-0 overflow-x-auto no-scrollbar">
-                    {(['available', 'active', 'completed'] as const).map(tab => {
-                        const count = tab === 'available' ? allAvailable.length : tab === 'active' ? activeQuests.length : completedQuestIds.length;
-                        return (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 transition-all relative overflow-hidden group shrink-0
-                                    ${activeTab === tab ? 'text-black bg-white' : 'text-zinc-500 hover:text-white hover:bg-white/5'}
-                                `}
-                            >
-                                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">{t(TL.quests.tabs[tab], lang)}</span>
-                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-mono border ${activeTab === tab ? 'bg-black/10 border-black/20' : 'bg-white/10 border-white/5'}`}>{count}</span>
-                                {activeTab === tab && <div className="absolute inset-x-0 bottom-0 h-1 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />}
-                            </button>
-                        );
-                    })}
+                    <div className="flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 transition-all relative overflow-hidden text-black bg-white">
+                        <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">{t(TL.quests.tabs.available, lang)}</span>
+                        <span className="px-2 py-0.5 rounded-full text-[8px] font-mono border bg-black/10 border-black/20">{allAvailable.length}</span>
+                        <div className="absolute inset-x-0 bottom-0 h-1 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />
+                    </div>
                 </div>
             </div>
 
             {/* CONTENT AREA */}
             <div className="flex-1 md:overflow-y-auto no-scrollbar relative z-10">
-                <AnimatePresence mode="wait">
-                    {activeTab === 'available' && (
-                        <motion.div
-                            key="available-quests" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-                            className="space-y-8"
-                        >
-                            <button
-                                onClick={handleRefresh}
-                                className="w-full py-8 bg-cyan-500/5 hover:bg-cyan-500 border border-cyan-500/20 hover:border-cyan-500 transition-all group flex flex-col items-center justify-center gap-2 overflow-hidden relative"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                <RefreshCcw className="w-6 h-6 group-hover:rotate-180 transition-transform duration-700 mb-2" />
-                                <span className="text-[10px] font-[1000] uppercase tracking-[0.5em] italic">{t(TL.ui.scanHighPriority, lang)}</span>
-                                <span className="text-[8px] text-zinc-500 font-mono uppercase group-hover:text-black/60 tracking-widest">{t(TL.ui.powerUnitsFee, lang)}</span>
-                            </button>
+                <div className="space-y-8">
+                    <button
+                        onClick={handleRefresh}
+                        className="w-full py-8 bg-cyan-500/5 hover:bg-cyan-500 border border-cyan-500/20 hover:border-cyan-500 transition-all group flex flex-col items-center justify-center gap-2 overflow-hidden relative"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                        <RefreshCcw className="w-6 h-6 group-hover:rotate-180 transition-transform duration-700 mb-2" />
+                        <span className="text-[10px] font-[1000] uppercase tracking-[0.5em] italic">{t(TL.ui.scanHighPriority, lang)}</span>
+                        <span className="text-[8px] text-zinc-500 font-mono uppercase group-hover:text-black/60 tracking-widest">{t(TL.ui.powerUnitsFee, lang)}</span>
+                    </button>
 
-                            {allAvailable.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-24 grayscale text-center group">
-                                    <div className="text-8xl mb-8 opacity-10 group-hover:opacity-30 transition-opacity duration-1000">📡</div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">{t(TL.quests.noAvailable, lang)}</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {allAvailable.map(quest => (
-                                        <QuestCard
-                                            key={quest.id}
-                                            quest={quest}
-                                            lang={lang}
-                                            onAction={() => {
-                                                acceptQuest(quest.id);
-                                                if (quest.id.startsWith('rnd_')) {
-                                                    setDynamicQuests(prev => prev.filter(q => q.id !== quest.id));
-                                                }
-                                            }}
-                                            actionLabel={t(TL.quests.accept, lang)}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </motion.div>
+                    {allAvailable.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-24 grayscale text-center group">
+                            <div className="text-8xl mb-8 opacity-10 group-hover:opacity-30 transition-opacity duration-1000">📡</div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">{t(TL.quests.noAvailable, lang)}</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {allAvailable.map(quest => (
+                                <QuestCard
+                                    key={quest.id}
+                                    quest={quest}
+                                    lang={lang}
+                                    onAction={() => {
+                                        acceptQuest(quest.id);
+                                        if (quest.id.startsWith('rnd_')) {
+                                            setDynamicQuests(prev => prev.filter(q => q.id !== quest.id));
+                                        }
+                                    }}
+                                    actionLabel={t(TL.quests.accept, lang)}
+                                />
+                            ))}
+                        </div>
                     )}
-
-                    {activeTab === 'active' && (
-                        <motion.div
-                            key="active-quests" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }}
-                        >
-                            {activeQuests.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-24 grayscale text-center opacity-20">
-                                    <Navigation className="w-20 h-20 mb-6" />
-                                    <p className="text-[10px] font-black uppercase tracking-[0.4em]">{t(TL.quests.noActive, lang)}</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {activeQuests.map(quest => {
-                                        const isReady = quest.objectives.every(o => o.current >= o.required);
-                                        return (
-                                            <QuestCard
-                                                key={quest.id}
-                                                quest={quest}
-                                                lang={lang}
-                                                onAction={() => completeQuest(quest.id)}
-                                                actionLabel={t(TL.quests.complete, lang)}
-                                                isReady={isReady}
-                                                showObjectives
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {activeTab === 'completed' && (
-                        <motion.div
-                            key="completed-quests" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                            className="space-y-4 max-w-5xl mx-auto"
-                        >
-                            {completedQuestIds.length === 0 ? (
-                                <div className="text-center opacity-20 py-24 uppercase font-black tracking-widest text-[10px]">{t(TL.quests.emptyHistory, lang)}</div>
-                            ) : (
-                                completedQuestIds.map(id => {
-                                    const def = getQuestById(id);
-                                    return (
-                                        <div key={id} className="relative group overflow-hidden">
-                                            <div className="absolute inset-0 bg-white/5 transition-transform duration-500 translate-x-[-100%] group-hover:translate-x-0" />
-                                            <div className="relative bg-white/[0.02] border border-white/5 p-6 flex items-center justify-between transition-colors">
-                                                <div className="flex items-center gap-8">
-                                                    <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                                                        <CheckCircle2 className="w-6 h-6" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-black text-white uppercase italic tracking-widest leading-none mb-2">{def ? t(def.title, lang) : id}</h4>
-                                                        <div className="text-[8px] font-black text-zinc-600 uppercase tracking-[0.4em]">{t(TL.ui.contractFulfilled, lang)}</div>
-                                                    </div>
-                                                </div>
-                                                {def?.factionId && (
-                                                    <div className={`px-6 py-2 border text-[9px] font-[1000] uppercase tracking-widest flex items-center gap-3 ${FACTION_CHIP[def.factionId]}`}>
-                                                        {FACTION_ICONS[def.factionId]}
-                                                        {t(TL.factions.names[def.factionId], lang)}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                </div>
             </div>
         </div>
     );

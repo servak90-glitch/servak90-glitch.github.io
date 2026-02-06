@@ -32,7 +32,7 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
         const activePerks = getActivePerkIds(s.reputation);
 
         const grantArtifact = () => {
-            const def = rollArtifact(s.depth, calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth).luck, s.selectedBiome || undefined);
+            const def = rollArtifact(s.depth, calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, [], s.operatorId, s.hiredCrewIds).luck, s.selectedBiome || undefined);
             const id = Math.random().toString(36).substr(2, 9);
             const newItem: InventoryItem = { instanceId: id, defId: def.id, acquiredAt: Date.now(), isIdentified: false, isEquipped: false };
             const newInv = { ...s.inventory, [id]: newItem };
@@ -149,7 +149,7 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
 
                     // Расчет силы атаки (зависит от региона или глубины, тут упростим)
                     const attackPower = 20 + Math.random() * 50;
-                    const result = calculateRaidOutcome(base, attackPower);
+                    const result = calculateRaidOutcome(base, attackPower, activePerks);
 
                     // Обновление базы
                     const updatedBases = s.playerBases.map(b => b.id === base.id ? {

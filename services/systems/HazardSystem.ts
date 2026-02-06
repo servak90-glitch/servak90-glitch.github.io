@@ -42,6 +42,11 @@ export function processHazards(state: GameState, stats: Stats, dt: number, activ
         chancePerSecond *= 0.5;
     }
 
+    // [PHASE 5] Geologist bonus: Hazard Risk Reduction
+    if (stats.hazardRiskReductionPct > 0) {
+        chancePerSecond *= (1 - stats.hazardRiskReductionPct / 100);
+    }
+
     // Доп. защита от спама: если недавно было событие (eventQueue не пуст), не триггерим
     if (state.eventQueue.length > 0) return { update, events };
 

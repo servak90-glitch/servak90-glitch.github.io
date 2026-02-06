@@ -9,7 +9,7 @@ import { ResourceType } from '../types';
 
 // Базовые цены ресурсов (в credits за единицу)
 // TODO: вынести в constants/prices.ts когда появится
-const RESOURCE_PRICES: Record<keyof Resources, number> = {
+export const RESOURCE_PRICES: Record<keyof Resources, number> = {
     clay: 1,
     stone: 2,
     copper: 5,
@@ -31,7 +31,9 @@ const RESOURCE_PRICES: Record<keyof Resources, number> = {
     credits: 1,
     repairKit: 500,
     coolantPaste: 1000,
-    advancedCoolant: 5000
+    advancedCoolant: 5000,
+    voidMatter: 5000,
+    chronoShards: 15000
 };
 
 /**
@@ -68,6 +70,10 @@ export function calculateMarketPrice(
     // if (activeEvents.includes('PRICE_SPIKE')) {
     //     temporalModifier *= 1.3;
     // }
+    // Perk: Research Grant (+10% artifacts)
+    if (activePerks.includes('RESEARCH_GRANT')) {
+        temporalModifier *= 1.1; // Увеличиваем цену продажи
+    }
 
     const finalPrice = Math.floor(basePrice * regionalModifier * temporalModifier);
 
@@ -115,10 +121,11 @@ export function calculateSellRevenue(
     amount: number,
     regionId: RegionId,
     activeEvents: string[] = [],
-    activePerks: string[] = []
+    activePerks: string[] = [],
+    saturationMult: number = 1.0
 ): { sellPrice: number; totalRevenue: number; fee: number } {
     const price = calculateMarketPrice(resource, regionId, activeEvents, activePerks);
-    const sellPrice = Math.floor(price.finalPrice * 0.8);  // 20% комиссия (FIXME: Maybe perks reduce fee?)
+    const sellPrice = Math.floor(price.finalPrice * 0.8 * saturationMult);
     const totalRevenue = sellPrice * amount;
     const fee = (price.finalPrice - sellPrice) * amount;
 

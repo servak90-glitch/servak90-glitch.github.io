@@ -412,6 +412,7 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                 const warpSpeed = isDrillingActive ? 25 : 1;
 
                                 dustParticles.forEach(p => {
+                                    if (p.sprite.destroyed) return;
                                     p.y -= p.speed * p.z * warpSpeed * dt;
                                     if (p.y < -10) {
                                         p.y = screenH + 10;
@@ -427,8 +428,19 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
 
                                 for (let i = globalParticles.length - 1; i >= 0; i--) {
                                     const p = globalParticles[i];
-                                    if (p.sprite.destroyed) { globalParticles.splice(i, 1); continue; }
+                                    if (!p.sprite || p.sprite.destroyed) {
+                                        globalParticles.splice(i, 1);
+                                        continue;
+                                    }
+
                                     p.life -= dt;
+
+                                    if (p.life <= 0) {
+                                        p.sprite.destroy();
+                                        globalParticles.splice(i, 1);
+                                        continue;
+                                    }
+
                                     p.sprite.x += p.vx * dt;
                                     p.sprite.y += p.vy * dt;
                                     if (p.type === 'DEBRIS') {
@@ -441,7 +453,6 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                         p.sprite.scale.y += 0.01 * dt;
                                     }
                                     else { p.sprite.alpha = p.life / p.maxLife; }
-                                    if (p.life <= 0) { p.sprite.destroy(); globalParticles.splice(i, 1); }
                                 }
 
                                 activeDrones.forEach((type, i) => {

@@ -305,6 +305,46 @@ export const STORY_QUESTS: Quest[] = [
             { type: 'RESOURCE', target: 'rubies', amount: 20000 },
             { type: 'XP', target: 'player', amount: 10000 },
         ],
+    },
+    {
+        id: 'SQ_PHASE7_FINALE',
+        title: { RU: '⏳ Последний Рубеж', EN: '⏳ The Final Frontier' },
+        description: { RU: 'Чтобы пронзить саму Пустоту, вам нужны ресурсы, существующие вне времени. Соберите их и приготовьтесь к финальному погружению.', EN: 'To pierce the Void itself, you need resources that exist outside of time. Collect them and prepare for the final descent.' },
+        status: 'available',
+        type: 'COLLECTION',
+        factionId: 'SCIENCE',
+        prerequisites: ['SQ_VOID_SENTINEL'],
+        objectives: [
+            {
+                id: 'collect_void_matter_final',
+                type: 'COLLECT',
+                description: { RU: 'Собрать 100 Материи Пустоты', EN: 'Collect 100 Void Matter' },
+                target: 'voidMatter',
+                required: 100,
+                current: 0,
+            },
+            {
+                id: 'collect_chrono_shards_final',
+                type: 'COLLECT',
+                description: { RU: 'Собрать 50 Хроно-осколков', EN: 'Collect 50 Chrono-Shards' },
+                target: 'chronoShards',
+                required: 50,
+                current: 0,
+            },
+            {
+                id: 'reach_150km',
+                type: 'REACH_DEPTH',
+                description: { RU: 'Достичь глубины 150,000м', EN: 'Reach depth 150,000m' },
+                target: '150000',
+                required: 1,
+                current: 0,
+            }
+        ],
+        rewards: [
+            { type: 'REPUTATION', target: 'SCIENCE', amount: 500 },
+            { type: 'RESOURCE', target: 'ancientTech', amount: 100 },
+            { type: 'BLUEPRINT', target: 'blueprint_fusion_core' },
+            { type: 'XP', target: 'player', amount: 50000 },
+        ],
     }
-
 ];

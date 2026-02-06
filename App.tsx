@@ -14,6 +14,7 @@ import {
     useAIState,
     useStatsProperty,
     useCargoStatus,
+    useChronos,
 } from './store/selectors';
 import { View, Language } from './types';
 import { calculateStats, calculateShieldRechargeCost, formatCompactNumber, calculateTotalFuel } from './services/gameMath';
@@ -21,6 +22,7 @@ import { BIOMES } from './constants';
 import { audioEngine } from './services/audioEngine';
 import { t, TEXT_IDS } from './services/localization';
 import { useResponsive } from './services/hooks/useResponsive';
+import { formatGameTime } from './services/systems/TimeSystem';
 import { AlertTriangle } from 'lucide-react';
 
 // Components
@@ -34,6 +36,8 @@ import NavigationManager from './components/navigation/NavigationManager';
 import OverlayManager from './components/overlays/OverlayManager';
 import EventModal from './components/EventModal';
 import SkillsView from './components/SkillsView';
+import { OperatorSelectOverlay } from './components/overlays/OperatorSelectOverlay';
+import { DialogueOverlay } from './components/overlays/DialogueOverlay';
 import AICompanion from './components/AICompanion';
 import SettingsModal from './components/SettingsModal';
 import CodexView from './components/CodexView';
@@ -139,6 +143,8 @@ const App: React.FC = () => {
     const settings = useGameStore(s => s.settings);
     const isZeroWeight = useGameStore(s => s.isZeroWeight);
     const isInfiniteEnergy = useGameStore(s => s.isInfiniteEnergy);
+    const operatorId = useGameStore(s => s.operatorId);
+    const travel = useGameStore(s => s.travel);
 
     const enterGame = useGameStore(s => s.enterGame);
     const manualLoad = useGameStore(s => s.manualLoad);
@@ -214,19 +220,9 @@ const App: React.FC = () => {
 
     const { setLanguage, updateSettings, resetProgress, selectBiome, selectedBiome } = useSettingsActions();
     const { aiState } = useAIState();
+    const { chronos } = useChronos();
 
-    // [DEBUG] Логирование изменений перегруза для отладки
-    useEffect(() => {
-        // Включаем логирование только в dev режиме (localhost)
-        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-            console.log('[CARGO DEBUG]', {
-                currentWeight: Math.floor(currentWeightCargo),
-                maxCapacity: Math.floor(totalCargoCapacityCargo),
-                isOverloaded: isCargoOverloaded,
-                percentage: cargoPercentage.toFixed(1) + '%'
-            });
-        }
-    }, [currentWeightCargo, totalCargoCapacityCargo, isCargoOverloaded, cargoPercentage]);
+
 
 
 
@@ -245,7 +241,7 @@ const App: React.FC = () => {
         detailLevel: 'BASIC' | 'MEDIUM' | 'FULL';
     }>>([]);
     const [logs, setLogs] = useState<{ msg: string; color?: string; icon?: string; detail?: string; timestamp?: string }[]>([
-        { msg: t(TEXT_IDS.AI_INIT, lang), color: 'text-zinc-400', icon: '🤖', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }
+        { msg: t(TEXT_IDS.AI_INIT, lang), color: 'text-zinc-400', icon: '🤖', timestamp: formatGameTime(useGameStore.getState().chronos, true) }
     ]);
 
     // [USER REQUEST] Force open help modal on first run (as soon as app loads)
@@ -291,12 +287,13 @@ const App: React.FC = () => {
 
     // Log Handler
     const addLog = useCallback((msg: string, color?: string, icon?: string, detail?: string) => {
+        const currentChronos = useGameStore.getState().chronos;
         setLogs(prev => [...prev.slice(-15), {
             msg,
             color,
             icon,
             detail,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            timestamp: formatGameTime(currentChronos, true)
         }]);
     }, []);
 
@@ -584,6 +581,7 @@ const App: React.FC = () => {
                             </div>
                         </div>
 
+
                         <div className="pointer-events-auto"><AICompanion state={aiState} heat={heat} /></div>
 
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto flex items-center justify-center">
@@ -658,14 +656,9 @@ const App: React.FC = () => {
 
             {/* --- LAYER 3: OVERLAYS (Z-50+) managed by OverlayManager --- */}
 
-            {/* MENUS */}
-            <MenuOverlay
-                isOpen={isMenuOpen}
-                onClose={() => setIsMenuOpen(false)}
-                onOpenSettings={() => setIsSettingsOpen(true)}
-                onOpenHelp={() => setIsHelpOpen(true)}
-            />
-
+            {/* Overlays */}
+            <DialogueOverlay />
+            <OperatorSelectOverlay />
             <OverlayManager
                 eventQueue={eventQueue}
                 combatMinigame={combatMinigame}
@@ -734,50 +727,90 @@ const App: React.FC = () => {
                             </span>
                         </a>
                     </div>
+
+                    {/* FIRST RUN MODAL */}
+                    {showFirstRunModal && (
+                        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-void/90 p-6">
+                            <div className="max-w-md w-full glass-panel border-rose-500/30 p-8 shadow-[0_0_100px_rgba(244,63,94,0.1)] relative overflow-hidden">
+                                <h2 className="text-rose-500 font-black font-technical text-2xl mb-6 flex items-center gap-3 uppercase tracking-tighter">
+                                    <AlertTriangle className="w-8 h-8" /> {t(TEXT_IDS.FIRST_RUN_TITLE, lang)}
+                                </h2>
+                                <p className="text-white font-mono text-sm leading-relaxed mb-8 opacity-90">
+                                    {t(TEXT_IDS.FIRST_RUN_BODY, lang)}
+                                </p>
+                                <button onClick={handleFirstRunConfirm} className="w-full py-5 bg-rose-600 text-white font-black font-technical text-sm tracking-[0.3em] uppercase">
+                                    {t(TEXT_IDS.BTN_ACKNOWLEDGE, lang)}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {activePredictions.map(pred => (
+                        <PredictionAlert key={pred.id} eventTitle={pred.eventTitle} eventType={pred.eventType} timeRemaining={pred.timeRemaining} detailLevel={pred.detailLevel} onDismiss={() => setActivePredictions(prev => prev.filter(p => p.id !== pred.id))} />
+                    ))}
+
+                    {sideTunnel && activeView === View.DRILL && (
+                        <>
+                            <TunnelAtmosphereOverlay type={sideTunnel.type} />
+                            <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60]"><SideTunnelProgressMini tunnel={sideTunnel} lang={lang} /></div>
+                        </>
+                    )}
+
+                    {travel && activeView !== View.GLOBAL_MAP && (
+                        <div className="fixed top-36 left-1/2 -translate-x-1/2 z-[60]"><TravelProgressMini travel={travel} lang={lang} /></div>
+                    )}
+
+                    {/* Global Modals that are not yet in OverlayManager (if any) */}
+                    {isSettingsOpen && <SettingsModal settings={settings} onClose={() => setIsSettingsOpen(false)} onUpdateSettings={updateSettings} onResetProgress={resetProgress} language={lang} onSetLanguage={setLanguage} />}
+                    {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
+                    {isInventoryOpen && <EquipmentInventoryView onClose={() => setIsInventoryOpen(false)} />}
+
+                    <RareResourcesMenu
+                        isOpen={isRareOpen}
+                        onClose={() => setIsRareOpen(false)}
+                        resources={resources}
+                        lang={lang}
+                    />
+
                 </div>
             )}
 
-            {showFirstRunModal && (
-                <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-void/90 p-6">
-                    <div className="max-w-md w-full glass-panel border-rose-500/30 p-8 shadow-[0_0_100px_rgba(244,63,94,0.1)] relative overflow-hidden">
-                        <h2 className="text-rose-500 font-black font-technical text-2xl mb-6 flex items-center gap-3 uppercase tracking-tighter">
-                            <AlertTriangle className="w-8 h-8" /> {t(TEXT_IDS.FIRST_RUN_TITLE, lang)}
-                        </h2>
-                        <p className="text-white font-mono text-sm leading-relaxed mb-8 opacity-90">
-                            {t(TEXT_IDS.FIRST_RUN_BODY, lang)}
-                        </p>
-                        <button onClick={handleFirstRunConfirm} className="w-full py-5 bg-rose-600 text-white font-black font-technical text-sm tracking-[0.3em] uppercase">
-                            {t(TEXT_IDS.BTN_ACKNOWLEDGE, lang)}
-                        </button>
-                    </div>
-                </div>
-            )}
+            {/* --- LAYER 3: OVERLAYS (Z-50+) managed by OverlayManager --- */}
 
-            {activePredictions.map(pred => (
-                <PredictionAlert key={pred.id} eventTitle={pred.eventTitle} eventType={pred.eventType} timeRemaining={pred.timeRemaining} detailLevel={pred.detailLevel} onDismiss={() => setActivePredictions(prev => prev.filter(p => p.id !== pred.id))} />
-            ))}
+            {/* MENUS */}
+            <MenuOverlay
+                isOpen={isMenuOpen}
+                onClose={() => setIsMenuOpen(false)}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenHelp={() => setIsHelpOpen(true)}
+            />
 
-            {sideTunnel && activeView === View.DRILL && (
-                <>
-                    <TunnelAtmosphereOverlay type={sideTunnel.type} />
-                    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60]"><SideTunnelProgressMini tunnel={sideTunnel} lang={lang} /></div>
-                </>
-            )}
+            <OperatorSelectOverlay />
 
-            {useGameStore(s => s.travel) && activeView !== View.GLOBAL_MAP && (
-                <div className="fixed top-36 left-1/2 -translate-x-1/2 z-[60]"><TravelProgressMini travel={useGameStore(s => s.travel)!} lang={lang} /></div>
-            )}
-
-            {/* Global Modals that are not yet in OverlayManager (if any) */}
-            {isSettingsOpen && <SettingsModal settings={settings} onClose={() => setIsSettingsOpen(false)} onUpdateSettings={updateSettings} onResetProgress={resetProgress} language={lang} onSetLanguage={setLanguage} />}
-            {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
-            {isInventoryOpen && <EquipmentInventoryView onClose={() => setIsInventoryOpen(false)} />}
-
-            <RareResourcesMenu
-                isOpen={isRareOpen}
-                onClose={() => setIsRareOpen(false)}
-                resources={resources}
+            <OverlayManager
+                eventQueue={eventQueue}
+                combatMinigame={combatMinigame}
+                isMenuOpen={isMenuOpen}
+                isSettingsOpen={isSettingsOpen}
+                isHelpOpen={isHelpOpen}
+                isInventoryOpen={isInventoryOpen}
+                isRareOpen={isRareOpen}
+                settings={settings}
                 lang={lang}
+                resources={resources}
+                discoveredArtifacts={discoveredArtifacts}
+                onOptionSelect={handleEventOption}
+                onCompleteMinigame={completeCombatMinigame}
+                onCloseMenu={() => setIsMenuOpen(false)}
+                onCloseSettings={() => setIsSettingsOpen(false)}
+                onCloseHelp={() => setIsHelpOpen(false)}
+                onCloseInventory={() => setIsInventoryOpen(false)}
+                onCloseRare={() => setIsRareOpen(false)}
+                onUpdateSettings={updateSettings}
+                onResetProgress={resetProgress}
+                onSetLanguage={setLanguage}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenHelp={() => setIsHelpOpen(true)}
             />
         </div>
     );

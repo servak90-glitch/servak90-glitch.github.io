@@ -1,8 +1,9 @@
 
-import { DrillState, Resources, GameState, ResourceType, EquipmentItem } from '../types';
+import { DrillState, Resources, GameState, ResourceType, EquipmentItem, OperatorId, CrewId } from '../types';
 import { calculateSkillModifiers } from './skillRegistry';
 import { ARTIFACTS } from './artifactRegistry';
 import { calculateTotalMass, calculateDepthScale } from './mathEngine';
+import { OPERATORS, CREW_MEMBERS } from '../constants/rpg';
 
 // [DEV_CONTEXT: HARDCORE MATH]
 const BASE_CARGO_CAPACITY = 5000;
@@ -79,8 +80,9 @@ export const RESOURCE_WEIGHTS: Record<keyof Resources, number> = {
     rubies: 1,
     emeralds: 1,
     diamonds: 1,
-
-    // Топливо (MVP)
+    voidMatter: 8,
+    chronoShards: 5,
+    // [ПОДДЕРЖКА] Расходники (лёгкие)
     coal: 3,
     oil: 2,
     gas: 1,
@@ -157,13 +159,15 @@ const CACHE_TTL = 100; // Время жизни кэша в мс (10 тиков)
 function generateBaseCacheKey(
     drill: DrillState,
     skillLevels: GameState['skillLevels'],
-    equippedArtifacts: string[]
+    equippedArtifacts: string[],
+    operatorId?: OperatorId,
+    hiredCrewIds?: CrewId[]
 ): string {
-    // Используем простой конкатенированный ключ вместо JSON.stringify
     const drillKey = `${drill.bit.id}|${drill.engine.id}|${drill.cooling.id}|${drill.hull.id}|${drill.logic.id}|${drill.control.id}|${drill.gearbox.id}|${drill.power.id}|${drill.armor.id}`;
     const skillsKey = Object.values(skillLevels).join(',');
     const artifactsKey = equippedArtifacts.join(',');
-    return `${drillKey}#${skillsKey}#${artifactsKey}`;
+    const rpgKey = `${operatorId || 'none'}:${(hiredCrewIds || []).sort().join(',')}`;
+    return `${drillKey}#${skillsKey}#${artifactsKey}#${rpgKey}`;
 }
 
 interface BaseStatsCache {
@@ -182,19 +186,20 @@ export const calculateStats = (
     equippedArtifacts: string[],
     inventory: GameState['inventory'],
     currentDepth: number = 0,
-    activeEffects: GameState['activeEffects'] = []
+    activeEffects: GameState['activeEffects'] = [],
+    operatorId?: OperatorId,
+    hiredCrewIds: CrewId[] = []
 ) => {
-    const baseKey = generateBaseCacheKey(drill, skillLevels, equippedArtifacts);
+    const baseKey = generateBaseCacheKey(drill, skillLevels, equippedArtifacts, operatorId, hiredCrewIds);
 
     let baseResult;
     if (baseStatsCache && baseStatsCache.key === baseKey) {
         baseResult = baseStatsCache.result;
     } else {
-        baseResult = calculateBaseStatsInternal(drill, skillLevels, equippedArtifacts, inventory);
+        baseResult = calculateBaseStatsInternal(drill, skillLevels, equippedArtifacts, inventory, operatorId, hiredCrewIds);
         baseStatsCache = { key: baseKey, result: baseResult };
     }
 
-    // Применяем динамические модификаторы (глубина, эффекты), которые меняются часто
     return applyDynamicModifiers(baseResult, currentDepth, activeEffects);
 };
 
@@ -205,7 +210,9 @@ const calculateBaseStatsInternal = (
     drill: DrillState,
     skillLevels: GameState['skillLevels'],
     equippedArtifacts: string[],
-    inventory: GameState['inventory']
+    inventory: GameState['inventory'],
+    operatorId?: OperatorId,
+    hiredCrewIds: CrewId[] = []
 ) => {
     // Defensive check
     if (!drill || !drill.bit || !drill.power || !drill.engine || !drill.cooling || !drill.hull || !drill.logic || !drill.control || !drill.gearbox || !drill.armor || !drill.shield) {
@@ -223,7 +230,8 @@ const calculateBaseStatsInternal = (
 
     // Пре-расчет модификаторов артефактов
     const artifactMods = {
-        clickPowerPct: 0, drillSpeedPct: 0, heatGenPct: 0, resourceMultPct: 0, luckPct: 0, shopDiscountPct: 0, shieldEfficiencyPct: 0
+        clickPowerPct: 0, drillSpeedPct: 0, heatGenPct: 0, resourceMultPct: 0, luckPct: 0, shopDiscountPct: 0, shieldEfficiencyPct: 0,
+        droneSpeedPct: 0, hazardResist: 0
     };
 
     equippedArtifacts.forEach(id => {
@@ -240,37 +248,85 @@ const calculateBaseStatsInternal = (
 
     const skillMods = calculateSkillModifiers(skillLevels);
 
+    // --- RPG SYSTEM MODIFIERS ---
+    const rpgMods = {
+        gemDropChancePct: 0,
+        luckPct: 0,
+        predictionTime: 0,
+        maxHullPct: 0,
+        damageReductionPct: 0,
+        heatCapAdd: 0,
+        coolingEfficiencyPct: 0,
+        craftingCostReductionPct: 0,
+        drillSpeedBasePct: 0,
+        cargoCapacityPct: 0,
+        drillTorquePct: 0,
+        critChancePct: 0,
+        evasionPct: 0,
+        bossDamagePct: 0,
+        shieldChargeSpeedPct: 0,
+        droneSpeedPct: 0,
+        rareResourceChancePct: 0,
+        hazardRiskReductionPct: 0,
+        consumableSaveChancePct: 0
+    };
+
+    // Apply Operator Bonuses
+    if (operatorId) {
+        const op = OPERATORS.find(o => o.id === operatorId);
+        if (op?.stats) {
+            Object.entries(op.stats).forEach(([k, v]) => {
+                if (k in rpgMods) (rpgMods as any)[k] += v;
+            });
+        }
+    }
+
+    // Apply Crew Bonuses
+    hiredCrewIds.forEach(cid => {
+        const crew = CREW_MEMBERS.find(c => c.id === cid);
+        if (crew?.stats) {
+            Object.entries(crew.stats).forEach(([k, v]) => {
+                if (k in rpgMods) (rpgMods as any)[k] += v;
+            });
+        }
+    });
+
     // Базовое уклонение
-    const baseEvasion = (drill.engine.tier * 0.5) + (drill.logic.tier * 0.5);
+    const baseEvasion = (drill.engine.tier * 0.5) + (drill.logic.tier * 0.5) + rpgMods.evasionPct;
     const totalEvasion = Math.min(60, baseEvasion);
 
     return {
         energyProd,
         baseEnergyCons,
-        drillDamageBase: drill.bit.baseStats.damage,
-        drillSpeedBase: drill.engine.baseStats.speed,
-        coolingBase: drill.cooling.baseStats.cooling,
-        totalCargoCapacity,
-        torque: drill.gearbox.baseStats.torque || 0,
-        critChance: drill.logic.baseStats.critChance + skillMods.critChance,
-        luck: (drill.logic.baseStats.luck || 0) + artifactMods.luckPct,
-        predictionTime: drill.logic.baseStats.predictionTime || 0,
+        drillDamageBase: drill.bit.baseStats.damage * (1 + rpgMods.bossDamagePct / 100), // Note: boss damage usually applied in combat, but we can store it here
+        drillSpeedBase: drill.engine.baseStats.speed * (1 + rpgMods.drillSpeedBasePct / 100),
+        coolingBase: drill.cooling.baseStats.cooling * (1 + rpgMods.coolingEfficiencyPct / 100),
+        totalCargoCapacity: (totalCargoCapacity) * (1 + rpgMods.cargoCapacityPct / 100),
+        torque: (drill.gearbox.baseStats.torque || 0) * (1 + rpgMods.drillTorquePct / 100),
+        critChance: drill.logic.baseStats.critChance + skillMods.critChance + rpgMods.critChancePct,
+        luck: (drill.logic.baseStats.luck || 0) + artifactMods.luckPct + rpgMods.luckPct,
+        predictionTime: (drill.logic.baseStats.predictionTime || 0) + rpgMods.predictionTime,
         clickMult: drill.control.baseStats.clickMultiplier * (1 + (skillMods.clickPowerPct + artifactMods.clickPowerPct) / 100),
         ventSpeed: drill.control.baseStats.ventSpeed || 1.0,
         defense: drill.armor.baseStats.defense,
         evasion: totalEvasion,
-        hazardResist: drill.armor.baseStats.hazardResist || 0,
-        integrity: drill.hull.baseStats.maxIntegrity,
+        hazardResist: (drill.armor.baseStats.hazardResist || 0) + artifactMods.hazardResist,
+        integrity: drill.hull.baseStats.maxIntegrity * (1 + rpgMods.maxHullPct / 100),
         regen: drill.hull.baseStats.regen || 0,
-        droneEfficiency: drill.power.baseStats.droneEfficiency || 1.0,
+        droneEfficiency: (drill.power.baseStats.droneEfficiency || 1.0) * (1 + (rpgMods.droneSpeedPct + artifactMods.droneSpeedPct) / 100),
+        rareResourceChancePct: rpgMods.rareResourceChancePct,
+        hazardRiskReductionPct: rpgMods.hazardRiskReductionPct,
+        consumableSaveChancePct: rpgMods.consumableSaveChancePct,
         travelSpeed: 50 + (drill.engine.tier * 25),
         bitTier: drill.bit.tier,
         skillMods,
         artifactMods,
+        rpgMods,
+        activeDrones: 0,
         // Shield Specific
         maxShield: drill.shield.baseStats.maxShield,
         shieldEfficiencyBase: drill.shield.baseStats.efficiency,
-        shieldRechargeMult: drill.shield.baseStats.rechargeMult
+        shieldRechargeMult: drill.shield.baseStats.rechargeMult * (1 + rpgMods.shieldChargeSpeedPct / 100)
     };
 };
 
@@ -337,7 +393,7 @@ function getFallbackStats() {
         energyProd: 0, energyCons: 0, energyEfficiency: 1, totalDamage: 0, totalSpeed: 0, totalCooling: 0, torque: 0,
         critChance: 0, luck: 0, predictionTime: 0, clickMult: 1, ventSpeed: 1, defense: 0, evasion: 0,
         hazardResist: 0, integrity: 100, regen: 0, droneEfficiency: 1, drillingEfficiency: 1, ambientHeat: 0,
-        requiredTier: 1, skillMods: {}, artifactMods: {}, totalCargoCapacity: 5000
+        requiredTier: 1, skillMods: {}, artifactMods: {}, totalCargoCapacity: 5000, rpgMods: {} as any, activeDrones: 0
     };
 }
 

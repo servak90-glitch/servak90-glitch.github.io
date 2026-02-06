@@ -176,6 +176,16 @@ export const useAIState = () => useGameStore(
 );
 
 /**
+ * [CHRONOS PROTOCOL] Селектор игрового времени
+ */
+export const useChronos = () => useGameStore(
+    useShallow(s => ({
+        chronos: s.chronos,
+        gameTime: s.gameTime,
+    }))
+);
+
+/**
  * View navigation actions
  */
 export const useViewActions = () => useGameStore(

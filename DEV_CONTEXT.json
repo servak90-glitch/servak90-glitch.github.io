@@ -1,7 +1,7 @@
 {
   "project_info": {
     "name": "Cosmic Excavator: Void-Piercer",
-    "version": "0.3.6",
+    "version": "5.6.5",
     "stack": [
       "React 19.2.3",
       "TypeScript",
@@ -13,7 +13,7 @@
       "Custom Grammar Engine",
       "Capacitor 6"
     ],
-    "description": "Sci-Fi Idle кликер. ФАЗА 4.1: Polishing & Balance. Реализована строгая типизация ResourceType и стандартизация Store."
+    "description": "Sci-Fi Idle кликер. ФАЗА 4.1: Polishing & Balance. Реализована система Насыщения рынка (Этап 3) и Chronos Protocol (Этап 1-2)."
   },
   "architecture_rules": [
     "СТРОГО ЗАПРЕЩЕНО: Предлагать механики Престижа/Time Warp/Сброса прогресса. Игра масштабируется линейно и бесконечно.",
@@ -37,27 +37,32 @@
     "PROTOCOL: WEB_SEARCH. Использовать Brave Search для поиска современных (2025+) практик и решений."
   ],
   "narrative_roadmap": {
-    "status": "TBD",
-    "description": "Waiting for new direction."
+    "status": "DEVELOPMENT",
+    "description": "Stage 3 Economy Complete. Moving towards Stage 4 Logbook."
   },
   "refactoring_plan": [],
   "audit_report": {},
   "roadmap": {
-    "current_step": 0,
-    "total_steps": 0,
-    "steps": []
+    "current_step": 3,
+    "total_steps": 8,
+    "steps": [
+      "Chronos Protocol (DONE)",
+      "Event Scheduler (DONE)",
+      "Market Saturation (DONE)",
+      "Logbook (NEXT)"
+    ]
   },
   "last_changes": {
-    "date": "2026-01-22",
-    "description": "VERSION 0.3.6: ResourceType Hardening & Store Standardization. 1) Migrated all resource references to ResourceType enum. 2) Renamed Slices to Actions in Store. 3) Fixed fuel cost calculation bug in GlobalMapView. 4) Updated regional market modifiers and admin cheats.",
+    "date": "2026-02-05",
+    "description": "VERSION 5.6.5: MARKET SATURATION & ECONOMY. 1) Created EconomySystem.ts for dynamic pricing and quota recovery. 2) Implemented Fox smuggling mechanic with Raid Risk. 3) Updated MarketView.tsx with quota indicators, block overlay, and UX improvement for transaction amount. 4) Fixed time jump economy recovery in adminSlice.ts.",
     "affected_files": [
-      "types.ts",
-      "store/gameStore.ts",
-      "store/slices/index.ts",
-      "constants/marketPrices.ts",
-      "constants/fuelRecipes.ts",
-      "components/CaravanPanel.tsx",
-      "components/GlobalMapView.tsx"
+      "services/systems/EconomySystem.ts",
+      "constants/economy.ts",
+      "store/slices/marketSlice.ts",
+      "store/slices/adminSlice.ts",
+      "components/MarketView.tsx",
+      "services/GameEngine.ts",
+      "types.ts"
     ]
   }
 }

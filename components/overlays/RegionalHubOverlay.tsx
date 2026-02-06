@@ -15,7 +15,8 @@ import {
     Boxes,
     ScrollText,
     Gem,
-    GlassWater
+    GlassWater,
+    Activity
 } from 'lucide-react';
 
 // Reuse existing sub-views or logic
@@ -26,13 +27,15 @@ import JewelerTab from '../city/JewelerTab';
 import ServiceTab from '../city/ServiceTab';
 import BarTab from '../city/BarTab';
 import QuestPanel from '../QuestPanel';
+import { ClinicTab } from '../city/ClinicTab';
+import StateContractsTab from '../city/StateContractsTab';
 
 interface RegionalHubOverlayProps {
     regionId: RegionId;
     onClose: () => void;
 }
 
-type HubTab = 'MARKET' | 'FORGE' | 'DRONES' | 'SERVICES' | 'BAR' | 'JEWELER' | 'CONTRACTS';
+type HubTab = 'MARKET' | 'FORGE' | 'DRONES' | 'SERVICES' | 'BAR' | 'JEWELER' | 'CONTRACTS' | 'CLINIC' | 'STATE_CONTRACTS';
 
 export const RegionalHubOverlay: React.FC<RegionalHubOverlayProps> = ({ regionId, onClose }) => {
     const [activeTab, setActiveTab] = useState<HubTab>('MARKET');
@@ -45,8 +48,10 @@ export const RegionalHubOverlay: React.FC<RegionalHubOverlayProps> = ({ regionId
     const tabs: { id: HubTab; label: string; icon: any }[] = [
         { id: 'MARKET', label: lang === 'RU' ? 'РЫНОК' : 'MARKET', icon: <ShoppingBag className="w-4 h-4" /> },
         { id: 'CONTRACTS', label: lang === 'RU' ? 'КОНТРАКТЫ' : 'CONTRACTS', icon: <ScrollText className="w-4 h-4" /> },
+        { id: 'STATE_CONTRACTS', label: lang === 'RU' ? 'ГОСЗАКАЗЫ' : 'STATE CONTRACTS', icon: <Hexagon className="w-4 h-4" /> },
         { id: 'FORGE', label: lang === 'RU' ? 'КУЗНЯ' : 'FORGE', icon: <Hammer className="w-4 h-4" /> },
         { id: 'SERVICES', label: lang === 'RU' ? 'СЕРВИС' : 'SERVICES', icon: <Zap className="w-4 h-4" /> },
+        { id: 'CLINIC', label: lang === 'RU' ? 'КЛИНИКА' : 'CLINIC', icon: <Activity className="w-4 h-4" /> },
         { id: 'JEWELER', label: lang === 'RU' ? 'ЮВЕЛИР' : 'JEWELER', icon: <Gem className="w-4 h-4" /> },
         { id: 'BAR', label: lang === 'RU' ? 'БАР' : 'BAR', icon: <GlassWater className="w-4 h-4" /> },
         { id: 'DRONES', label: lang === 'RU' ? 'ДРОНЫ' : 'DRONES', icon: <Bot className="w-4 h-4" /> },
@@ -149,6 +154,11 @@ export const RegionalHubOverlay: React.FC<RegionalHubOverlayProps> = ({ regionId
                                 <QuestPanel />
                             </motion.div>
                         )}
+                        {activeTab === 'STATE_CONTRACTS' && (
+                            <motion.div key="state-contracts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto scrollbar-hide touch-pan-y p-4 md:p-8">
+                                <StateContractsTab />
+                            </motion.div>
+                        )}
                         {activeTab === 'SERVICES' && (
                             <motion.div key="services" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto scrollbar-hide touch-pan-y p-4 md:p-8">
                                 <ServiceTab
@@ -177,6 +187,11 @@ export const RegionalHubOverlay: React.FC<RegionalHubOverlayProps> = ({ regionId
                                     resources={resources}
                                     depth={stats_depth}
                                 />
+                            </motion.div>
+                        )}
+                        {activeTab === 'CLINIC' && (
+                            <motion.div key="clinic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto scrollbar-hide touch-pan-y">
+                                <ClinicTab />
                             </motion.div>
                         )}
                         {activeTab === 'DRONES' && (

@@ -88,7 +88,7 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         }
 
         // Проверка 4: Cargo overload?
-        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, [], s.operatorId, s.hiredCrewIds);
         const maxCapacity = stats.totalCargoCapacity;
 
         if (!s.isZeroWeight && s.currentCargoWeight > maxCapacity) {
@@ -209,7 +209,7 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         if (s.currentRegion === targetRegion) return 0;
 
         const distance = calculateDistance(s.currentRegion, targetRegion);
-        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth, [], s.operatorId, s.hiredCrewIds);
         const maxCapacity = stats.totalCargoCapacity || 1;
 
         // Рассчитываем ПОЛНУЮ массу (M_drill + M_cargo + M_fuel + M_equipment)
