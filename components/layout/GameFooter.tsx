@@ -14,25 +14,18 @@ import {
     ChevronRight
 } from 'lucide-react';
 
-interface GameFooterProps {
-    logs: {
-        msg: string;
-        color?: string;
-        icon?: string;
-        detail?: string;
-        timestamp?: string;
-    }[];
-}
+interface GameFooterProps { }
 
-const GameFooter: React.FC<GameFooterProps> = ({ logs }) => {
-    const { activeView, setView, currentBoss, lang, forgeUnlocked, skillsUnlocked, cityUnlocked } = useGameStore(useShallow(s => ({
+const GameFooter: React.FC<GameFooterProps> = () => {
+    const { activeView, setView, currentBoss, lang, forgeUnlocked, skillsUnlocked, cityUnlocked, logs } = useGameStore(useShallow(s => ({
         activeView: s.activeView,
         setView: s.setView,
         currentBoss: s.currentBoss,
         lang: s.settings.language,
         forgeUnlocked: s.forgeUnlocked,
         skillsUnlocked: s.skillsUnlocked,
-        cityUnlocked: s.cityUnlocked
+        cityUnlocked: s.cityUnlocked,
+        logs: s.consoleLogs
     })));
 
     const consoleEndRef = useRef<HTMLDivElement>(null);

@@ -8,7 +8,6 @@ import { View } from '../../types';
 interface RootLayoutProps {
     children: React.ReactNode;
     activeView: View;
-    logs: any[];
     onOpenMenu: () => void;
     onOpenInventory: () => void;
     onOpenRare: () => void;
@@ -21,7 +20,6 @@ interface RootLayoutProps {
 const RootLayout: React.FC<RootLayoutProps> = ({
     children,
     activeView,
-    logs,
     onOpenMenu,
     onOpenInventory,
     onOpenRare,
@@ -48,7 +46,7 @@ const RootLayout: React.FC<RootLayoutProps> = ({
                 {children}
             </div>
 
-            <GameFooter logs={logs} />
+            <GameFooter />
         </div>
     );
 };

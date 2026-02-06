@@ -180,6 +180,7 @@ export interface GameState {
 
     stats: Stats;
     logEntries: LogEntry[];
+    consoleLogs: import('./core').VisualLogEntry[];
 
     activeContracts: StateContract[];
     availableContracts: StateContract[];

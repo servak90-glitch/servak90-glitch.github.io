@@ -27,6 +27,9 @@
     --glass-bg-hover: rgba(5, 5, 5, 0.6);
     --glass-border: rgba(255, 255, 255, 0.08);
     --glass-blur: blur(20px);
+    --backdrop-blur-md: blur(12px);
+    --backdrop-blur-sm: blur(4px);
+
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
 
     /* Spacing */
@@ -68,6 +71,20 @@
     --z-toast: 400;
     --z-tooltip: 500;
 }
+
+/* Performance Optimization: Disable blurs on low/medium settings */
+[data-quality="low"],
+[data-quality="medium"] {
+    --glass-blur: none !important;
+    --backdrop-blur-md: none !important;
+    --backdrop-blur-sm: none !important;
+}
+
+/* Enhanced settings for Ultra level */
+[data-quality="ultra"] {
+    --glass-blur: blur(24px);
+}
+
 
 body {
     font-family: 'Fira Sans', sans-serif;
@@ -477,35 +494,88 @@ body {
 .vertical-text {
     writing-mode: vertical-rl;
 }
+
 /* AI Companion Special Effects */
 @keyframes crt-flicker {
-  0% { opacity: 1; }
-  5% { opacity: 0.8; }
-  10% { opacity: 1; }
-  15% { opacity: 0.9; }
-  25% { opacity: 1; }
-  30% { opacity: 0.7; }
-  45% { opacity: 1; }
-  50% { opacity: 0.8; }
-  75% { opacity: 1; }
-  80% { opacity: 0.1; }
-  85% { opacity: 1; }
-  100% { opacity: 1; }
+    0% {
+        opacity: 1;
+    }
+
+    5% {
+        opacity: 0.8;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    15% {
+        opacity: 0.9;
+    }
+
+    25% {
+        opacity: 1;
+    }
+
+    30% {
+        opacity: 0.7;
+    }
+
+    45% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+
+    75% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 0.1;
+    }
+
+    85% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 .crt-flicker {
-  animation: crt-flicker 4s infinite;
+    animation: crt-flicker 4s infinite;
 }
 
 @keyframes glitch-text-anim {
-  0% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
-  100% { transform: translate(0); }
+    0% {
+        transform: translate(0);
+    }
+
+    20% {
+        transform: translate(-2px, 2px);
+    }
+
+    40% {
+        transform: translate(-2px, -2px);
+    }
+
+    60% {
+        transform: translate(2px, 2px);
+    }
+
+    80% {
+        transform: translate(2px, -2px);
+    }
+
+    100% {
+        transform: translate(0);
+    }
 }
 
 .glitch-text-anim {
-  animation: glitch-text-anim 0.2s infinite;
+    animation: glitch-text-anim 0.2s infinite;
 }

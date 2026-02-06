@@ -198,7 +198,7 @@ const INITIAL_STATE: GameState = {
 
     // SETTINGS
     // SETTINGS
-    settings: { musicVolume: 0.5, sfxVolume: 0.5, drillVolume: 0.5, musicMuted: false, sfxMuted: false, drillMuted: false, language: 'RU', graphicsQuality: 'high' },
+    settings: { musicVolume: 0.5, sfxVolume: 0.5, drillVolume: 0.5, musicMuted: false, sfxMuted: false, drillMuted: false, language: 'RU', graphicsQuality: 'ultra' },
     selectedBiome: null,
     debugUnlocked: false,
     isGodMode: false,
@@ -279,7 +279,8 @@ const INITIAL_STATE: GameState = {
     blackMarkets: {} as Record<RegionId, any>,
     foxReputation: 0,
 
-    logEntries: []
+    logEntries: [],
+    consoleLogs: []
 };
 
 // === ПЕРСИСТЕНТНОСТЬ ===
@@ -556,11 +557,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const queue = s.actionLogQueue;
         const allEvents = [...events, ...queue];
 
+        // === UPDATE CONSOLE LOGS FROM EVENTS ===
+        const logEvents = allEvents.filter(e => e.type === 'LOG');
+        let updatedConsoleLogs = s.consoleLogs;
+        if (logEvents.length > 0) {
+            const timestampStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const newEntries = logEvents.map(e => ({
+                msg: (e as any).msg,
+                color: (e as any).color,
+                icon: (e as any).icon,
+                detail: (e as any).detail,
+                timestamp: timestampStr
+            }));
+            updatedConsoleLogs = [...newEntries, ...s.consoleLogs].slice(0, 50);
+        }
+
         set({
             ...partialState,
             activeView: nextView,
             actionLogQueue: [],
-            craftingQueue: updatedQueue
+            craftingQueue: updatedQueue,
+            consoleLogs: updatedConsoleLogs
         });
 
         // Audio Engine Update (Generative Music & Ambiance)
@@ -681,8 +698,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     addLog: (msg: string, color?: string, icon?: string, detail?: string) => {
         const s = get();
-        const event: VisualEvent = { type: 'LOG', msg, color, icon, detail };
-        set({ actionLogQueue: [...s.actionLogQueue, event] });
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const newLog = { msg, color, icon, detail, timestamp };
+
+        set({
+            consoleLogs: [newLog, ...s.consoleLogs].slice(0, 50)
+        });
     },
 
     // === DIALOGUE ACTIONS ===

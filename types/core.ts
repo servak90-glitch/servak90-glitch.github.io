@@ -54,7 +54,7 @@ export interface GameSettings {
     sfxMuted: boolean;
     drillMuted: boolean;
     language: Language;
-    graphicsQuality: 'low' | 'medium' | 'high';
+    graphicsQuality: 'low' | 'medium' | 'high' | 'ultra';
 }
 
 export interface ChronosTime {
@@ -143,6 +143,14 @@ export interface LogEntry {
     content: string;
     isRead: boolean;
     metadata?: any;
+}
+
+export interface VisualLogEntry {
+    msg: string;
+    color?: string;
+    icon?: string;
+    detail?: string;
+    timestamp: string;
 }
 
 export type VisualEvent =

@@ -186,6 +186,11 @@ const App: React.FC = () => {
         };
     }, []);
 
+    // === PERFORMANCE QUALITY SYNC ===
+    useEffect(() => {
+        document.documentElement.setAttribute('data-quality', settings.graphicsQuality);
+    }, [settings.graphicsQuality]);
+
     // --- TELEGRAM MINI APP INITIALIZATION ---
     useEffect(() => {
         if (window.Telegram?.WebApp) {
@@ -240,9 +245,6 @@ const App: React.FC = () => {
         timeRemaining: number;
         detailLevel: 'BASIC' | 'MEDIUM' | 'FULL';
     }>>([]);
-    const [logs, setLogs] = useState<{ msg: string; color?: string; icon?: string; detail?: string; timestamp?: string }[]>([
-        { msg: t(TEXT_IDS.AI_INIT, lang), color: 'text-zinc-400', icon: '🤖', timestamp: formatGameTime(useGameStore.getState().chronos, true) }
-    ]);
 
     // [USER REQUEST] Force open help modal on first run (as soon as app loads)
     useEffect(() => {
@@ -285,18 +287,6 @@ const App: React.FC = () => {
     const pixiOverlayRef = useRef<PixiOverlayHandle>(null);
     const textRef = useRef<FloatingTextHandle>(null);
 
-    // Log Handler
-    const addLog = useCallback((msg: string, color?: string, icon?: string, detail?: string) => {
-        const currentChronos = useGameStore.getState().chronos;
-        setLogs(prev => [...prev.slice(-15), {
-            msg,
-            color,
-            icon,
-            detail,
-            timestamp: formatGameTime(currentChronos, true)
-        }]);
-    }, []);
-
     // --- INITIAL LOAD ---
     useEffect(() => {
         manualLoad();
@@ -319,7 +309,7 @@ const App: React.FC = () => {
             const events = tick(safeDt);
             // ... process events ...
             events.forEach(e => {
-                if (e.type === 'LOG') addLog(e.msg, e.color, e.icon, e.detail);
+                if (e.type === 'LOG') { /* Handled by store */ }
                 else if (e.type === 'TEXT') {
                     let x = e.x || window.innerWidth / 2;
                     let y = e.y || window.innerHeight / 2;
@@ -372,7 +362,7 @@ const App: React.FC = () => {
             });
         }, 100);
         return () => clearInterval(interval);
-    }, [isGameActive, tick, addLog]);
+    }, [isGameActive, tick]);
 
     const handleInitClick = async () => {
         try { await audioEngine.init(settings.musicVolume, settings.sfxVolume, settings.drillVolume, settings.musicMuted, settings.sfxMuted, settings.drillMuted); } catch (e) { console.warn(e); }
@@ -393,8 +383,6 @@ const App: React.FC = () => {
     };
 
     const startActualGame = () => {
-        setLogs([{ msg: t(TEXT_IDS.AI_INIT, lang), color: 'text-zinc-400' }]);
-        addLog(t(TEXT_IDS.AI_READY, lang));
         enterGame();
 
         // Попытка войти в полноэкранный режим на мобильных
@@ -550,7 +538,6 @@ const App: React.FC = () => {
             {/* --- LAYER 2: UI (Z-10) --- */}
             <RootLayout
                 activeView={activeView}
-                logs={logs}
                 onOpenMenu={() => setIsMenuOpen(true)}
                 onOpenInventory={() => setIsInventoryOpen(true)}
                 onOpenRare={() => setIsRareOpen(!isRareOpen)}

@@ -164,6 +164,7 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             const depth = liveState.depth;
             const isShielding = liveState.isShielding;
             const shieldCharge = liveState.shieldCharge;
+            const graphicsQuality = liveState.settings.graphicsQuality;
 
             // Медленные поля — из кэша
             const { drill, activeEffects, selectedBiome, inventory, equippedArtifacts, resources, skillLevels } = cachedState;
@@ -258,13 +259,16 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                 const noiseArr = noiseBufferRef.current!;
                 const noiseLen = noiseArr.length;
 
+                // [DEV_CONTEXT: PERFORMANCE] Skipping complex wall shapes on Low
+                const wallDetail = graphicsQuality === 'low' ? 0.3 : 1.0;
+
                 ctx.fillStyle = '#000';
                 // Left Wall
                 ctx.beginPath(); ctx.moveTo(0, 0);
                 for (let i = -1; i < segmentsInView * (segmentHeight / wallSegHeight); i++) {
                     const y = (i * wallSegHeight) - wallScroll;
                     const noiseIdx = Math.abs((noiseOffset + i) % noiseLen);
-                    ctx.lineTo(wallWidth + noiseArr[noiseIdx] * 35, y);
+                    ctx.lineTo(wallWidth + noiseArr[noiseIdx] * 35 * wallDetail, y);
                 }
                 ctx.lineTo(0, h); ctx.lineTo(0, 0); ctx.fill();
 
@@ -273,7 +277,7 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                 for (let i = -1; i < segmentsInView * (segmentHeight / wallSegHeight); i++) {
                     const y = (i * wallSegHeight) - wallScroll;
                     const noiseIdx = Math.abs((noiseOffset + i + 50) % noiseLen);
-                    ctx.lineTo(w - wallWidth - noiseArr[noiseIdx] * 35, y);
+                    ctx.lineTo(w - wallWidth - noiseArr[noiseIdx] * 35 * wallDetail, y);
                 }
                 ctx.lineTo(w, h); ctx.lineTo(w, 0); ctx.fill();
 
@@ -334,6 +338,7 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
 
             // UTILS: Texture & Detail
             const drawWeathering = (x: number, y: number, w: number, h: number, seed: number) => {
+                if (graphicsQuality === 'low' || graphicsQuality === 'medium') return;
                 ctx.save();
                 ctx.rect(x, y, w, h); ctx.clip();
                 const noise = noiseBufferRef.current!;
@@ -348,12 +353,15 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
             };
 
             const drawRivets = (pts: { x: number, y: number }[]) => {
+                if (graphicsQuality === 'low') return;
                 ctx.fillStyle = '#111';
                 pts.forEach(p => {
                     ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill();
-                    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-                    ctx.beginPath(); ctx.arc(p.x - 0.5, p.y - 0.5, 0.8, 0, Math.PI * 2); ctx.fill();
-                    ctx.fillStyle = '#111';
+                    if (graphicsQuality === 'ultra' || graphicsQuality === 'high') {
+                        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                        ctx.beginPath(); ctx.arc(p.x - 0.5, p.y - 0.5, 0.8, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = '#111';
+                    }
                 });
             };
 
@@ -560,7 +568,9 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                     ctx.restore();
                 }
 
-                drawWeathering(-bw / 2, by - bh / 2, bw, bh, 40);
+                if (graphicsQuality === 'ultra' || graphicsQuality === 'high') {
+                    drawWeathering(-bw / 2, by - bh / 2, bw, bh, 40);
+                }
 
                 // Ribs/Details (drawn over cargo for depth)
                 ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
@@ -607,7 +617,9 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                     ctx.closePath(); ctx.fill(); ctx.stroke();
                 }
 
-                if (theme.rust) drawWeathering(-cw / 2, cy - ch / 2, cw, ch, 10);
+                if (theme.rust && (graphicsQuality === 'ultra' || graphicsQuality === 'high')) {
+                    drawWeathering(-cw / 2, cy - ch / 2, cw, ch, 10);
+                }
 
                 // Tiered Hatch/Window
                 const hSize = tier >= 13 ? 10 : 45;
