@@ -113,14 +113,13 @@ export function processDrilling(
         // Мы возвращаем обновленный sideTunnel.
         return {
             update: {
-                ...result.update,
                 depth,
                 forgeUnlocked,
                 cityUnlocked,
                 skillsUnlocked,
                 storageLevel,
                 sideTunnel: result.update.sideTunnel
-            } as any,
+            },
             resourceChanges: result.resourceChanges,
             events
         };
