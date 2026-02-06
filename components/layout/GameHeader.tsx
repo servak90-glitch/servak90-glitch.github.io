@@ -150,7 +150,7 @@ export const RareResourcesMenu: React.FC<{
     return (
         <>
             <div
-                className="fixed inset-0 bg-black/80 backdrop-blur-md pointer-events-auto"
+                className="fixed inset-0 bg-black/80 backdrop-blur-md pointer-events-auto overflow-y-auto touch-pan-y"
                 style={{ zIndex: 10000 }}
                 onClick={onClose}
             />

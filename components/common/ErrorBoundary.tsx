@@ -47,7 +47,7 @@ class ErrorBoundary extends Component<Props, State> {
             }
 
             return (
-                <div className="fixed inset-0 bg-black flex items-center justify-center p-6 z-[9999]">
+                <div className="fixed inset-0 bg-black flex items-center justify-center p-6 z-[9999] overflow-y-auto touch-pan-y">
                     <div className="max-w-lg w-full bg-zinc-950 border-2 border-red-600 p-6 shadow-[0_0_50px_rgba(255,0,0,0.3)]">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="text-4xl">⚠️</span>
@@ -59,7 +59,7 @@ class ErrorBoundary extends Component<Props, State> {
                         </p>
 
                         {this.state.error && (
-                            <div className="bg-black border border-zinc-800 p-3 mb-4 max-h-32 overflow-auto">
+                            <div className="bg-black border border-zinc-800 p-3 mb-4 max-h-32 overflow-auto touch-pan-y">
                                 <code className="text-red-400 text-xs font-mono break-all">
                                     {this.state.error.toString()}
                                 </code>

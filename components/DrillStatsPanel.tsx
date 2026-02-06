@@ -55,7 +55,7 @@ export const DrillStatsPanel: React.FC = () => {
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[190] pointer-events-auto"
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[190] pointer-events-auto overflow-y-auto touch-pan-y"
                 onClick={() => setIsOpen(false)}
             />
 
@@ -80,7 +80,7 @@ export const DrillStatsPanel: React.FC = () => {
                 </div>
 
                 {/* Stats Content */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar touch-pan-y">
                     <section className="space-y-3">
                         <ProgressBar label="Целостность корпуса" current={Math.floor(integrity)} max={Math.floor(stats.integrity)} color="bg-green-500" bgColor="bg-green-950/30" />
                         <ProgressBar label="Энергопотребление" current={Math.floor(stats.energyCons)} max={Math.floor(stats.energyProd)} unit="ед" color={energyLoad > 90 ? "bg-red-500" : energyLoad > 70 ? "bg-yellow-500" : "bg-cyan-500"} bgColor="bg-cyan-950/30" />

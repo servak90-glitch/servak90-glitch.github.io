@@ -156,7 +156,7 @@ export const ClinicTab: React.FC = () => {
 
             {/* Confirmation Modal */}
             {showConfirm && selectedOperator && (
-                <div className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4 overflow-y-auto touch-pan-y">
                     <div className="bg-zinc-900 border-2 border-cyan-500 p-6 max-w-md w-full">
                         <h3 className="text-xl font-black text-white uppercase mb-4">
                             CONFIRM RE-CERTIFICATION

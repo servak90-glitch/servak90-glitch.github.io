@@ -216,7 +216,7 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                         </button>
                     </div>
 
-                    <div className="md:flex-1 bg-gray-950/50 border border-gray-800 rounded-lg rounded-tl-none p-3 md:overflow-y-auto custom-scrollbar">
+                    <div className="md:flex-1 bg-gray-950/50 border border-gray-800 rounded-lg rounded-tl-none p-3 overflow-y-auto md:overflow-y-auto custom-scrollbar touch-pan-y">
                         {tab === 'EQUIPMENT' ? (
                             <>
                                 <WeightBar />

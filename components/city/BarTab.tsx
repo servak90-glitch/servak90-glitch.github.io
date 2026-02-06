@@ -519,7 +519,7 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
             {/* OVERLAY MODAL: TRANSACTION LOG */}
             {
                 showResult && resultData && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-500">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-500 overflow-y-auto touch-pan-y">
                         <div className={`max-w-md w-full bg-black border-2 p-10 text-center relative overflow-hidden transition-all duration-500
                         ${resultData.won ? 'border-green-500/50 shadow-[0_0_100px_rgba(34,197,94,0.1)]' : 'border-red-500/50 shadow-[0_0_100px_rgba(239,68,68,0.1)]'}
                     `}>
