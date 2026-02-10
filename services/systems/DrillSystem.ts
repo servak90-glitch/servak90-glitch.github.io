@@ -185,7 +185,11 @@ export function processDrilling(
 
         // Итоговая мощность бурения
         let drillPower = stats.totalSpeed * speedPenalty * speedMult;
-        if (isLowFuelMode) drillPower *= 0.05; // Штраф за отсутствие топлива
+        if (isLowFuelMode) {
+            drillPower *= 0.05;
+            // [FIXED BY VALIDATOR] Аварийный сбор угля при ручном приводе
+            resourceChanges[ResourceType.COAL] = (resourceChanges[ResourceType.COAL] || 0) + (0.2 * dt);
+        } // Штраф за отсутствие топлива
         if (state.isOverdrive) drillPower *= 100;
 
         // === ПОТРЕБЛЕНИЕ ТОПЛИВА ===

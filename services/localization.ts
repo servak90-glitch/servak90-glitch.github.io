@@ -14,7 +14,7 @@ export const TL = {
     [RegionId.CRYSTAL_WASTES]: { RU: "Заброшенные кристаллические шахты Science Faction. Изумруды ×3, магнитные аномалии.", EN: "Abandoned crystal mines of the Science Faction. Emeralds ×3, magnetic anomalies." },
     [RegionId.IRON_GATES]: { RU: "Военная зона Void Industries. Железо ×2, контроль корпораций, патрули дронов.", EN: "Military zone of Void Industries. Iron ×2, corporate control, drone patrols." },
     [RegionId.MAGMA_CORE]: { RU: "Вулканический регион. Экстремальные температуры, древние руины, лавовые потоки.", EN: "Volcanic region. Extreme temperatures, ancient ruins, lava flows." },
-    [RegionId.VOID_CHASM]: { RU: "Аномальная зона. Пространственные разрывы, Ancient Tech ×3, подготовка к порталу.", EN: "Anomalous zone. Spatial ruptures, Ancient Tech ×3, portal preparation." }
+    [RegionId.VOID_CHASM]: { RU: "Аномальная зона. Пространственные разрывы, Древние технологии ×3, подготовка к порталу.", EN: "Anomalous zone. Spatial ruptures, Ancient Tech ×3, portal preparation." }
   },
   baseTypes: {
     outpost: { RU: "Аванпост", EN: "Outpost" },
